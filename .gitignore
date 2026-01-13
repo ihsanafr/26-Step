@@ -1,0 +1,49 @@
+# Root ignore (GitHub-friendly)
+
+## Dependencies / build outputs
+**/node_modules/
+**/vendor/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/.cache/
+**/.tmp/
+
+## Env / secrets
+**/.env
+**/.env.*
+**/auth.json
+
+## Logs
+**/*.log
+backend/storage/logs/
+
+## Laravel generated
+backend/public/storage
+backend/public/hot
+backend/public/build
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/storage/pail/
+backend/storage/*.key
+backend/bootstrap/cache/*.php
+
+## Local databases / uploads (keep migrations instead)
+backend/database/database.sqlite
+
+## OS / IDE
+.DS_Store
+Thumbs.db
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.idea/
+.vscode/
+
+## Cursor / local tooling
+.cursor/
+
+

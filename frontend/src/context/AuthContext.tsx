@@ -1,0 +1,117 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import api from '../services/api';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  [key: string]: any;
+}
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  login: (credentials: { email: string; password: string }) => Promise<any>;
+  register: (data: { name: string; email: string; password: string; password_confirmation: string }) => Promise<any>;
+  logout: () => Promise<void>;
+  fetchUser: () => Promise<User>;
+  initializeAuth: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+
+  const isAuthenticated = !!token;
+
+  const login = async (credentials: { email: string; password: string }) => {
+    try {
+      const response = await api.post('/login', credentials);
+      setToken(response.data.token);
+      setUser(response.data.user);
+      localStorage.setItem('token', response.data.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || error;
+    }
+  };
+
+  const register = async (data: { name: string; email: string; password: string; password_confirmation: string }) => {
+    try {
+      const response = await api.post('/register', data);
+      setToken(response.data.token);
+      setUser(response.data.user);
+      localStorage.setItem('token', response.data.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await api.post('/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+    }
+  };
+
+  const fetchUser = async (): Promise<User> => {
+    try {
+      const response = await api.get('/user');
+      setUser(response.data);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || error;
+    }
+  };
+
+  const initializeAuth = () => {
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchUser().catch(() => {
+        logout();
+      });
+    }
+  };
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        login,
+        register,
+        logout,
+        fetchUser,
+        initializeAuth,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
