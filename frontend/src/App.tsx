@@ -121,6 +121,13 @@ export default function App() {
             <Route path="/habits" element={<Habits />} />
             <Route path="/storage" element={<Storage />} />
             <Route path="/journals" element={<Journals />} />
+          <Route path="/journals/list" element={<Journals />} />
+          <Route path="/journals/new" element={<Journals />} />
+          <Route path="/journals/edit/:id" element={<Journals />} />
+          <Route path="/journals/view/:id" element={<Journals />} />
+          <Route path="/journals/calendar" element={<Journals />} />
+          <Route path="/journals/notes" element={<Journals />} />
+          <Route path="/journals/guide" element={<Journals />} />
           </Route>
 
           {/* 404 */}

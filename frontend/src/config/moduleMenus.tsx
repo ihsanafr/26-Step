@@ -8,7 +8,6 @@ import {
   FolderIcon,
   FileIcon,
   ListIcon,
-  PlusIcon,
   CalenderIcon,
   TargetIcon,
   TagIcon,
@@ -135,18 +134,18 @@ export const moduleMenus: Record<string, MenuItem[]> = {
     },
     {
       icon: <FileIcon className="w-5 h-5" />,
-      name: "Journal",
+      name: "Journal Entries",
       path: "/journals/list",
     },
     {
-      icon: <PlusIcon className="w-5 h-5" />,
-      name: "Entry Baru",
-      path: "/journals/new",
+      icon: <CalenderIcon className="w-5 h-5" />,
+      name: "Calendar",
+      path: "/journals/calendar",
     },
     {
-      icon: <CalenderIcon className="w-5 h-5" />,
-      name: "Kalender",
-      path: "/journals/calendar",
+      icon: <ListIcon className="w-5 h-5" />,
+      name: "Notes",
+      path: "/journals/notes",
     },
   ],
 };

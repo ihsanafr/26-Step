@@ -791,3 +791,130 @@ span.flatpickr-weekday,
   @apply opacity-100;
 }
 
+/* Rich Text Editor - Dark mode dropdown arrow */
+.dark select[style*="background-image"] {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%2398A2B3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+}
+
+/* --- Rich text (TipTap) --- */
+.tiptap {
+  @apply text-gray-900 dark:text-white;
+  color: rgb(17, 24, 39) !important;
+}
+.dark .tiptap {
+  color: rgb(255, 255, 255) !important;
+}
+
+.tiptap:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(156, 163, 175, 0.9);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.dark .tiptap:empty:before {
+  color: rgba(156, 163, 175, 0.7);
+}
+
+.tiptap p {
+  margin: 0.5rem 0;
+  color: inherit;
+}
+.tiptap h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0.8rem 0 0.4rem;
+  color: inherit;
+}
+.tiptap h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0.8rem 0 0.4rem;
+  color: inherit;
+}
+.tiptap h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0.8rem 0 0.4rem;
+  color: inherit;
+}
+.tiptap ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+  color: inherit;
+}
+.tiptap ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+  color: inherit;
+}
+.tiptap li {
+  color: inherit;
+}
+.tiptap blockquote {
+  border-left: 3px solid rgba(156, 163, 175, 0.6);
+  padding-left: 0.75rem;
+  margin: 0.75rem 0;
+  color: rgba(107, 114, 128, 1);
+}
+.dark .tiptap blockquote {
+  border-left-color: rgba(75, 85, 99, 1);
+  color: rgba(156, 163, 175, 1);
+}
+.tiptap code {
+  background: rgba(99, 102, 241, 0.12);
+  padding: 0.1rem 0.25rem;
+  border-radius: 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: inherit;
+}
+.dark .tiptap code {
+  background: rgba(99, 102, 241, 0.25);
+}
+.tiptap pre {
+  background: rgba(17, 24, 39, 1);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.tiptap pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.tiptap a {
+  color: rgb(99, 102, 241);
+  text-decoration: underline;
+}
+.dark .tiptap a {
+  color: rgb(129, 140, 248);
+}
+
+.tiptap strong {
+  color: inherit;
+  font-weight: 700;
+}
+
+.tiptap em {
+  color: inherit;
+}
+
+.tiptap u {
+  color: inherit;
+}
+
+.tiptap s {
+  color: inherit;
+}
+

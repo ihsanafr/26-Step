@@ -51,6 +51,8 @@ class JournalController extends Controller
             'is_private' => 'nullable|boolean',
             'weather' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:7',
+            'cover_image' => 'nullable|string',
         ]);
 
         $validated['user_id'] = $request->user()->id;
@@ -85,6 +87,8 @@ class JournalController extends Controller
             'is_private' => 'nullable|boolean',
             'weather' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:7',
+            'cover_image' => 'nullable|string',
         ]);
 
         $journal->update($validated);

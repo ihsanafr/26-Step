@@ -15,33 +15,15 @@ const ModuleSidebar: React.FC = () => {
   const isActive = useCallback(
     (path: string) => {
       const currentPath = location.pathname;
-      
-      // Exact match
-      if (currentPath === path) return true;
-      
-      // For base path like /tasks, only match if current path is exactly /tasks (not /tasks/list, etc)
-      if (path === "/tasks" && currentPath === "/tasks") return true;
-      if (path === "/tasks" && currentPath.startsWith("/tasks/")) return false;
-      
-      // For base path like /habits, only match if current path is exactly /habits (not /habits/list, etc)
-      if (path === "/habits" && currentPath === "/habits") return true;
-      if (path === "/habits" && currentPath.startsWith("/habits/")) return false;
 
-      // For base path like /productivity, only match if current path is exactly /productivity (not /productivity/pomodoro, etc)
-      if (path === "/productivity" && currentPath === "/productivity") return true;
-      if (path === "/productivity" && currentPath.startsWith("/productivity/")) return false;
-      
-      // For other paths, check if current path starts with menu path
-      if (currentPath.startsWith(path + "/") || currentPath === path) {
-        // Make sure we're not matching a shorter path when we should match exact
-        // e.g., /tasks should not match /tasks/list
-        if (path.length < currentPath.length && !currentPath.startsWith(path + "/")) {
-          return false;
-        }
-        return true;
+      // Root module items like "/journals" should only be active on exact match (not on "/journals/list").
+      const isRootModulePath = path.split("/").filter(Boolean).length === 1;
+      if (isRootModulePath) {
+        return currentPath === path || currentPath === `${path}/`;
       }
-      
-      return false;
+
+      // Non-root items can match exact or nested routes.
+      return currentPath === path || currentPath.startsWith(path + "/");
     },
     [location.pathname]
   );

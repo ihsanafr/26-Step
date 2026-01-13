@@ -20,6 +20,8 @@ class Journal extends Model
         'is_private',
         'weather',
         'location',
+        'color',
+        'cover_image',
     ];
 
     protected function casts(): array
