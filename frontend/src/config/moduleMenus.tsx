@@ -79,12 +79,12 @@ export const moduleMenus: Record<string, MenuItem[]> = {
     },
     {
       icon: <CalenderIcon className="w-5 h-5" />,
-      name: "Jadwal",
+      name: "Schedule",
       path: "/productivity/schedule",
     },
     {
       icon: <FileIcon className="w-5 h-5" />,
-      name: "Laporan",
+      name: "Reports",
       path: "/productivity/reports",
     },
   ],

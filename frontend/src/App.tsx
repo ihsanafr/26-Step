@@ -3,6 +3,8 @@ import { useAuth } from "./context/AuthContext";
 import SimpleLayout from "./layout/SimpleLayout";
 import ModuleLayout from "./layout/ModuleLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
+import { PomodoroProvider } from "./context/PomodoroContext";
+import PomodoroMiniWidget from "./components/productivity/PomodoroMiniWidget";
 
 // Pages
 import Home from "./pages/Home";
@@ -42,77 +44,89 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Router>
       <ScrollToTop />
-      <Routes>
-        {/* Public Routes */}
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/register" 
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/" 
-          element={
-            <PublicRoute>
-              <Home />
-            </PublicRoute>
-          } 
-        />
+      <PomodoroProvider>
+        {/* Show the mini widget across the whole app (while authenticated) */}
+        {isAuthenticated ? <PomodoroMiniWidget /> : null}
 
-        {/* Dashboard Route - Simple Layout (no sidebar) */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <SimpleLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
+        <Routes>
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <Home />
+              </PublicRoute>
+            }
+          />
 
-        {/* Module Routes - Module Layout (with sidebar) */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <ModuleLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Tasks routes - more specific routes first */}
-          <Route path="/tasks/guide" element={<TasksGuide />} />
-          <Route path="/tasks/list" element={<Tasks />} />
-          <Route path="/tasks/targets/:id" element={<TargetDetail />} />
-          <Route path="/tasks/targets" element={<Tasks />} />
-          <Route path="/tasks/categories" element={<Tasks />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/finance" element={<Finance />} />
-          <Route path="/productivity" element={<Productivity />} />
-          {/* Habits routes - more specific routes first */}
-          <Route path="/habits/guide" element={<Habits />} />
-          <Route path="/habits/list" element={<Habits />} />
-          <Route path="/habits/streaks" element={<Habits />} />
-          <Route path="/habits/:id" element={<HabitDetail />} />
-          <Route path="/habits" element={<Habits />} />
-          <Route path="/storage" element={<Storage />} />
-          <Route path="/journals" element={<Journals />} />
-        </Route>
+          {/* Dashboard Route - Simple Layout (no sidebar) */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <SimpleLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
 
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Module Routes - Module Layout (with sidebar) */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <ModuleLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Tasks routes - more specific routes first */}
+            <Route path="/tasks/guide" element={<TasksGuide />} />
+            <Route path="/tasks/list" element={<Tasks />} />
+            <Route path="/tasks/targets/:id" element={<TargetDetail />} />
+            <Route path="/tasks/targets" element={<Tasks />} />
+            <Route path="/tasks/categories" element={<Tasks />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/finance" element={<Finance />} />
+            {/* Productivity routes - more specific routes first */}
+            <Route path="/productivity/guide" element={<Productivity />} />
+            <Route path="/productivity/pomodoro" element={<Productivity />} />
+            <Route path="/productivity/schedule" element={<Productivity />} />
+            <Route path="/productivity/reports" element={<Productivity />} />
+            <Route path="/productivity" element={<Productivity />} />
+            {/* Habits routes - more specific routes first */}
+            <Route path="/habits/guide" element={<Habits />} />
+            <Route path="/habits/list" element={<Habits />} />
+            <Route path="/habits/streaks" element={<Habits />} />
+            <Route path="/habits/:id" element={<HabitDetail />} />
+            <Route path="/habits" element={<Habits />} />
+            <Route path="/storage" element={<Storage />} />
+            <Route path="/journals" element={<Journals />} />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </PomodoroProvider>
     </Router>
   );
 }

@@ -1,26 +1,65 @@
+import { useLocation } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import ProductivityOverview from "../../components/productivity/ProductivityOverview";
+import PomodoroPage from "../../components/productivity/PomodoroPage";
+import ReportsPage from "../../components/productivity/ReportsPage";
+import SchedulePage from "../../components/productivity/SchedulePage";
+import ProductivityGuide from "../../components/productivity/ProductivityGuide";
 
 export default function Productivity() {
+  const location = useLocation();
+  const path = location.pathname;
+
+  if (path === "/productivity" || path === "/productivity/") {
+    return (
+      <>
+        <PageMeta title="Productivity & Time - Lifesync" description="Time tracking, focus, and planning" />
+        <ProductivityOverview />
+      </>
+    );
+  }
+
+  // Temporary placeholders for upcoming sub-pages (will be implemented next)
+  if (path === "/productivity/pomodoro") {
+    return (
+      <>
+        <PageMeta title="Pomodoro - Lifesync" description="Run focus sessions" />
+        <PomodoroPage />
+      </>
+    );
+  }
+
+  if (path === "/productivity/schedule") {
+    return (
+      <>
+        <PageMeta title="Schedule - Lifesync" description="Plan your day" />
+        <SchedulePage />
+      </>
+    );
+  }
+
+  if (path === "/productivity/reports") {
+    return (
+      <>
+        <PageMeta title="Reports - Lifesync" description="Review your time logs" />
+        <ReportsPage />
+      </>
+    );
+  }
+
+  if (path === "/productivity/guide") {
+    return (
+      <>
+        <PageMeta title="Productivity Guide - Lifesync" description="How to use Productivity & Time module" />
+        <ProductivityGuide />
+      </>
+    );
+  }
+
   return (
     <>
-      <PageMeta
-        title="Productivity & Time - 26-step"
-        description="Time tracking and increase productivity"
-      />
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white md:text-4xl">
-          Productivity & Time
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Time tracking and increase productivity
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-        <p className="text-gray-600 dark:text-gray-400">
-          Productivity module content will be migrated here. This is a placeholder page.
-        </p>
-      </div>
+      <PageMeta title="Productivity & Time - Lifesync" description="Time tracking, focus, and planning" />
+      <ProductivityOverview />
     </>
   );
 }

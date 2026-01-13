@@ -26,6 +26,10 @@ const ModuleSidebar: React.FC = () => {
       // For base path like /habits, only match if current path is exactly /habits (not /habits/list, etc)
       if (path === "/habits" && currentPath === "/habits") return true;
       if (path === "/habits" && currentPath.startsWith("/habits/")) return false;
+
+      // For base path like /productivity, only match if current path is exactly /productivity (not /productivity/pomodoro, etc)
+      if (path === "/productivity" && currentPath === "/productivity") return true;
+      if (path === "/productivity" && currentPath.startsWith("/productivity/")) return false;
       
       // For other paths, check if current path starts with menu path
       if (currentPath.startsWith(path + "/") || currentPath === path) {
