@@ -67,12 +67,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Files
     Route::apiResource('files', FileController::class);
+    Route::get('files/{file}/download', [FileController::class, 'download']);
     Route::post('files/upload', [FileController::class, 'upload']);
 
     // Links
     Route::apiResource('links', LinkController::class);
 
     // Journals
+    Route::post('journals/cover', [JournalController::class, 'uploadCover']);
+    Route::post('journals/content-image', [JournalController::class, 'uploadContentImage']);
     Route::apiResource('journals', JournalController::class);
 });
 

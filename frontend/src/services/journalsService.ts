@@ -61,6 +61,146 @@ export const journalsService = {
     return response.data;
   },
 
+  async uploadCover(file: File): Promise<{ url: string; path: string }> {
+    console.log("🔵 [journalsService] uploadCover called with file:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+    
+    // Validate file
+    if (!file) {
+      throw new Error("No file provided");
+    }
+    
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error("File must be an image");
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("File size exceeds 5MB limit");
+    }
+    
+    const form = new FormData();
+    form.append("cover", file, file.name);
+    
+    console.log("🔵 [journalsService] Sending POST to /journals/cover", {
+      formDataKeys: Array.from(form.keys()),
+      fileInForm: form.has('cover'),
+      fileObject: form.get('cover'),
+    });
+    
+    try {
+      // Create axios config that bypasses the default headers
+      const response = await api.post("/journals/cover", form, {
+        headers: {
+          'Content-Type': undefined, // Let browser set it with boundary
+        },
+        transformRequest: [(data) => data], // Don't transform FormData
+      });
+      console.log("🟢 [journalsService] Upload response:", response.data);
+      
+      if (!response.data?.url) {
+        throw new Error("Invalid response from server: missing URL");
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ [journalsService] Upload cover error:", {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+      });
+      
+      // Extract error message from response
+      let errorMessage = "Failed to upload cover image";
+      if (error?.response?.data) {
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.errors) {
+          const errors = error.response.data.errors;
+          const errorArray = Object.values(errors).flat() as string[];
+          errorMessage = errorArray.join(', ') || errorMessage;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  },
+
+  async uploadContentImage(file: File): Promise<{ url: string; path: string }> {
+    console.log("🔵 [journalsService] uploadContentImage called with file:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+    
+    // Validate file
+    if (!file) {
+      throw new Error("No file provided");
+    }
+    
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error("File must be an image");
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("File size exceeds 5MB limit");
+    }
+    
+    const form = new FormData();
+    form.append("image", file, file.name);
+    
+    console.log("🔵 [journalsService] Sending POST to /journals/content-image", {
+      formDataKeys: Array.from(form.keys()),
+      fileInForm: form.has('image'),
+      fileObject: form.get('image'),
+    });
+    
+    try {
+      // Create axios config that bypasses the default headers
+      const response = await api.post("/journals/content-image", form, {
+        headers: {
+          'Content-Type': undefined, // Let browser set it with boundary
+        },
+        transformRequest: [(data) => data], // Don't transform FormData
+      });
+      console.log("🟢 [journalsService] Upload response:", response.data);
+      
+      if (!response.data?.url) {
+        throw new Error("Invalid response from server: missing URL");
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ [journalsService] Upload content image error:", {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+      });
+      
+      // Extract error message from response
+      let errorMessage = "Failed to upload image";
+      if (error?.response?.data) {
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.errors) {
+          const errors = error.response.data.errors;
+          const errorArray = Object.values(errors).flat() as string[];
+          errorMessage = errorArray.join(', ') || errorMessage;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  },
+
   async delete(id: number): Promise<void> {
     await api.delete(`/journals/${id}`);
   },

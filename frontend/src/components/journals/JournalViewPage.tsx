@@ -7,7 +7,9 @@ import { formatIndonesianDate } from "../../utils/date";
 import { getMoodEmoji, getWeatherEmoji } from "../../utils/journal";
 import { stripHtml } from "../../utils/text";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import AlertModal from "../common/AlertModal";
 import Button from "../ui/button/Button";
+import { resolveAssetUrl } from "../../utils/url";
 
 export default function JournalViewPage() {
   const navigate = useNavigate();
@@ -16,6 +18,12 @@ export default function JournalViewPage() {
   const [journal, setJournal] = useState<Journal | null>(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [alertModal, setAlertModal] = useState<{ open: boolean; title: string; message: string; type?: "error" | "warning" | "info" | "success" }>({
+    open: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -29,8 +37,15 @@ export default function JournalViewPage() {
         setJournal(data);
       } catch (e: any) {
         console.error("Error loading journal:", e);
-        alert("Failed to load journal. Redirecting...");
-        navigate("/journals/list");
+        setAlertModal({
+          open: true,
+          title: "Error",
+          message: "Failed to load journal. Redirecting...",
+          type: "error",
+        });
+        setTimeout(() => {
+          navigate("/journals/list");
+        }, 2000);
       } finally {
         setLoading(false);
       }
@@ -46,7 +61,12 @@ export default function JournalViewPage() {
       navigate("/journals/list");
     } catch (e: any) {
       console.error("Error deleting journal:", e);
-      alert("Failed to delete journal. Please try again.");
+      setAlertModal({
+        open: true,
+        title: "Error",
+        message: "Failed to delete journal. Please try again.",
+        type: "error",
+      });
     } finally {
       setDeleting(false);
       setDeleteModal(false);
@@ -117,7 +137,7 @@ export default function JournalViewPage() {
         {/* Cover Image or Color Header - Using User's Color */}
         {hasCover ? (
           <div className="relative h-64 w-full overflow-hidden">
-            <img src={journal.cover_image!} alt={journal.title} className="h-full w-full object-cover" />
+            <img src={resolveAssetUrl(journal.cover_image!)} alt={journal.title} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           </div>
         ) : (
@@ -180,6 +200,14 @@ export default function JournalViewPage() {
         isLoading={deleting}
         title="Delete Journal Entry"
         message={`Are you sure you want to delete "${journal.title}"? This action cannot be undone.`}
+      />
+
+      <AlertModal
+        isOpen={alertModal.open}
+        onClose={() => setAlertModal({ open: false, title: "", message: "" })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
       />
     </div>
   );

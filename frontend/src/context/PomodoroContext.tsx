@@ -82,9 +82,36 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
       setCategory(parsed.category ?? "Focus");
       setNotes(parsed.notes ?? "");
       setWidgetDismissed(!!parsed.widgetDismissed);
-      endAtMsRef.current = parsed.endAtMs ?? null;
-      setIsRunning(!!parsed.isRunning && !!parsed.endAtMs);
-      setSecondsLeft(typeof parsed.secondsLeft === "number" ? parsed.secondsLeft : totalSecondsForMode);
+      
+      const wasRunning = !!parsed.isRunning && !!parsed.endAtMs;
+      
+      if (wasRunning && parsed.endAtMs) {
+        // Timer was running, recalculate secondsLeft based on endAtMs
+        const now = Date.now();
+        const remainingMs = parsed.endAtMs - now;
+        const recalculatedSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+        
+        if (recalculatedSeconds > 0) {
+          // Timer is still valid, continue running
+          setSecondsLeft(recalculatedSeconds);
+          endAtMsRef.current = parsed.endAtMs; // Keep original endAtMs
+          setIsRunning(true);
+        } else {
+          // Timer expired while away
+          const totalSecondsForCurrentMode = Math.max(1, Math.round((parsed.durations ?? DEFAULTS)[parsed.mode ?? "focus"] * 60));
+          setSecondsLeft(totalSecondsForCurrentMode);
+          endAtMsRef.current = null;
+          setIsRunning(false);
+        }
+      } else {
+        // Timer was paused, use saved secondsLeft
+        const totalSecondsForCurrentMode = Math.max(1, Math.round((parsed.durations ?? DEFAULTS)[parsed.mode ?? "focus"] * 60));
+        setSecondsLeft(typeof parsed.secondsLeft === "number" && parsed.secondsLeft >= 0 && parsed.secondsLeft <= totalSecondsForCurrentMode 
+          ? parsed.secondsLeft 
+          : totalSecondsForCurrentMode);
+        endAtMsRef.current = null;
+        setIsRunning(false);
+      }
     } catch {
       // ignore
     }
@@ -113,33 +140,44 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   // Keep secondsLeft accurate even when tab is in background
   const recompute = useCallback(() => {
-    if (!isRunning) return;
     const endAt = endAtMsRef.current;
     if (!endAt) return;
     const now = Date.now();
     const next = Math.max(0, Math.ceil((endAt - now) / 1000));
     setSecondsLeft(next);
-  }, [isRunning]);
+    // If timer reached 0, stop it
+    if (next === 0) {
+      endAtMsRef.current = null;
+      setIsRunning(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isRunning) {
-      if (tickRef.current) window.clearInterval(tickRef.current);
-      tickRef.current = null;
+      if (tickRef.current) {
+        window.clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
       return;
     }
+    
+    // Only start interval if endAtMs is set
+    if (!endAtMsRef.current) {
+      setIsRunning(false);
+      return;
+    }
+    
+    // Recompute immediately
     recompute();
+    // Then set up interval
     tickRef.current = window.setInterval(recompute, 1000);
     return () => {
-      if (tickRef.current) window.clearInterval(tickRef.current);
-      tickRef.current = null;
+      if (tickRef.current) {
+        window.clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
     };
   }, [isRunning, recompute]);
-
-  // When mode or duration changes and timer is not running, reset secondsLeft
-  useEffect(() => {
-    if (isRunning) return;
-    setSecondsLeft(totalSecondsForMode);
-  }, [isRunning, totalSecondsForMode]);
 
   const setMeta = useCallback((meta: { activity?: string; category?: string; notes?: string }) => {
     if (typeof meta.activity === "string") setActivity(meta.activity);
@@ -147,21 +185,63 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     if (typeof meta.notes === "string") setNotes(meta.notes);
   }, []);
 
+  // Wrapper for setMode to reset secondsLeft when mode changes (only if not running)
+  const handleSetMode = useCallback((newMode: PomodoroMode) => {
+    setMode(newMode);
+    if (!isRunning) {
+      const newTotal = Math.max(1, Math.round(durations[newMode] * 60));
+      setSecondsLeft(newTotal);
+    }
+  }, [isRunning, durations]);
+
+  // Wrapper for setDurations to reset secondsLeft when durations change (only if not running)
+  const handleSetDurations = useCallback((newDurations: PomodoroDurations) => {
+    setDurations(newDurations);
+    if (!isRunning) {
+      const newTotal = Math.max(1, Math.round(newDurations[mode] * 60));
+      setSecondsLeft(newTotal);
+    }
+  }, [isRunning, mode]);
+
   const start = useCallback(() => {
     if (isRunning) return;
     const now = Date.now();
-    endAtMsRef.current = now + secondsLeft * 1000;
+    const endAt = now + secondsLeft * 1000;
+    endAtMsRef.current = endAt;
+    // Immediately persist to ensure endAtMs is saved
+    try {
+      const data: Persisted = {
+        mode,
+        durations,
+        isRunning: true,
+        endAtMs: endAt,
+        secondsLeft,
+        activity,
+        category,
+        notes,
+        widgetDismissed: false,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore
+    }
     setIsRunning(true);
     setWidgetDismissed(false);
     setLastMessage(null);
-  }, [isRunning, secondsLeft]);
+  }, [isRunning, secondsLeft, mode, durations, activity, category, notes]);
 
   const pause = useCallback(() => {
     if (!isRunning) return;
-    recompute();
+    // Calculate remaining seconds before clearing endAtMs
+    const endAt = endAtMsRef.current;
+    if (endAt) {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.ceil((endAt - now) / 1000));
+      setSecondsLeft(remaining);
+    }
     endAtMsRef.current = null;
     setIsRunning(false);
-  }, [isRunning, recompute]);
+  }, [isRunning]);
 
   const reset = useCallback(() => {
     endAtMsRef.current = null;
@@ -233,8 +313,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isRunning) return;
     if (secondsLeft > 0) return;
-    endAtMsRef.current = null;
-    setIsRunning(false);
+    // Timer finished - already handled in recompute
     void saveIfFinished();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, isRunning]);
@@ -249,8 +328,8 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     notes,
     widgetDismissed,
     lastMessage,
-    setMode,
-    setDurations,
+    setMode: handleSetMode,
+    setDurations: handleSetDurations,
     setMeta,
     start,
     pause,

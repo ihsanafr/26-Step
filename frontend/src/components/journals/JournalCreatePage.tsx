@@ -8,6 +8,7 @@ import RichTextEditor from "../common/RichTextEditor";
 import { stripHtml } from "../../utils/text";
 import { ChevronLeftIcon } from "../../icons";
 import { getMoodEmoji, getWeatherEmoji, JOURNAL_COLORS } from "../../utils/journal";
+import AlertModal from "../common/AlertModal";
 
 type FormData = {
   title: string;
@@ -18,7 +19,7 @@ type FormData = {
   location: string;
   is_private: boolean;
   color: string;
-  cover_image: string;
+  cover_image: string; // URL (persisted)
 };
 
 const MOODS = ["Happy", "Calm", "Grateful", "Excited", "Neutral", "Stressed", "Sad", "Angry"];
@@ -48,6 +49,14 @@ export default function JournalCreatePage() {
 
   const [form, setForm] = useState<FormData>(initial);
   const [saving, setSaving] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>("");
+  const [alertModal, setAlertModal] = useState<{ open: boolean; title: string; message: string; type?: "error" | "warning" | "info" | "success" }>({
+    open: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   // Ensure color always has a value
   useEffect(() => {
@@ -59,31 +68,82 @@ export default function JournalCreatePage() {
   const handleCoverUpload: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = () => reject(new Error("Failed to read image"));
-        r.readAsDataURL(file);
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setAlertModal({
+        open: true,
+        title: "Invalid File Type",
+        message: "Please select an image file.",
+        type: "error",
       });
-      setForm((f) => ({ ...f, cover_image: dataUrl }));
+      if (e.target) e.target.value = "";
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setAlertModal({
+        open: true,
+        title: "File Too Large",
+        message: "Image size must be less than 5MB. Please choose a smaller image.",
+        type: "error",
+      });
+      if (e.target) e.target.value = "";
+      return;
+    }
+
+    try {
+      // Preview locally (do not store base64 in DB)
+      const url = URL.createObjectURL(file);
+      // Revoke previous preview
+      setCoverPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      setCoverFile(file);
+      // Clear persisted cover_image URL until we upload on save
+      setForm((f) => ({ ...f, cover_image: "" }));
     } catch (err) {
-      console.error("Error reading image:", err);
+      console.error("Error preparing image:", err);
+      setAlertModal({
+        open: true,
+        title: "Upload Error",
+        message: "Failed to prepare image. Please try again.",
+        type: "error",
+      });
     } finally {
       if (e.target) e.target.value = "";
     }
   };
 
   const handleRemoveCover = () => {
+    setCoverFile(null);
+    setCoverPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return "";
+    });
     setForm((f) => ({ ...f, cover_image: "" }));
   };
+
+  useEffect(() => {
+    return () => {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    };
+  }, [coverPreviewUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
     if (!form.title.trim()) {
-      alert("Please enter a title");
+      setAlertModal({
+        open: true,
+        title: "Validation Error",
+        message: "Please enter a title for your journal entry.",
+        type: "warning",
+      });
       return;
     }
     
@@ -95,6 +155,35 @@ export default function JournalCreatePage() {
 
     try {
       setSaving(true);
+
+      let coverImageToSave: string | null = form.cover_image || null;
+      if (coverFile) {
+        console.log("🔵 [JournalCreate] Uploading cover file:", {
+          fileName: coverFile.name,
+          fileSize: coverFile.size,
+          fileType: coverFile.type,
+        });
+        try {
+        const uploaded = await journalsService.uploadCover(coverFile);
+        console.log("🟢 [JournalCreate] Upload response:", uploaded);
+          if (!uploaded.url) {
+            throw new Error("Server did not return cover image URL");
+          }
+        coverImageToSave = uploaded.url;
+        } catch (uploadError: any) {
+          console.error("❌ [JournalCreate] Cover upload error:", uploadError);
+          const errorMessage = uploadError?.response?.data?.message || uploadError?.message || "Failed to upload cover image";
+          setAlertModal({
+            open: true,
+            title: "Upload Error",
+            message: errorMessage,
+            type: "error",
+          });
+          setSaving(false);
+          return;
+        }
+      }
+
       const journalData = {
         title: form.title.trim(),
         content: form.content || "",
@@ -104,14 +193,21 @@ export default function JournalCreatePage() {
         location: form.location || null,
         is_private: form.is_private,
         color: colorToSave,
-        cover_image: form.cover_image || null,
+        cover_image: coverImageToSave,
       };
-      await journalsService.create(journalData);
+      console.log("🔵 [JournalCreate] Creating journal with data:", journalData);
+      const created = await journalsService.create(journalData);
+      console.log("🟢 [JournalCreate] Journal created:", created);
       navigate("/journals/list");
     } catch (e: any) {
       console.error("Error creating journal:", e);
       const errorMessage = e?.response?.data?.message || e?.message || "Failed to save journal. Please try again.";
-      alert(errorMessage);
+      setAlertModal({
+        open: true,
+        title: "Error",
+        message: errorMessage,
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -240,30 +336,44 @@ export default function JournalCreatePage() {
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Cover Image (optional)</label>
               <input
                 ref={coverInputRef}
+                id="journal-cover-upload"
                 type="file"
                 accept="image/*"
-                className="hidden"
+                className="sr-only"
                 onChange={handleCoverUpload}
               />
-              {form.cover_image ? (
-                <div className="relative">
-                  <img src={form.cover_image} alt="Cover" className="h-40 w-full rounded-xl object-cover" />
+              {(coverPreviewUrl || form.cover_image) ? (
+                <div className="relative group">
+                  <img src={coverPreviewUrl || form.cover_image} alt="Cover" className="h-40 w-full rounded-xl object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 group-hover:bg-black/20 transition-colors">
+                    <label
+                      htmlFor="journal-cover-upload"
+                      className="opacity-0 group-hover:opacity-100 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-900 transition-opacity hover:bg-white cursor-pointer"
+                    >
+                      Change Image
+                    </label>
+                  </div>
                   <button
                     type="button"
                     onClick={handleRemoveCover}
                     className="absolute right-2 top-2 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600"
                   >
-                    Remove Cover
+                    Remove
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => coverInputRef.current?.click()}
-                  className="flex h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-sm text-gray-600 transition hover:border-brand-400 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-brand-500"
+                <label
+                  htmlFor="journal-cover-upload"
+                  className="flex h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-sm text-gray-600 transition hover:border-brand-400 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-brand-500 cursor-pointer"
                 >
-                  Click to upload cover image
-                </button>
+                  <div className="text-center">
+                    <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="mt-2">Click to upload cover image</p>
+                    <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                  </div>
+                </label>
               )}
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 Upload a cover image for your journal. If not provided, the selected color will be used.
@@ -294,6 +404,14 @@ export default function JournalCreatePage() {
           </label>
         </form>
       </div>
+
+      <AlertModal
+        isOpen={alertModal.open}
+        onClose={() => setAlertModal({ open: false, title: "", message: "" })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </div>
   );
 }

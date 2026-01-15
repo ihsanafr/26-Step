@@ -9,6 +9,7 @@ import { FileIcon, MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, 
 import { stripHtml } from "../../utils/text";
 import { formatIndonesianDate } from "../../utils/date";
 import { getMoodEmoji, getWeatherEmoji, getJournalCardGradient } from "../../utils/journal";
+import { resolveAssetUrl } from "../../utils/url";
 
 export default function JournalList() {
   const navigate = useNavigate();
@@ -222,35 +223,47 @@ export default function JournalList() {
             return (
               <div
                 key={j.id}
-                className="group relative overflow-hidden rounded-2xl border shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02]"
+                className={`group relative flex flex-col overflow-hidden rounded-2xl shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] ${
+                  hasCover ? "" : "border"
+                }`}
                 style={{
-                  backgroundColor: hasCover ? undefined : hexToRgba(cardColor, 0.1),
-                  borderColor: hasCover ? undefined : hexToRgba(cardColor, 0.3),
+                  backgroundColor: hexToRgba(cardColor, 0.08),
+                  borderColor: hasCover ? "transparent" : hexToRgba(cardColor, 0.3),
                 }}
               >
                 {/* Header: Cover Image or Color */}
                 <div className="relative h-24 w-full overflow-hidden">
                   {j.cover_image ? (
-                    <>
-                      <img
-                        src={j.cover_image}
-                        alt={j.title}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          // Fallback to color if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const parent = target.parentElement;
-                          if (parent && j.color) {
-                            parent.style.backgroundColor = j.color;
-                          }
-                        }}
-                      />
-                    </>
+                    <img
+                      src={resolveAssetUrl(j.cover_image)}
+                      alt={j.title}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        // Fallback to color if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent && j.color) {
+                          parent.style.backgroundColor = j.color;
+                        }
+                      }}
+                    />
                   ) : j.color ? (
                     <div className="h-full w-full" style={{ backgroundColor: cardColor }} />
                   ) : (
                     <div className="h-full w-full" style={{ backgroundColor: cardColor }} />
+                  )}
+                  
+                  {/* Mood Emoji Box - Top Left Corner */}
+                  {j.mood && (
+                    <div 
+                      className="absolute left-3 top-3 flex items-center justify-center rounded-2xl shadow-2xl backdrop-blur-md bg-white/85 dark:bg-black/70"
+                      style={{
+                        boxShadow: `0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
+                      }}
+                    >
+                      <span className="p-2.5 text-2xl">{getMoodEmoji(j.mood)}</span>
+                    </div>
                   )}
                 </div>
 
@@ -258,7 +271,7 @@ export default function JournalList() {
                 <div 
                   className="flex items-start justify-between gap-3 border-b px-6 py-4"
                   style={{
-                    borderColor: hasCover ? undefined : hexToRgba(cardColor, 0.2),
+                    borderColor: hexToRgba(cardColor, 0.2),
                   }}
                 >
                   <div className="min-w-0 flex-1">
@@ -324,18 +337,17 @@ export default function JournalList() {
                   </div>
                 </div>
 
-                {/* Content */}
+                {/* Content - flex-grow to push button to bottom */}
                 <div 
-                  className="p-6"
+                  className="flex-grow p-6"
                   style={{
-                    backgroundColor: hasCover ? undefined : hexToRgba(cardColor, 0.05),
+                    backgroundColor: hexToRgba(cardColor, 0.05),
                   }}
                 >
                   {/* Metadata and Content */}
                   <div className="space-y-3">
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                       {formatIndonesianDate(j.date || "")}
-                      {j.mood ? ` • ${getMoodEmoji(j.mood)} ${j.mood}` : ""}
                       {j.weather ? ` • ${getWeatherEmoji(j.weather)} ${j.weather}` : ""}
                       {j.location ? ` • ${j.location}` : ""}
                     </p>
@@ -345,12 +357,14 @@ export default function JournalList() {
                       {stripHtml(j.content)}
                     </p>
                   </div>
+                </div>
 
-                  {/* View button */}
+                {/* View button - at the bottom of card */}
+                <div className="p-4 pt-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => navigate(`/journals/view/${j.id}`)}
-                    className="mt-4 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition"
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition"
                     style={{
                       backgroundColor: cardColor,
                     }}

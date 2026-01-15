@@ -18,6 +18,13 @@ class FileController extends Controller
         }
 
         $files = $query->orderBy('created_at', 'desc')->get();
+        
+        // Add URL to each file
+        $appUrl = config('app.url');
+        $files->transform(function ($file) use ($appUrl) {
+            $file->url = rtrim($appUrl, '/') . '/storage/' . $file->path;
+            return $file;
+        });
 
         return response()->json($files);
     }
@@ -51,9 +58,13 @@ class FileController extends Controller
         ]);
 
         $uploadedFiles = [];
+        $appUrl = config('app.url');
 
         foreach ($request->file('files') as $uploadedFile) {
             $path = $uploadedFile->store('files/' . $request->user()->id, 'public');
+            
+            // Generate absolute URL
+            $absoluteUrl = rtrim($appUrl, '/') . '/storage/' . $path;
             
             $file = File::create([
                 'user_id' => $request->user()->id,
@@ -66,6 +77,8 @@ class FileController extends Controller
                 'description' => $request->description,
             ]);
 
+            // Add URL to response
+            $file->url = $absoluteUrl;
             $uploadedFiles[] = $file;
         }
 
@@ -76,6 +89,10 @@ class FileController extends Controller
     {
         $file = File::where('user_id', $request->user()->id)
             ->findOrFail($id);
+
+        // Add URL
+        $appUrl = config('app.url');
+        $file->url = rtrim($appUrl, '/') . '/storage/' . $file->path;
 
         return response()->json($file);
     }
@@ -109,5 +126,20 @@ class FileController extends Controller
         $file->delete();
 
         return response()->json(['message' => 'File deleted successfully']);
+    }
+
+    public function download(Request $request, string $id)
+    {
+        $file = File::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!Storage::disk('public')->exists($file->path)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        $absolutePath = Storage::disk('public')->path($file->path);
+        $downloadName = $file->original_name ?: ($file->name ?: basename($file->path));
+
+        return response()->download($absolutePath, $downloadName);
     }
 }

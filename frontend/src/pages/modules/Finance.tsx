@@ -1,26 +1,64 @@
+import { useLocation } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import FinanceOverview from "../../components/finance/FinanceOverview";
+import TransactionsList from "../../components/finance/TransactionsList";
+import BudgetsList from "../../components/finance/BudgetsList";
+import FinanceCategories from "../../components/finance/FinanceCategories";
+import FinanceGuide from "../../components/finance/FinanceGuide";
 
 export default function Finance() {
+  const location = useLocation();
+  const path = location.pathname;
+
+  if (path === "/finance" || path === "/finance/") {
+    return (
+      <>
+        <PageMeta title="Personal Finance - Lifesync" description="Kelola transaksi, budget, dan kategori" />
+        <FinanceOverview />
+      </>
+    );
+  }
+
+  if (path === "/finance/transactions") {
+    return (
+      <>
+        <PageMeta title="Transaksi - Lifesync" description="Catat pemasukan dan pengeluaran" />
+        <TransactionsList />
+      </>
+    );
+  }
+
+  if (path === "/finance/budget") {
+    return (
+      <>
+        <PageMeta title="Budget - Lifesync" description="Atur budget pengeluaran" />
+        <BudgetsList />
+      </>
+    );
+  }
+
+  if (path === "/finance/categories") {
+    return (
+      <>
+        <PageMeta title="Kategori - Lifesync" description="Kelola kategori transaksi" />
+        <FinanceCategories />
+      </>
+    );
+  }
+
+  if (path === "/finance/guide") {
+    return (
+      <>
+        <FinanceGuide />
+      </>
+    );
+  }
+
+
   return (
     <>
-      <PageMeta
-        title="Personal Finance - 26-step"
-        description="Manage your finances, budgets, and savings"
-      />
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white md:text-4xl">
-          Personal Finance
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Manage your finances, budgets, and savings
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-        <p className="text-gray-600 dark:text-gray-400">
-          Finance module content will be migrated here. This is a placeholder page.
-        </p>
-      </div>
+      <PageMeta title="Personal Finance - Lifesync" description="Kelola transaksi, budget, dan kategori" />
+      <FinanceOverview />
     </>
   );
 }

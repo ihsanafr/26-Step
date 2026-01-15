@@ -13,13 +13,49 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     console.log('🔐 API Request:', config.method?.toUpperCase(), config.url);
-    console.log('📦 API Request Data:', config.data);
+    
+    // Don't log FormData content (too large)
+    if (config.data instanceof FormData) {
+      console.log('📦 API Request Data: FormData (multipart/form-data)');
+      console.log('📦 FormData keys:', Array.from(config.data.keys()));
+    } else {
+      console.log('📦 API Request Data:', config.data);
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
       console.log('✅ Token attached to request');
     } else {
       console.warn('⚠️ No token found in localStorage');
     }
+    
+    // For FormData, ensure Content-Type is not set (let browser/axios set it with boundary)
+    if (config.data instanceof FormData) {
+      // Remove all Content-Type related headers
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+      delete config.headers['Accept'];
+      
+      // Also remove from common headers
+      if (config.headers.common) {
+        delete config.headers.common['Content-Type'];
+        delete config.headers.common['content-type'];
+      }
+      
+      // And from post headers
+      if (config.headers.post) {
+        delete config.headers.post['Content-Type'];
+        delete config.headers.post['content-type'];
+      }
+      
+      console.log('✅ Content-Type removed for FormData (browser will set it)');
+    }
+    
+    console.log('📤 Final headers:', {
+      ...config.headers,
+      Authorization: config.headers.Authorization ? '***' : undefined
+    });
+    
     return config
   },
   (error) => {

@@ -60,7 +60,7 @@ export const moduleMenus: Record<string, MenuItem[]> = {
       path: "/finance/budget",
     },
     {
-      icon: <FolderIcon className="w-5 h-5" />,
+      icon: <TagIcon className="w-5 h-5" />,
       name: "Kategori",
       path: "/finance/categories",
     },
@@ -116,11 +116,6 @@ export const moduleMenus: Record<string, MenuItem[]> = {
       path: "/storage/files",
     },
     {
-      icon: <FileIcon className="w-5 h-5" />,
-      name: "Notes",
-      path: "/storage/notes",
-    },
-    {
       icon: <ListIcon className="w-5 h-5" />,
       name: "Links",
       path: "/storage/links",
@@ -136,11 +131,6 @@ export const moduleMenus: Record<string, MenuItem[]> = {
       icon: <FileIcon className="w-5 h-5" />,
       name: "Journal Entries",
       path: "/journals/list",
-    },
-    {
-      icon: <CalenderIcon className="w-5 h-5" />,
-      name: "Calendar",
-      path: "/journals/calendar",
     },
     {
       icon: <ListIcon className="w-5 h-5" />,

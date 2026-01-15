@@ -106,6 +106,10 @@ export default function App() {
             <Route path="/tasks/targets" element={<Tasks />} />
             <Route path="/tasks/categories" element={<Tasks />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/finance/transactions" element={<Finance />} />
+            <Route path="/finance/budget" element={<Finance />} />
+            <Route path="/finance/categories" element={<Finance />} />
+            <Route path="/finance/guide" element={<Finance />} />
             <Route path="/finance" element={<Finance />} />
             {/* Productivity routes - more specific routes first */}
             <Route path="/productivity/guide" element={<Productivity />} />
@@ -119,6 +123,9 @@ export default function App() {
             <Route path="/habits/streaks" element={<Habits />} />
             <Route path="/habits/:id" element={<HabitDetail />} />
             <Route path="/habits" element={<Habits />} />
+            {/* Storage routes - more specific routes first */}
+            <Route path="/storage/files" element={<Storage />} />
+            <Route path="/storage/links" element={<Storage />} />
             <Route path="/storage" element={<Storage />} />
             <Route path="/journals" element={<Journals />} />
           <Route path="/journals/list" element={<Journals />} />

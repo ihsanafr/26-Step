@@ -12,6 +12,8 @@ import FontFamily from "@tiptap/extension-font-family";
 import Image from "@tiptap/extension-image";
 import { Extension } from "@tiptap/core";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { journalsService } from "../../services/journalsService";
+import AlertModal from "./AlertModal";
 
 function ToolbarButton({
   active,
@@ -199,6 +201,15 @@ export default function RichTextEditor({
   const [fontFamily, setFontFamily] = useState<string>("ui-sans-serif");
   const [fontSize, setFontSize] = useState<string>("default");
   const [blockType, setBlockType] = useState<string>("p");
+  const [imageMenuOpen, setImageMenuOpen] = useState(false);
+  const imageMenuRef = useRef<HTMLDivElement | null>(null);
+  const [alertModal, setAlertModal] = useState<{ open: boolean; title: string; message: string; type: "error" | "warning" | "info" | "success" }>({
+    open: false,
+    title: "",
+    message: "",
+    type: "error",
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const FontSize = useMemo(
     () =>
@@ -257,7 +268,11 @@ export default function RichTextEditor({
       FontSize,
       Image.configure({
         inline: false,
-        allowBase64: true,
+        allowBase64: false, // Don't allow base64 to avoid max_allowed_packet issue
+        HTMLAttributes: {
+          class: 'tiptap-image',
+          style: 'max-width: 100%; height: auto; display: block; margin: 1rem auto;',
+        },
       }),
       Video,
       Indent,
@@ -295,6 +310,18 @@ export default function RichTextEditor({
     if (!editor) return;
     editor.setEditable(!readOnly);
   }, [readOnly, editor]);
+
+  // Close image menu when clicking outside
+  useEffect(() => {
+    if (!imageMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (imageMenuRef.current && !imageMenuRef.current.contains(e.target as Node)) {
+        setImageMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [imageMenuOpen]);
 
   if (!editor) {
     return (
@@ -366,9 +393,11 @@ export default function RichTextEditor({
   };
 
   const insertImageFromUrl = () => {
-    const url = window.prompt("Image URL");
+    const url = window.prompt("Image URL (e.g., https://example.com/image.jpg)");
     if (!url) return;
+    console.log("🔵 [RichTextEditor] Inserting image from URL:", url);
     editor.chain().focus().setImage({ src: url }).run();
+    setImageMenuOpen(false);
   };
 
   const insertVideo = () => {
@@ -378,21 +407,86 @@ export default function RichTextEditor({
   };
 
   const triggerImageUpload = () => {
-    fileInputRef.current?.click();
+    console.log("🔵 [RichTextEditor] triggerImageUpload called", fileInputRef.current);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+      setImageMenuOpen(false);
+    } else {
+      console.error("❌ [RichTextEditor] fileInputRef is null");
+    }
   };
 
   const onPickImage: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = () => reject(new Error("Failed to read image"));
-        r.readAsDataURL(file);
+    console.log("🔵 [RichTextEditor] onPickImage called", file?.name);
+    if (!file) {
+      e.target.value = "";
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setAlertModal({
+        open: true,
+        title: "File Too Large",
+        message: "Image size must be less than 5MB. Please choose a smaller image.",
+        type: "warning",
       });
-      editor.chain().focus().setImage({ src: dataUrl, alt: file.name }).run();
+      e.target.value = "";
+      return;
+    }
+
+    // Check file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setAlertModal({
+        open: true,
+        title: "Invalid File Type",
+        message: "Please select a valid image file (JPG, PNG, GIF, or WebP).",
+        type: "warning",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      // Upload to backend instead of using base64
+      console.log("🔵 [RichTextEditor] Uploading image to backend...", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
+      
+      const uploadResponse = await journalsService.uploadContentImage(file);
+      console.log("🟢 [RichTextEditor] Image uploaded successfully", {
+        url: uploadResponse.url,
+        path: uploadResponse.path,
+      });
+      
+      if (!uploadResponse.url) {
+        throw new Error("Server did not return image URL");
+      }
+      
+      // Insert image with URL from backend
+      editor.chain().focus().setImage({ 
+        src: uploadResponse.url, 
+        alt: file.name,
+        title: file.name,
+      }).run();
+      
+      console.log("🟢 [RichTextEditor] Image inserted into editor");
+    } catch (err: any) {
+      console.error("❌ [RichTextEditor] Error uploading image:", err);
+      const errorMessage = err?.response?.data?.message || err?.message || "Failed to upload image. Please try again.";
+      setAlertModal({
+        open: true,
+        title: "Upload Failed",
+        message: errorMessage,
+        type: "error",
+      });
     } finally {
+      setUploadingImage(false);
       // allow picking the same file again
       e.target.value = "";
     }
@@ -558,9 +652,45 @@ export default function RichTextEditor({
           <ToolbarButton title="Unlink" disabled={!editor.isActive("link")} onClick={unsetLink}>
             Unlink
           </ToolbarButton>
-          <ToolbarButton title="Insert image" onClick={triggerImageUpload}>
-            Img
-          </ToolbarButton>
+          
+          {/* Image dropdown */}
+          <div className="relative" ref={imageMenuRef}>
+            <ToolbarButton 
+              title="Insert image" 
+              active={imageMenuOpen}
+              disabled={uploadingImage}
+              onClick={() => setImageMenuOpen(!imageMenuOpen)}
+            >
+              {uploadingImage ? "..." : "Img"}
+            </ToolbarButton>
+            {imageMenuOpen && (
+              <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-300 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                <button
+                  type="button"
+                  onClick={triggerImageUpload}
+                  disabled={uploadingImage}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {uploadingImage ? "Uploading..." : "Upload Image"}
+                </button>
+                <button
+                  type="button"
+                  onClick={insertImageFromUrl}
+                  disabled={uploadingImage}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  Image from URL
+                </button>
+              </div>
+            )}
+          </div>
+          
           <ToolbarButton title="Insert video" onClick={insertVideo}>
             Video
           </ToolbarButton>
@@ -575,9 +705,28 @@ export default function RichTextEditor({
       ) : null}
 
       <div className="p-4 bg-white dark:bg-gray-900">
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
         <EditorContent editor={editor} />
       </div>
+      
+      {/* Hidden file input for image upload */}
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+        className="sr-only" 
+        onChange={onPickImage}
+        disabled={uploadingImage}
+        aria-label="Upload image"
+      />
+      
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal.open}
+        onClose={() => setAlertModal({ ...alertModal, open: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </div>
   );
 }
