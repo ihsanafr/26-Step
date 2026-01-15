@@ -1,12 +1,12 @@
-# Lifesync - Personal Life Management Platform
+# 26-step - Personal Life Management Platform
 
 Platform web modern untuk mengelola berbagai aspek kehidupan sehari-hari dengan tujuan meningkatkan produktivitas, konsistensi, dan keseimbangan hidup.
 
-![Lifesync Dashboard](image.png)
+![26-step Dashboard](image.png)
 
 ## Tentang Aplikasi
 
-Lifesync adalah aplikasi manajemen pribadi yang komprehensif yang membantu Anda mengatur tugas, keuangan, produktivitas, kebiasaan, penyimpanan, dan refleksi harian dalam satu platform terintegrasi.
+26-step adalah aplikasi manajemen pribadi yang komprehensif yang membantu Anda mengatur tugas, keuangan, produktivitas, kebiasaan, penyimpanan, dan refleksi harian dalam satu platform terintegrasi.
 
 ## Fitur Utama
 
@@ -59,7 +59,7 @@ npm run dev
 ## Struktur Proyek
 
 ```
-Lifesync/
+26-step/
 ├── backend/              # Laravel API
 │   ├── app/
 │   ├── database/
