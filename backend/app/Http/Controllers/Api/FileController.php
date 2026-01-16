@@ -18,7 +18,7 @@ class FileController extends Controller
         }
 
         $files = $query->orderBy('created_at', 'desc')->get();
-        
+
         // Add URL to each file
         $appUrl = config('app.url');
         $files->transform(function ($file) use ($appUrl) {

@@ -16,10 +16,12 @@ use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\LinkController;
 use App\Http\Controllers\Api\JournalController;
+use App\Http\Controllers\Api\FeedbackController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/feedback', [FeedbackController::class, 'store']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

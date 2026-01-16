@@ -59,15 +59,18 @@ export default function StorageOverview() {
       try {
         setLoading(true);
         const [f, n, l] = await Promise.all([
-          filesService.getAll(),
-          notesService.getAll(),
-          linksService.getAll(),
+          filesService.getAll().catch(() => []),
+          notesService.getAll().catch(() => []),
+          linksService.getAll().catch(() => []),
         ]);
-        setFiles(f);
-        setNotes(n);
-        setLinks(l);
+        setFiles(f || []);
+        setNotes(n || []);
+        setLinks(l || []);
       } catch (e) {
         console.error("Error loading storage dashboard:", e);
+        setFiles([]);
+        setNotes([]);
+        setLinks([]);
       } finally {
         setLoading(false);
       }
@@ -103,15 +106,6 @@ export default function StorageOverview() {
       textColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: "Total Notes",
-      value: notes.length,
-      icon: FileIcon,
-      color: "from-purple-500 to-purple-600",
-      borderColor: "border-purple-200 dark:border-purple-800",
-      bgColor: "bg-purple-50 dark:bg-purple-950/30",
-      textColor: "text-purple-600 dark:text-purple-400",
-    },
-    {
       label: "Total Links",
       value: links.length,
       icon: LinkIcon,
@@ -128,6 +122,15 @@ export default function StorageOverview() {
       borderColor: "border-orange-200 dark:border-orange-800",
       bgColor: "bg-orange-50 dark:bg-orange-950/30",
       textColor: "text-orange-600 dark:text-orange-400",
+    },
+    {
+      label: "Categories",
+      value: categories.length,
+      icon: FolderIcon,
+      color: "from-indigo-500 to-indigo-600",
+      borderColor: "border-indigo-200 dark:border-indigo-800",
+      bgColor: "bg-indigo-50 dark:bg-indigo-950/30",
+      textColor: "text-indigo-600 dark:text-indigo-400",
     },
   ];
 
@@ -157,13 +160,13 @@ export default function StorageOverview() {
             Manage your files, notes, and important links in one place
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button
+            <button
               onClick={() => navigate("/storage/files")}
-              className="bg-white text-indigo-600 hover:bg-indigo-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3.5 text-sm font-semibold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 hover:shadow-xl"
             >
-              <FolderIcon className="mr-2 h-5 w-5" />
+              <FolderIcon className="h-5 w-5" />
               Browse Files
-            </Button>
+            </button>
             <Button
               onClick={() => navigate("/storage/notes")}
               className="bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
@@ -271,44 +274,6 @@ export default function StorageOverview() {
 
         {/* Quick Insights - 1 column */}
         <div className="space-y-6">
-          {/* Pinned Notes */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pinned Notes</h2>
-              <RouterLink
-                to="/storage/notes"
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-              >
-                View All →
-              </RouterLink>
-            </div>
-            {pinnedNotes.length === 0 ? (
-              <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                <PinIcon className="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-                <p>No pinned notes</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pinnedNotes.map((note) => (
-                  <div
-                    key={note.id}
-                    className="rounded-lg border border-gray-200 p-3 transition-all hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/20"
-                  >
-                    <div className="mb-1 flex items-start justify-between">
-                      <div className="font-semibold text-gray-900 dark:text-white line-clamp-1">
-                        {note.title}
-                      </div>
-                      <PinIcon className="h-4 w-4 flex-shrink-0 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                      {note.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Favorite Links */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
             <div className="mb-4 flex items-center justify-between">

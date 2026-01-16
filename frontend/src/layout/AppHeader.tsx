@@ -103,20 +103,18 @@ const AppHeader: React.FC = () => {
           </button>
 
           <Link to="/dashboard" className="lg:hidden">
-            <img
-              className="dark:hidden"
-              src="/images/logo/logo.svg"
-              alt="Logo"
-              width={120}
-              height={32}
-            />
-            <img
-              className="hidden dark:block"
-              src="/images/logo/logo-dark.svg"
-              alt="Logo"
-              width={120}
-              height={32}
-            />
+            <div className="relative">
+              {/* Outer box with blue-purple gradient */}
+              <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-indigo-500/30 blur-sm"></div>
+              {/* Inner box with logo - blue-purple gradient */}
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 shadow-lg">
+                <img
+                  src="/logo.svg"
+                  alt="Logo"
+                  className="h-8 w-8"
+                />
+              </div>
+            </div>
           </Link>
 
         </div>

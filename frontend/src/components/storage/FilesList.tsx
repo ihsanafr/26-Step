@@ -3,20 +3,7 @@ import Button from "../ui/button/Button";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
 import { filesService, File } from "../../services/filesService";
-import { MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, DownloadIcon, EyeIcon, ListIcon, GridIcon, CloseIcon } from "../../icons";
-
-// Simple and modern folder icon component
-function FolderIcon({ className, color = "currentColor" }: { className?: string; color?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={1.5}>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
-      />
-    </svg>
-  );
-}
+import { MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, DownloadIcon, EyeIcon, ListIcon, GridIcon, CloseIcon, FolderIcon } from "../../icons";
 import { formatIndonesianDate } from "../../utils/date";
 import { resolveAssetUrl } from "../../utils/url";
 import AlertModal from "../common/AlertModal";
@@ -138,6 +125,15 @@ export default function FilesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [closingModal, setClosingModal] = useState<string | null>(null);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
+  const [downloadConfirm, setDownloadConfirm] = useState<File | null>(null);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [editFolderName, setEditFolderName] = useState("");
+  const [editFolderParent, setEditFolderParent] = useState<string>("root");
+  const [deleteFolderModal, setDeleteFolderModal] = useState<{ open: boolean; folder: Folder | null }>({ open: false, folder: null });
+  const [deletingFolder, setDeletingFolder] = useState(false);
+  const [draggedFile, setDraggedFile] = useState<File | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [folderMenuOpenId, setFolderMenuOpenId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadFileInputRef = useRef<HTMLInputElement>(null);
@@ -229,8 +225,8 @@ export default function FilesList() {
   const load = async () => {
     try {
       setLoading(true);
-      const data = await filesService.getAll();
-      setItems(data);
+      const data = await filesService.getAll().catch(() => []);
+      setItems(data || []);
     } catch (e) {
       console.error("Error loading files:", e);
       setItems([]);
@@ -240,8 +236,13 @@ export default function FilesList() {
   };
 
   const loadFolders = () => {
-    const stored = loadFoldersFromStorage();
-    setCustomFolders(stored);
+    try {
+      const stored = loadFoldersFromStorage();
+      setCustomFolders(stored || []);
+    } catch (e) {
+      console.error("Error loading folders:", e);
+      setCustomFolders([]);
+    }
   };
 
   useEffect(() => {
@@ -259,6 +260,18 @@ export default function FilesList() {
     window.addEventListener("mousedown", onMouseDown);
     return () => window.removeEventListener("mousedown", onMouseDown);
   }, [menuOpenId]);
+
+  useEffect(() => {
+    if (folderMenuOpenId === null) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-folder-menu]')) {
+        setFolderMenuOpenId(null);
+      }
+    };
+    window.addEventListener("mousedown", onMouseDown);
+    return () => window.removeEventListener("mousedown", onMouseDown);
+  }, [folderMenuOpenId]);
 
   const categories = useMemo(() => {
     const set = new Set(items.map((f) => f.category).filter(Boolean) as string[]);
@@ -357,6 +370,27 @@ export default function FilesList() {
       setUploading(true);
       setUploadError(null);
       
+      // Check for duplicate files
+      const fileArray = Array.from(uploadFiles);
+      const duplicateFiles: string[] = [];
+      
+      fileArray.forEach((file) => {
+        const fileName = uploadFileName.trim() || file.name;
+        const existingFile = items.find(
+          (f) => (f.name === fileName || f.original_name === fileName) &&
+          f.category === (uploadFileLocation !== "root" ? folders.flatMap((f) => [f, ...(f.children || [])]).find((f) => f.id === uploadFileLocation)?.path : undefined)
+        );
+        if (existingFile) {
+          duplicateFiles.push(fileName);
+        }
+      });
+      
+      if (duplicateFiles.length > 0) {
+        setUploadError(`File dengan nama berikut sudah ada: ${duplicateFiles.join(", ")}. Silakan gunakan nama yang berbeda.`);
+        setUploading(false);
+        return;
+      }
+      
       // Get folder path for category
       let category: string | undefined = undefined;
       if (uploadFileLocation !== "root") {
@@ -368,7 +402,19 @@ export default function FilesList() {
         }
       }
       
-      await filesService.upload(uploadFiles, category);
+      // If uploadFileName is provided and only one file, rename it
+      let filesToUpload = uploadFiles;
+      if (uploadFileName.trim() && fileArray.length === 1) {
+        const originalFile = fileArray[0];
+        const extension = originalFile.name.substring(originalFile.name.lastIndexOf('.'));
+        const newName = uploadFileName.trim() + extension;
+        
+        // Create a new File object with the new name
+        const renamedFile = new File([originalFile], newName, { type: originalFile.type });
+        filesToUpload = [renamedFile] as any;
+      }
+      
+      await filesService.upload(filesToUpload, category);
       await load();
       
       // Reset upload modal with animation
@@ -410,26 +456,42 @@ export default function FilesList() {
   const handleEdit = (file: File) => {
     setEditing(file);
     setEditName(file.name);
-    setEditCategory(file.category || "");
+    // Find folder ID from category path
+    if (file.category) {
+      const folder = folders
+        .flatMap((f) => [f, ...(f.children || [])])
+        .find((f) => f.path === file.category || f.name === file.category);
+      setEditCategory(folder ? folder.id : file.category);
+    } else {
+      setEditCategory("root");
+    }
     setEditDescription(file.description || "");
   };
 
-  const handleDownload = async (file: File) => {
+  const handleDownloadClick = (file: File) => {
+    setDownloadConfirm(file);
+  };
+
+  const handleDownloadConfirm = async () => {
+    if (!downloadConfirm) return;
+    
     try {
       setUploadError(null);
-      const blob = await filesService.download(file.id);
+      const blob = await filesService.download(downloadConfirm.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = file.original_name || file.name;
+      link.download = downloadConfirm.original_name || downloadConfirm.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      setDownloadNotice(`Download dimulai: ${file.original_name || file.name}`);
+      setDownloadNotice(`Download dimulai: ${downloadConfirm.original_name || downloadConfirm.name}`);
+      setDownloadConfirm(null);
     } catch (error: any) {
       console.error("Error downloading file:", error);
       setUploadError(error.response?.data?.message || "Gagal mengunduh file");
+      setDownloadConfirm(null);
     }
   };
 
@@ -444,14 +506,29 @@ export default function FilesList() {
     try {
       setSaving(true);
       setUploadError(null);
+      
+      // Get folder path for category if editCategory is a folder ID
+      let category: string | null = null;
+      if (editCategory) {
+        const folder = folders
+          .flatMap((f) => [f, ...(f.children || [])])
+          .find((f) => f.id === editCategory);
+        if (folder && folder.id !== "root") {
+          category = folder.path || folder.name;
+        } else if (!editCategory.startsWith("folder-") && !editCategory.startsWith("category-")) {
+          category = editCategory;
+        }
+      }
+      
       await filesService.update(editing.id, {
         name: editName.trim(),
-        category: editCategory || null,
+        category: category,
         description: editDescription || null,
       });
       setClosingModal("edit");
       setTimeout(() => {
         setEditing(null);
+        setEditCategory("");
         setClosingModal(null);
         void load();
       }, 200);
@@ -480,103 +557,330 @@ export default function FilesList() {
   };
 
   const handleCreateFolder = () => {
+    setEditingFolder(null);
+    setEditFolderName("");
+    setEditFolderParent("root");
     setNewFolderName("");
     setParentFolderId(selectedFolder);
     setShowFolderModal(true);
   };
 
-  const handleSaveFolder = () => {
-    if (!newFolderName.trim()) return;
+  const getFolderDepth = (folderId: string): number => {
+    if (folderId === "root") return 0;
+    const folder = folders
+      .flatMap((f) => [f, ...(f.children || [])])
+      .find((f) => f.id === folderId);
+    if (!folder) return 0;
     
-    try {
-      // Check folder depth - maximum 3 levels
-      const getFolderDepth = (folderId: string): number => {
-        if (folderId === "root") return 0;
-        const folder = folders
-          .flatMap((f) => [f, ...(f.children || [])])
-          .find((f) => f.id === folderId);
-        if (!folder) return 0;
-        
-        let depth = 0;
-        let current = folder;
-        while (current.parentId && current.parentId !== "root") {
-          depth++;
-          const parent = folders
-            .flatMap((f) => [f, ...(f.children || [])])
-            .find((f) => f.id === current.parentId);
-          if (!parent) break;
-          current = parent;
-        }
-        return depth + 1; // +1 because we're adding a child
-      };
-
-      const currentDepth = getFolderDepth(parentFolderId);
-      if (currentDepth >= 3) {
-        setUploadError("Maksimal tumpukan folder adalah 3 level. Tidak dapat membuat folder di level ini.");
-        return;
-      }
-      
-      // Check if folder name already exists in the same parent
+    let depth = 0;
+    let current = folder;
+    while (current.parentId && current.parentId !== "root") {
+      depth++;
       const parent = folders
         .flatMap((f) => [f, ...(f.children || [])])
-        .find((f) => f.id === parentFolderId);
+        .find((f) => f.id === current.parentId);
+      if (!parent) break;
+      current = parent;
+    }
+    return depth + 1; // +1 because we're adding a child
+  };
+
+  const handleSaveFolder = () => {
+    if (editingFolder) {
+      // Edit existing folder
+      if (!editFolderName.trim()) return;
       
-      if (parent?.children?.some((f) => f.name.toLowerCase() === newFolderName.trim().toLowerCase())) {
-        setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
+      try {
+        // Check if moving to new parent would exceed depth limit
+        if (editFolderParent !== editingFolder.parentId) {
+          const newDepth = getFolderDepth(editFolderParent);
+          if (newDepth >= 3) {
+            setUploadError("Maksimal tumpukan folder adalah 3 level. Tidak dapat memindahkan folder ke level ini.");
+            return;
+          }
+          
+          // Check if folder would be moved into itself or its children
+          const isDescendant = (folderId: string, ancestorId: string): boolean => {
+            if (folderId === ancestorId) return true;
+            const folder = folders
+              .flatMap((f) => [f, ...(f.children || [])])
+              .find((f) => f.id === folderId);
+            if (!folder || !folder.parentId) return false;
+            return isDescendant(folder.parentId, ancestorId);
+          };
+          
+          if (isDescendant(editFolderParent, editingFolder.id)) {
+            setUploadError("Tidak dapat memindahkan folder ke dalam dirinya sendiri atau folder turunannya.");
+            return;
+          }
+        }
+        
+        // Check if folder name already exists in the same parent (if name changed or parent changed)
+        if (editFolderName.trim() !== editingFolder.name || editFolderParent !== (editingFolder.parentId || "root")) {
+          const parent = folders
+            .flatMap((f) => [f, ...(f.children || [])])
+            .find((f) => f.id === editFolderParent);
+          
+          if (parent?.children?.some((f) => f.id !== editingFolder.id && f.name.toLowerCase() === editFolderName.trim().toLowerCase())) {
+            setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
+            return;
+          }
+        }
+
+        // Update folder
+        const updatedFolders = customFolders.map((f) =>
+          f.id === editingFolder.id
+            ? { ...f, name: editFolderName.trim(), parentId: editFolderParent === "root" ? undefined : editFolderParent }
+            : f
+        );
+        setCustomFolders(updatedFolders);
+        saveFoldersToStorage(updatedFolders);
+
+        // Close modal and reset with animation
+        setClosingModal("folder");
+        setTimeout(() => {
+          setShowFolderModal(false);
+          setEditingFolder(null);
+          setEditFolderName("");
+          setEditFolderParent("root");
+          setNewFolderName("");
+          setParentFolderId("root");
+          setClosingModal(null);
+        }, 200);
+      } catch (error) {
+        console.error("Error updating folder:", error);
+        setUploadError("Gagal memperbarui folder");
+      }
+    } else {
+      // Create new folder
+      if (!newFolderName.trim()) return;
+      
+      try {
+        const currentDepth = getFolderDepth(parentFolderId);
+        if (currentDepth >= 3) {
+          setUploadError("Maksimal tumpukan folder adalah 3 level. Tidak dapat membuat folder di level ini.");
+          return;
+        }
+        
+        // Check if folder name already exists in the same parent
+        const parent = folders
+          .flatMap((f) => [f, ...(f.children || [])])
+          .find((f) => f.id === parentFolderId);
+        
+        if (parent?.children?.some((f) => f.name.toLowerCase() === newFolderName.trim().toLowerCase())) {
+          setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
+          return;
+        }
+
+        // Create new folder
+        const newFolder: Folder = {
+          id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: newFolderName.trim(),
+          path: "",
+          parentId: parentFolderId === "root" ? undefined : parentFolderId,
+          createdAt: new Date().toISOString(),
+        };
+
+        // Add to custom folders
+        const updatedFolders = [...customFolders, newFolder];
+        setCustomFolders(updatedFolders);
+        saveFoldersToStorage(updatedFolders);
+
+        // Close modal and reset with animation
+        setClosingModal("folder");
+        setTimeout(() => {
+          setShowFolderModal(false);
+          setNewFolderName("");
+          setParentFolderId("root");
+          setClosingModal(null);
+        }, 200);
+      } catch (error) {
+        console.error("Error creating folder:", error);
+        setUploadError("Gagal membuat folder");
+      }
+    }
+  };
+
+  const handleEditFolder = (folder: Folder) => {
+    if (folder.id === "root" || folder.id.startsWith("category-")) {
+      setUploadError("Folder default tidak dapat diedit");
+      return;
+    }
+    setEditingFolder(folder);
+    setEditFolderName(folder.name);
+    setEditFolderParent(folder.parentId || "root");
+    setShowFolderModal(true);
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!deleteFolderModal.folder) return;
+    
+    try {
+      setDeletingFolder(true);
+      
+      // Check if folder has children
+      const folder = folders
+        .flatMap((f) => [f, ...(f.children || [])])
+        .find((f) => f.id === deleteFolderModal.folder!.id);
+      
+      if (folder?.children && folder.children.length > 0) {
+        setUploadError("Tidak dapat menghapus folder yang masih memiliki subfolder. Hapus atau pindahkan subfolder terlebih dahulu.");
+        setDeleteFolderModal({ open: false, folder: null });
+        setDeletingFolder(false);
         return;
       }
-
-      // Create new folder
-      const newFolder: Folder = {
-        id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: newFolderName.trim(),
-        path: "",
-        parentId: parentFolderId === "root" ? undefined : parentFolderId,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Add to custom folders
-      const updatedFolders = [...customFolders, newFolder];
+      
+      // Check if folder has files
+      const folderPath = folder?.path || "";
+      const hasFiles = items.some((file) => file.category === folderPath || file.category?.startsWith(folderPath + "/"));
+      
+      if (hasFiles) {
+        setUploadError("Tidak dapat menghapus folder yang masih berisi file. Pindahkan atau hapus file terlebih dahulu.");
+        setDeleteFolderModal({ open: false, folder: null });
+        setDeletingFolder(false);
+        return;
+      }
+      
+      // Delete folder
+      const updatedFolders = customFolders.filter((f) => f.id !== deleteFolderModal.folder!.id);
       setCustomFolders(updatedFolders);
       saveFoldersToStorage(updatedFolders);
-
-      // Close modal and reset with animation
-      setClosingModal("folder");
-      setTimeout(() => {
-        setShowFolderModal(false);
-        setNewFolderName("");
-        setParentFolderId("root");
-        setClosingModal(null);
-      }, 200);
+      
+      // If deleted folder was selected, go to root
+      if (selectedFolder === deleteFolderModal.folder!.id) {
+        setSelectedFolder("root");
+      }
+      
+      setDeleteFolderModal({ open: false, folder: null });
     } catch (error) {
-      console.error("Error creating folder:", error);
-      setUploadError("Gagal membuat folder");
+      console.error("Error deleting folder:", error);
+      setUploadError("Gagal menghapus folder");
+      setDeleteFolderModal({ open: false, folder: null });
+    } finally {
+      setDeletingFolder(false);
+    }
+  };
+
+  const handleMoveFile = async (file: File, targetFolderId: string) => {
+    try {
+      let category: string | null = null;
+      if (targetFolderId !== "root") {
+        const folder = folders
+          .flatMap((f) => [f, ...(f.children || [])])
+          .find((f) => f.id === targetFolderId);
+        if (folder && folder.id !== "root") {
+          category = folder.path || folder.name;
+        }
+      }
+      
+      await filesService.update(file.id, {
+        category: category,
+      });
+      await load();
+    } catch (error: any) {
+      console.error("Error moving file:", error);
+      setUploadError(error.response?.data?.message || "Gagal memindahkan file");
     }
   };
 
   const renderFolderTree = (folder: Folder, level: number = 0) => {
     const isSelected = selectedFolder === folder.id;
+    const isCustomFolder = folder.id.startsWith("folder-");
+    
     return (
       <div key={folder.id}>
-        <button
-          onClick={() => setSelectedFolder(folder.id)}
-          className={`mb-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
-            isSelected
-              ? "bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-400"
-              : "text-gray-700 hover:bg-gray-100 hover:shadow-sm hover:scale-[1.02] dark:text-gray-300 dark:hover:bg-gray-800"
+        <div
+          className={`group relative mb-1 flex items-center gap-2 rounded-lg transition-all duration-200 ${
+            dragOverFolder === folder.id ? "bg-indigo-200 dark:bg-indigo-900/50" : ""
           }`}
-          style={{ paddingLeft: `${12 + level * 20}px` }}
+          onDragOver={(e) => {
+            if (draggedFile) {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOverFolder(folder.id);
+            }
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setDragOverFolder(null);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (draggedFile) {
+              handleMoveFile(draggedFile, folder.id);
+              setDraggedFile(null);
+              setDragOverFolder(null);
+            }
+          }}
         >
-          <FolderIcon 
-            className={`h-5 w-5 shrink-0 transition-colors ${
-              isSelected 
-                ? "text-indigo-600 dark:text-indigo-400" 
-                : "text-yellow-500 dark:text-yellow-400"
+          <button
+            onClick={() => setSelectedFolder(folder.id)}
+            className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
+              isSelected
+                ? "bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-400"
+                : "text-gray-700 hover:bg-gray-100 hover:shadow-sm hover:scale-[1.02] dark:text-gray-300 dark:hover:bg-gray-800"
             }`}
-            color={isSelected ? "#4f46e5" : "#eab308"}
-          />
-          <span className="truncate text-sm font-medium">{folder.name}</span>
-        </button>
+            style={{ paddingLeft: `${12 + level * 20}px` }}
+          >
+            <FolderIcon 
+              className={`h-5 w-5 shrink-0 transition-colors ${
+                isSelected 
+                  ? "text-indigo-600 dark:text-indigo-400" 
+                  : "text-yellow-500 dark:text-yellow-400"
+              }`}
+              color={isSelected ? "#4f46e5" : "#eab308"}
+            />
+            <span className="truncate text-sm font-medium">{folder.name}</span>
+          </button>
+          {isCustomFolder && (
+            <div className="relative" data-folder-menu>
+              <button
+                data-folder-menu
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFolderMenuOpenId(folderMenuOpenId === folder.id ? null : folder.id);
+                }}
+                className="rounded-lg p-1.5 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-gray-700"
+              >
+                <MoreDotIcon className="h-4 w-4" />
+              </button>
+              {folderMenuOpenId === folder.id && (
+                <div
+                  data-folder-menu
+                  className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    data-folder-menu
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditFolder(folder);
+                      setFolderMenuOpenId(null);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    data-folder-menu
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteFolderModal({ open: true, folder });
+                      setFolderMenuOpenId(null);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  >
+                    <TrashBinIcon className="h-4 w-4" />
+                    Hapus
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         {folder.children && folder.children.length > 0 && (
           <div className="ml-4">
             {folder.children.map((child) => renderFolderTree(child, level + 1))}
@@ -716,7 +1020,7 @@ export default function FilesList() {
         <div className="w-64 shrink-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
           <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Struktur Folder</h2>
           <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-            {folders.map((folder) => renderFolderTree(folder))}
+            {folders && folders.length > 0 ? folders.map((folder) => renderFolderTree(folder)) : <div className="text-sm text-gray-500 dark:text-gray-400">No folders</div>}
           </div>
         </div>
 
@@ -747,6 +1051,15 @@ export default function FilesList() {
                 return (
                   <div
                     key={file.id}
+                    draggable
+                    onDragStart={(e) => {
+                      setDraggedFile(file);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDraggedFile(null);
+                      setDragOverFolder(null);
+                    }}
                     onClick={(e) => handleCardClick(e, file)}
                     className="group relative cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-theme-sm transition-all duration-200 hover:border-indigo-300 hover:shadow-theme-md hover:scale-[1.02] hover:-translate-y-1 dark:border-gray-700 dark:bg-gray-800"
                   >
@@ -790,7 +1103,7 @@ export default function FilesList() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setMenuOpenId(null);
-                              void handleDownload(file);
+                              handleDownloadClick(file);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                           >
@@ -869,6 +1182,15 @@ export default function FilesList() {
                 return (
                   <div
                     key={file.id}
+                    draggable
+                    onDragStart={(e) => {
+                      setDraggedFile(file);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDraggedFile(null);
+                      setDragOverFolder(null);
+                    }}
                     onClick={(e) => handleCardClick(e, file)}
                     className="group flex cursor-pointer items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50/50 hover:shadow-theme-sm hover:scale-[1.01] dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-indigo-950/20"
                   >
@@ -929,7 +1251,7 @@ export default function FilesList() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setMenuOpenId(null);
-                              void handleDownload(file);
+                              handleDownloadClick(file);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                           >
@@ -1169,15 +1491,26 @@ export default function FilesList() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Kategori
+                  Lokasi Folder
                 </label>
-                <input
-                  type="text"
+                <select
                   value={editCategory}
                   onChange={(e) => setEditCategory(e.target.value)}
-                  placeholder="e.g., Documents, Images"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                />
+                >
+                  <option value="root">Root</option>
+                  {folders
+                    .flatMap((f) => [f, ...(f.children || [])])
+                    .filter((f) => f.id !== "root")
+                    .map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.path || folder.name}
+                      </option>
+                    ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Pilih folder untuk memindahkan file
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1246,7 +1579,9 @@ export default function FilesList() {
           >
             <div className="mb-4 flex items-center gap-3">
               <FolderIcon className="h-6 w-6" color="#eab308" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Folder Baru</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {editingFolder ? "Edit Folder" : "Folder Baru"}
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
@@ -1255,10 +1590,17 @@ export default function FilesList() {
                 </label>
                 <input
                   type="text"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
+                  value={editingFolder ? editFolderName : newFolderName}
+                  onChange={(e) => {
+                    if (editingFolder) {
+                      setEditFolderName(e.target.value);
+                    } else {
+                      setNewFolderName(e.target.value);
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && newFolderName.trim()) {
+                    const name = editingFolder ? editFolderName : newFolderName;
+                    if (e.key === "Enter" && name.trim()) {
                       handleSaveFolder();
                     }
                   }}
@@ -1272,14 +1614,20 @@ export default function FilesList() {
                   Lokasi Folder
                 </label>
                 <select
-                  value={parentFolderId}
-                  onChange={(e) => setParentFolderId(e.target.value)}
+                  value={editingFolder ? editFolderParent : parentFolderId}
+                  onChange={(e) => {
+                    if (editingFolder) {
+                      setEditFolderParent(e.target.value);
+                    } else {
+                      setParentFolderId(e.target.value);
+                    }
+                  }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="root">Root</option>
                   {folders
                     .flatMap((f) => [f, ...(f.children || [])])
-                    .filter((f) => f.id !== "root" && f.id.startsWith("folder-"))
+                    .filter((f) => f.id !== "root" && f.id.startsWith("folder-") && (!editingFolder || f.id !== editingFolder.id))
                     .map((folder) => (
                       <option key={folder.id} value={folder.id}>
                         {folder.path || folder.name}
@@ -1294,16 +1642,19 @@ export default function FilesList() {
             <div className="mt-6 flex gap-3">
               <Button
                 onClick={handleSaveFolder}
-                disabled={!newFolderName.trim()}
+                disabled={editingFolder ? !editFolderName.trim() : !newFolderName.trim()}
                 className="grow bg-indigo-600 hover:bg-indigo-700"
               >
-                Buat Folder
+                {editingFolder ? "Simpan Perubahan" : "Buat Folder"}
               </Button>
               <Button
                 onClick={() => {
                   setClosingModal("folder");
                   setTimeout(() => {
                     setShowFolderModal(false);
+                    setEditingFolder(null);
+                    setEditFolderName("");
+                    setEditFolderParent("root");
                     setNewFolderName("");
                     setParentFolderId("root");
                     setClosingModal(null);
@@ -1318,6 +1669,16 @@ export default function FilesList() {
           </div>
         </div>
       )}
+
+      {/* Delete Folder Modal */}
+      <ConfirmDeleteModal
+        isOpen={deleteFolderModal.open}
+        onClose={() => setDeleteFolderModal({ open: false, folder: null })}
+        onConfirm={handleDeleteFolder}
+        isLoading={deletingFolder}
+        title="Hapus Folder"
+        message={`Apakah Anda yakin ingin menghapus folder "${deleteFolderModal.folder?.name}"? Folder yang berisi file atau subfolder tidak dapat dihapus.`}
+      />
 
       {/* Delete Modal */}
       <ConfirmDeleteModal
@@ -1337,6 +1698,44 @@ export default function FilesList() {
         message={uploadError || ""}
         type="error"
       />
+
+      {/* Download Confirmation Modal */}
+      {downloadConfirm && (
+        <div
+          className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200`}
+          onClick={() => setDownloadConfirm(null)}
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
+                <DownloadIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Konfirmasi Download</h2>
+            </div>
+            <p className="mb-6 text-gray-600 dark:text-gray-400">
+              Apakah Anda yakin ingin mengunduh file <strong className="text-gray-900 dark:text-white">{downloadConfirm.original_name || downloadConfirm.name}</strong>?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setDownloadConfirm(null)}
+                variant="outline"
+                className="grow"
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={handleDownloadConfirm}
+                className="grow bg-indigo-600 hover:bg-indigo-700"
+              >
+                Download
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Download Notice Modal */}
       <AlertModal

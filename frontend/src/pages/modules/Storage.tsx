@@ -4,6 +4,7 @@ import StorageOverview from "../../components/storage/StorageOverview";
 import FilesList from "../../components/storage/FilesList";
 import LinksList from "../../components/storage/LinksList";
 import NotesList from "../../components/journals/NotesList";
+import StorageGuide from "../../components/storage/StorageGuide";
 
 export default function Storage() {
   const location = useLocation();
@@ -41,6 +42,15 @@ export default function Storage() {
       <>
         <PageMeta title="Notes - Lifesync" description="Quick notes and pinboard" />
         <NotesList />
+      </>
+    );
+  }
+
+  if (path === "/storage/guide") {
+    return (
+      <>
+        <PageMeta title="Storage Guide - Lifesync" description="User guide for the Storage module" />
+        <StorageGuide />
       </>
     );
   }

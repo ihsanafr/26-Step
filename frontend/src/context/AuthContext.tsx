@@ -85,16 +85,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const initializeAuth = () => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser().catch(() => {
-        logout();
-      });
+    try {
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        fetchUser().catch((error) => {
+          console.error('Failed to fetch user:', error);
+          // Only logout if token is invalid, not on network errors
+          if (error?.response?.status === 401) {
+            logout();
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing auth:', error);
     }
   };
 
   useEffect(() => {
     initializeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
