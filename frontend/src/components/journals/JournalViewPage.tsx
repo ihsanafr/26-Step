@@ -76,9 +76,26 @@ export default function JournalViewPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-          <Skeleton className="h-64 w-full" />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Skeleton className="h-9 w-24 rounded-lg" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-20 rounded-lg" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <Skeleton className="h-56 w-full rounded-t-2xl" />
+          <div className="space-y-4 p-6">
+            <Skeleton className="h-8 w-2/3" />
+            <div className="flex flex-wrap gap-3">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/6" />
+          </div>
         </div>
       </div>
     );

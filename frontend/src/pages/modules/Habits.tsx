@@ -1,4 +1,4 @@
-import { useLocation } from "react-router";
+import { useLocation, Link } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import HabitList from "../../components/habits/HabitList";
 import HabitsOverview from "../../components/habits/HabitsOverview";
@@ -94,13 +94,30 @@ function HabitsStreaksView() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-48 rounded-xl border border-gray-200 bg-gray-100 animate-pulse dark:border-gray-700 dark:bg-gray-800"
-              />
-            ))}
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-28 rounded-xl border border-gray-200 bg-gray-100 animate-pulse dark:border-gray-700 dark:bg-gray-800"
+                />
+              ))}
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+              <div className="mb-4 h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            </div>
+            <div>
+              <div className="mb-4 h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-44 rounded-xl border border-gray-200 bg-gray-100 animate-pulse dark:border-gray-700 dark:bg-gray-800"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : habitsWithStreaks.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-16 text-center dark:border-gray-800 dark:bg-gray-800">
@@ -116,7 +133,7 @@ function HabitsStreaksView() {
           <>
             {/* Streak Statistics */}
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5">
+              <div className="rounded-xl border border-orange-200 bg-linear-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">🔥</span>
                   <div>
@@ -128,7 +145,7 @@ function HabitsStreaksView() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+              <div className="rounded-xl border border-yellow-200 bg-linear-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">⚡</span>
                   <div>
@@ -144,7 +161,7 @@ function HabitsStreaksView() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+              <div className="rounded-xl border border-green-200 bg-linear-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">🏆</span>
                   <div>
@@ -161,7 +178,7 @@ function HabitsStreaksView() {
             {/* Single Calendar (view only) */}
             <HabitsStreakCalendar
               habits={activeHabits}
-              title="📅 Streak Calendar"
+              title="Streak Calendar"
               subtitle="Click a date to see which habits were completed on that day."
             />
 
@@ -279,14 +296,30 @@ function HabitsDashboard() {
       />
       
       <div className="space-y-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white md:text-4xl">
-            Habits & Streaks
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Build positive habits, track your progress, and maintain motivating streaks
-          </p>
+        {/* Hero Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-orange-500 via-rose-500 to-pink-500 p-8 text-white shadow-xl">
+          <div className="relative z-10">
+            <h1 className="mb-2 text-4xl font-bold md:text-5xl">Habits & Streaks</h1>
+            <p className="mb-6 text-lg text-orange-100 md:text-xl">
+              Build positive habits, track your progress, and maintain motivating streaks
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/habits/list"
+                className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+              >
+                Habit List
+              </Link>
+              <Link
+                to="/habits/streaks"
+                className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+              >
+                View Streaks
+              </Link>
+            </div>
+          </div>
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
         </div>
 
         {loading ? (
@@ -323,7 +356,7 @@ function HabitsDashboard() {
               <div className="mt-8">
                 <HabitsStreakCalendar
                   habits={activeHabits}
-                  title="📅 Streak Calendar"
+                  title="Streak Calendar"
                   subtitle="Click a date to see which habits were completed on that day."
                 />
               </div>

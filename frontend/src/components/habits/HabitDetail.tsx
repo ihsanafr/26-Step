@@ -82,6 +82,7 @@ const HabitDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
+        <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
           <Skeleton variant="rectangular" width="100%" height={200} className="mb-4" />
           <Skeleton variant="text" width="60%" height={32} className="mb-2" />
@@ -91,6 +92,10 @@ const HabitDetail: React.FC = () => {
               <Skeleton key={i} variant="rectangular" width="100%" height={80} />
             ))}
           </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <Skeleton variant="text" width="40%" height={24} className="mb-4" />
+          <Skeleton variant="rectangular" width="100%" height={260} />
         </div>
       </div>
     );

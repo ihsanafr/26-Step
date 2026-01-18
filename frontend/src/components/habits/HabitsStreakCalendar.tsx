@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Habit, HabitLog, habitsService } from "../../services/habitsService";
+import { CalenderIcon } from "../../icons";
+import Button from "../ui/button/Button";
+import { Skeleton } from "../common/Skeleton";
 
 type DayDetail = {
   date: string; // YYYY-MM-DD
@@ -108,7 +111,7 @@ function StreakDayModal({
 
   return (
     <div
-      className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
+      className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
       onClick={requestClose}
@@ -157,7 +160,7 @@ function StreakDayModal({
                       </div>
                     </div>
 
-                    <div className="shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 px-3 py-1 text-sm font-bold text-white">
+                    <div className="shrink-0 rounded-lg bg-linear-to-br from-red-500 to-orange-600 px-3 py-1 text-sm font-bold text-white">
                       🔥 {streakOnThatDay}
                     </div>
                   </div>
@@ -176,7 +179,7 @@ function StreakDayModal({
 
 export default function HabitsStreakCalendar({
   habits,
-  title = "📅 Streak Calendar",
+  title = "Streak Calendar",
   subtitle = "Click a date to see which habits were completed on that day.",
 }: HabitsStreakCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -273,125 +276,100 @@ export default function HabitsStreakCalendar({
 
   const days = getDaysInMonthGrid(currentMonth);
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const monthLabel = currentMonth.toLocaleString("en-US", { month: "long", year: "numeric" });
 
   return (
     <>
-      <div className="w-full rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-        <div className="mb-5">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
+      <div className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CalenderIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{monthLabel}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+            >
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
 
-        <div className="mb-5 flex items-center justify-between">
-          <button
-            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
-            className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            aria-label="Previous month"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-          </h3>
-          <button
-            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
-            className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            aria-label="Next month"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+        {title || subtitle ? (
+          <div className="mb-4">
+            {title ? <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2> : null}
+            {subtitle ? <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p> : null}
+          </div>
+        ) : null}
 
         {loading ? (
-          <div className="h-72 animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-700" />
+          <Skeleton variant="rectangular" width="100%" height={360} className="rounded-2xl" />
         ) : (
-          <div className="grid grid-cols-7 gap-3">
-            {weekDays.map((d) => (
-              <div key={d} className="p-3 text-center text-sm font-bold text-gray-600 dark:text-gray-400">
-                {d}
-              </div>
-            ))}
+          <>
+            <div className="grid grid-cols-7 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+              {weekDays.map((d) => (
+                <div key={d} className="px-2 py-1 font-semibold">
+                  {d}
+                </div>
+              ))}
+            </div>
 
-            {days.map((day, idx) => {
-              const dateStr =
-                day === null ? null : formatLocalDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
-              const count = dateStr ? countCompletedOnDate(dateStr) : 0;
-              const today = isToday(currentMonth, day);
+            <div className="grid grid-cols-7 gap-2">
+              {days.map((day, idx) => {
+                const dateStr =
+                  day === null ? null : formatLocalDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+                const count = dateStr ? countCompletedOnDate(dateStr) : 0;
+                const today = isToday(currentMonth, day);
+                const clickable = day !== null;
+                const hasData = count > 0;
 
-              const clickable = day !== null;
-              const hasData = count > 0;
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={!clickable}
-                  onClick={() => openDetail(day)}
-                  className={`group relative h-20 rounded-2xl text-base transition-all duration-200 ${
-                    day === null ? "cursor-default" : "cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
-                  } ${
-                    hasData
-                      ? "bg-gradient-to-br from-rose-500/90 to-orange-500/90 text-white shadow-lg ring-1 ring-white/20 dark:ring-white/10"
-                      : "bg-gray-100/70 text-gray-700 shadow-sm ring-1 ring-gray-200/60 dark:bg-gray-700/60 dark:text-gray-200 dark:ring-gray-700"
-                  } ${
-                    today && !hasData
-                      ? "ring-2 ring-brand-500 dark:ring-brand-400"
-                      : ""
-                  } ${day !== null ? "hover:shadow-xl" : ""}`}
-                >
-                  {/* soft glow for streak days */}
-                  {hasData ? (
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-70" />
-                  ) : null}
-
-                  <div className="relative flex h-full flex-col items-center justify-center">
-                    <span className={`text-lg font-bold ${day === null ? "opacity-0" : ""}`}>{day ?? ""}</span>
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={!clickable}
+                    onClick={() => openDetail(day)}
+                  className={`group relative h-20 rounded-2xl border p-2 text-left transition-all ${
+                      hasData
+                        ? "border-orange-300 bg-orange-50 ring-2 ring-orange-400/30 dark:border-orange-500 dark:bg-orange-500/10"
+                        : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 dark:hover:bg-gray-800/40"
+                    } ${!clickable ? "opacity-40 cursor-default" : "cursor-pointer"} ${
+                      today ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-semibold ${today ? "text-blue-600 dark:text-blue-300" : "text-gray-900 dark:text-white"}`}>
+                        {day ?? ""}
+                      </span>
+                      {hasData ? (
+                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+                          {count}
+                        </span>
+                      ) : null}
+                    </div>
 
                     {hasData ? (
-                      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-black/15 px-2 py-0.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm">
-                        <span className="text-[11px]">🔥</span>
-                        {count}
-                      </span>
+                      <div className="mt-2 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                        completions
+                      </div>
                     ) : (
-                      <span className="mt-1 text-[11px] text-gray-500 opacity-0 group-hover:opacity-70 dark:text-gray-400">
+                      <div className="mt-6 text-[10px] text-gray-400 opacity-0 transition group-hover:opacity-100 dark:text-gray-500">
                         view
-                      </span>
+                      </div>
                     )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
-
-        <div className="mt-6 flex items-center justify-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded bg-gray-200/80 ring-1 ring-gray-200 dark:bg-gray-700/70 dark:ring-gray-700" />
-            <span className="text-gray-600 dark:text-gray-400">No completions</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded bg-gradient-to-br from-rose-500/90 to-orange-500/90 ring-1 ring-white/20 dark:ring-white/10" />
-            <span className="text-gray-600 dark:text-gray-400">Completions (🔥 shows count)</span>
-          </div>
-        </div>
       </div>
 
       <StreakDayModal open={modal.open} detail={modal.detail} onClose={() => setModal({ open: false, detail: null })} />

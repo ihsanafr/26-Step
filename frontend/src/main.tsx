@@ -8,7 +8,13 @@ import { AppWrapper } from "./components/common/PageMeta.tsx";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found. Make sure there is a <div id='root'></div> in your HTML.");
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>

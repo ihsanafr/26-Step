@@ -67,6 +67,22 @@ const TaskList: React.FC = () => {
     setFilteredTasks(filtered);
   };
 
+  const upsertTask = (task: Task) => {
+    setTasks((prev) => {
+      const index = prev.findIndex((item) => item.id === task.id);
+      if (index === -1) {
+        return [task, ...prev];
+      }
+      const next = [...prev];
+      next[index] = task;
+      return next;
+    });
+  };
+
+  const removeTask = (taskId: number) => {
+    setTasks((prev) => prev.filter((item) => item.id !== taskId));
+  };
+
   const handleCreate = () => {
     setEditingTask(undefined);
     setShowForm(true);
@@ -84,20 +100,18 @@ const TaskList: React.FC = () => {
       
       if (editingTask) {
         console.log("📝 TaskList: Updating existing task ID:", editingTask.id);
-        await tasksService.update(editingTask.id, data);
+        const updated = await tasksService.update(editingTask.id, data);
         console.log("✅ TaskList: Task updated successfully");
+        upsertTask(updated);
       } else {
         console.log("🆕 TaskList: Creating new task...");
         const result = await tasksService.create(data);
         console.log("✅ TaskList: Task created successfully:", result);
+        upsertTask(result);
       }
       
       setShowForm(false);
       setEditingTask(undefined);
-      
-      console.log("🔄 TaskList: Reloading tasks...");
-      await loadTasks();
-      console.log("✅ TaskList: Tasks reloaded successfully");
     } catch (error: any) {
       console.error("❌ TaskList: Error saving task:", error);
       console.error("❌ TaskList: Error details:", error.response?.data);
@@ -117,9 +131,10 @@ const TaskList: React.FC = () => {
 
     try {
       setDeleting(true);
-      await tasksService.delete(deleteModal.task.id);
+      const taskId = deleteModal.task.id;
+      removeTask(taskId);
+      await tasksService.delete(taskId);
       setDeleteModal({ isOpen: false, task: null });
-      await loadTasks();
     } catch (error) {
       console.error("Error deleting task:", error);
     } finally {
@@ -131,18 +146,24 @@ const TaskList: React.FC = () => {
     // Toggle between todo and finish
     const newStatus = (task.status === "finish" || task.status === "completed") ? "todo" : "finish";
     try {
-      await tasksService.update(task.id, { status: newStatus as any, progress: newStatus === "finish" ? 100 : task.progress });
-      await loadTasks();
+      const nextProgress = newStatus === "finish" ? 100 : task.progress;
+      upsertTask({ ...task, status: newStatus as Task["status"], progress: nextProgress });
+      const updated = await tasksService.update(task.id, { status: newStatus as any, progress: nextProgress });
+      upsertTask(updated);
     } catch (error) {
+      upsertTask(task);
       console.error("Error updating task:", error);
     }
   };
 
   const handleStatusChange = async (task: Task, newStatus: string) => {
     try {
-      await tasksService.update(task.id, { status: newStatus as any, progress: newStatus === "finish" ? 100 : task.progress });
-      await loadTasks();
+      const nextProgress = newStatus === "finish" ? 100 : task.progress;
+      upsertTask({ ...task, status: newStatus as Task["status"], progress: nextProgress });
+      const updated = await tasksService.update(task.id, { status: newStatus as any, progress: nextProgress });
+      upsertTask(updated);
     } catch (error) {
+      upsertTask(task);
       console.error("Error updating task status:", error);
     }
   };

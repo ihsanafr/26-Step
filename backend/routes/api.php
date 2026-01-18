@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\LinkController;
 use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\AdminController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -27,6 +28,8 @@ Route::post('/feedback', [FeedbackController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/user/avatar', [AuthController::class, 'updateAvatar']);
 
     // Tasks
     Route::apiResource('tasks', TaskController::class);
@@ -81,3 +84,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('journals', JournalController::class);
 });
 
+// Admin routes
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    Route::get('/users', [AdminController::class, 'users']);
+    Route::get('/users/{id}', [AdminController::class, 'userDetails']);
+    Route::put('/users/{id}', [AdminController::class, 'updateUser']);
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+    Route::get('/active-users', [AdminController::class, 'activeUsers']);
+    Route::get('/analytics', [AdminController::class, 'analytics']);
+});

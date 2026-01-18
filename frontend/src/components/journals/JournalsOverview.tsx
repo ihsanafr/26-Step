@@ -146,7 +146,35 @@ export default function JournalsOverview() {
               <Skeleton key={i} variant="rectangular" width="100%" height={140} className="rounded-2xl" />
             ))}
           </div>
-          <Skeleton variant="rectangular" width="100%" height={300} className="rounded-2xl" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+                <div className="mb-4 flex items-center justify-between">
+                  <Skeleton className="h-6 w-44" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+                <div className="mb-4 flex items-center justify-between">
+                  <Skeleton className="h-6 w-36" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                  ))}
+                </div>
+              </div>
+              <Skeleton variant="rectangular" width="100%" height={260} className="rounded-2xl" />
+            </div>
+          </div>
         </div>
       ) : (
         <>

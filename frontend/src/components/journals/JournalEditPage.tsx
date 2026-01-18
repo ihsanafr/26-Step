@@ -270,11 +270,26 @@ export default function JournalEditPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <Skeleton className="h-6 w-20 mb-3" />
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-24 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg" />
+          </div>
+        </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
           <div className="space-y-5">
             <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-64 w-full" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-48 w-full" />
           </div>
         </div>
       </div>

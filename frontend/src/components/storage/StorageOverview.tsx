@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { filesService, File } from "../../services/filesService";
-import { notesService, Note } from "../../services/notesService";
-import { linksService, Link } from "../../services/linksService";
+import { filesService } from "../../services/filesService";
+import type { File } from "../../services/filesService";
+import { notesService } from "../../services/notesService";
+import type { Note } from "../../services/notesService";
+import { linksService } from "../../services/linksService";
+import type { Link } from "../../services/linksService";
 import { Skeleton } from "../common/Skeleton";
 import { Link as RouterLink, useNavigate } from "react-router";
 import { FolderIcon, FileIcon } from "../../icons";
@@ -137,14 +140,39 @@ export default function StorageOverview() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="mb-8">
-          <Skeleton className="mb-2 h-10 w-64" />
-          <Skeleton className="h-6 w-96" />
-        </div>
+        <Skeleton className="h-48 w-full rounded-3xl" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-32 rounded-2xl" />
           ))}
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+              <div className="mb-4 flex items-center justify-between">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+              <div className="mb-4 flex items-center justify-between">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

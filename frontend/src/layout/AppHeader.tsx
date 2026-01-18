@@ -1,29 +1,12 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useState } from "react";
+import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
-import { ChevronDownIcon } from "../icons";
+import UserDropdown from "../components/header/UserDropdown";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
-  const navigate = useNavigate();
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Load user data
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -36,29 +19,6 @@ const AppHeader: React.FC = () => {
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
-
-  const toggleProfileDropdown = () => {
-    setProfileDropdownOpen(!isProfileDropdownOpen);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
@@ -124,99 +84,7 @@ const AppHeader: React.FC = () => {
           } items-center justify-end w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <ThemeToggleButton />
-          
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={toggleProfileDropdown}
-              className="flex items-center gap-2 px-2 py-1.5 transition-all rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Profile Menu"
-            >
-              <div className="flex items-center justify-center w-10 h-10 overflow-hidden transition-all border-2 border-gray-200 rounded-full hover:border-brand-400 dark:border-gray-700 dark:hover:border-brand-500">
-                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-sm">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <ChevronDownIcon 
-                className={`w-4 h-4 text-gray-600 dark:text-gray-400 transition-transform duration-200 ${
-                  isProfileDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Dropdown Menu */}
-            {isProfileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                {/* User Info Section */}
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {user?.name || "Super Admin"}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {user?.email || "admin@fincy.com"}
-                  </p>
-                </div>
-
-                <div className="py-2">
-                  <Link
-                    to="/"
-                    onClick={() => setProfileDropdownOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-all hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400 group"
-                  >
-                    <svg
-                      className="w-5 h-5 transition-transform group-hover:-translate-x-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                      />
-                    </svg>
-                    <span>Back to Homepage</span>
-                  </Link>
-
-                  <hr className="my-2 border-gray-200 dark:border-gray-700" />
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <UserDropdown />
         </div>
       </div>
     </header>

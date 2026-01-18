@@ -203,6 +203,16 @@ const TargetList: React.FC = () => {
           <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
         </div>
 
+        {/* Summary Statistics Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="h-28 rounded-xl border border-gray-200 bg-gray-100 animate-pulse dark:border-gray-700 dark:bg-gray-800"
+            />
+          ))}
+        </div>
+
         {/* Filter Skeleton */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
           <div className="flex flex-col gap-3 md:flex-row">

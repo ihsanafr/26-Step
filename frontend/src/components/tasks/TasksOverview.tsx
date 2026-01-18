@@ -119,28 +119,32 @@ const TasksOverview: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-            Tasks & Targets Dashboard
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-xl">
+        <div className="relative z-10">
+          <h1 className="mb-2 text-4xl font-bold md:text-5xl">Tasks & Targets Dashboard</h1>
+          <p className="mb-6 text-lg text-blue-100 md:text-xl">
             Manage your daily tasks and achieve your targets
           </p>
-        </div>
-        <div className="hidden md:flex items-center gap-2">
-          <div className="rounded-lg bg-blue-100 px-3 py-1.5 dark:bg-blue-500/20">
-            <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
-              {stats.tasks.total} Tasks
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/tasks/list"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+            >
+              <ListIcon className="h-4 w-4" />
+              Task List
+            </Link>
+            <Link
+              to="/tasks/targets"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+            >
+              <TargetIcon className="h-4 w-4" />
+              Targets
+            </Link>
           </div>
-          <div className="rounded-lg bg-purple-100 px-3 py-1.5 dark:bg-purple-500/20">
-            <span className="text-sm font-semibold text-purple-700 dark:text-purple-400">
-              {stats.targets.total} Targets
-            </span>
-          </div>
         </div>
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       </div>
 
       {/* Tasks Statistics */}

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "../ui/button/Button";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
-import { filesService, File } from "../../services/filesService";
+import { filesService } from "../../services/filesService";
+import type { File } from "../../services/filesService";
 import { MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, DownloadIcon, EyeIcon, ListIcon, GridIcon, CloseIcon, FolderIcon } from "../../icons";
 import { formatIndonesianDate } from "../../utils/date";
 import { resolveAssetUrl } from "../../utils/url";
@@ -106,6 +107,7 @@ export default function FilesList() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [folderDeleteWarning, setFolderDeleteWarning] = useState<string | null>(null);
   const [editing, setEditing] = useState<File | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
@@ -143,6 +145,7 @@ export default function FilesList() {
     const folderMap = new Map<string, Folder>();
     const root: Folder = { id: "root", name: "Root", path: "", createdAt: new Date().toISOString() };
     folderMap.set("root", root);
+    const customPathMap = new Map<string, Folder>();
 
     // Helper to build folder path
     const buildPath = (folder: Folder, allFolders: Folder[]): string => {
@@ -161,7 +164,9 @@ export default function FilesList() {
     customFolders.forEach((folder) => {
       const path = buildPath(folder, customFolders);
       folder.path = path;
-      folderMap.set(folder.id, { ...folder, path });
+      const mappedFolder = { ...folder, path };
+      folderMap.set(folder.id, mappedFolder);
+      customPathMap.set(path, mappedFolder);
     });
 
     // Build tree structure from custom folders
@@ -190,6 +195,13 @@ export default function FilesList() {
           
           currentPath = currentPath ? `${currentPath}/${part}` : part;
           const folderId = `category-${currentPath}`;
+
+          const customFolder = customPathMap.get(currentPath);
+          if (customFolder) {
+            currentFolder = customFolder;
+            level++;
+            return;
+          }
 
           if (!folderMap.has(folderId)) {
             const newFolder: Folder = {
@@ -221,6 +233,16 @@ export default function FilesList() {
 
     return [root];
   }, [items, customFolders]);
+
+  const allFolders = useMemo(() => {
+    const collected: Folder[] = [];
+    const walk = (folder: Folder) => {
+      collected.push(folder);
+      (folder.children || []).forEach(walk);
+    };
+    folders.forEach(walk);
+    return collected;
+  }, [folders]);
 
   const load = async () => {
     try {
@@ -296,11 +318,9 @@ export default function FilesList() {
 
     // Filter by folder (category)
     if (selectedFolder !== "root") {
-      const folder = folders
-        .flatMap((f) => [f, ...(f.children || [])])
-        .find((f) => f.id === selectedFolder);
+      const folder = allFolders.find((f) => f.id === selectedFolder);
       if (folder) {
-        filtered = filtered.filter((f) => f.category === folder.path || f.category?.startsWith(folder.path + "/"));
+        filtered = filtered.filter((f) => f.category === folder.path);
       }
     } else {
       filtered = filtered.filter((f) => !f.category || f.category === "");
@@ -337,7 +357,7 @@ export default function FilesList() {
     }
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [items, selectedFolder, searchQuery, typeFilter, categoryFilter, folders]);
+  }, [items, selectedFolder, searchQuery, typeFilter, categoryFilter, allFolders]);
 
   // Get subfolders in the current folder
   const currentSubfolders = useMemo(() => {
@@ -346,22 +366,20 @@ export default function FilesList() {
       return folders[0]?.children || [];
     }
     
-    const folder = folders
-      .flatMap((f) => [f, ...(f.children || [])])
-      .find((f) => f.id === selectedFolder);
+    const folder = allFolders.find((f) => f.id === selectedFolder);
     
     if (!folder) return [];
     
     // Get direct children of the selected folder
     return folder.children || [];
-  }, [selectedFolder, folders]);
+  }, [selectedFolder, folders, allFolders]);
 
   const currentFolder = useMemo(() => {
     if (selectedFolder === "root") {
       return { id: "root", name: "Root", path: "" };
     }
-    return folders.flatMap((f) => [f, ...(f.children || [])]).find((f) => f.id === selectedFolder) || { id: "root", name: "Root", path: "" };
-  }, [selectedFolder, folders]);
+    return allFolders.find((f) => f.id === selectedFolder) || { id: "root", name: "Root", path: "" };
+  }, [selectedFolder, allFolders]);
 
   const handleUpload = async () => {
     if (!uploadFiles || uploadFiles.length === 0) return;
@@ -378,7 +396,7 @@ export default function FilesList() {
         const fileName = uploadFileName.trim() || file.name;
         const existingFile = items.find(
           (f) => (f.name === fileName || f.original_name === fileName) &&
-          f.category === (uploadFileLocation !== "root" ? folders.flatMap((f) => [f, ...(f.children || [])]).find((f) => f.id === uploadFileLocation)?.path : undefined)
+          f.category === (uploadFileLocation !== "root" ? allFolders.find((f) => f.id === uploadFileLocation)?.path : undefined)
         );
         if (existingFile) {
           duplicateFiles.push(fileName);
@@ -394,9 +412,7 @@ export default function FilesList() {
       // Get folder path for category
       let category: string | undefined = undefined;
       if (uploadFileLocation !== "root") {
-        const folder = folders
-          .flatMap((f) => [f, ...(f.children || [])])
-          .find((f) => f.id === uploadFileLocation);
+        const folder = allFolders.find((f) => f.id === uploadFileLocation);
         if (folder && folder.path) {
           category = folder.path;
         }
@@ -458,9 +474,7 @@ export default function FilesList() {
     setEditName(file.name);
     // Find folder ID from category path
     if (file.category) {
-      const folder = folders
-        .flatMap((f) => [f, ...(f.children || [])])
-        .find((f) => f.path === file.category || f.name === file.category);
+      const folder = allFolders.find((f) => f.path === file.category || f.name === file.category);
       setEditCategory(folder ? folder.id : file.category);
     } else {
       setEditCategory("root");
@@ -510,9 +524,7 @@ export default function FilesList() {
       // Get folder path for category if editCategory is a folder ID
       let category: string | null = null;
       if (editCategory) {
-        const folder = folders
-          .flatMap((f) => [f, ...(f.children || [])])
-          .find((f) => f.id === editCategory);
+        const folder = allFolders.find((f) => f.id === editCategory);
         if (folder && folder.id !== "root") {
           category = folder.path || folder.name;
         } else if (!editCategory.startsWith("folder-") && !editCategory.startsWith("category-")) {
@@ -567,18 +579,14 @@ export default function FilesList() {
 
   const getFolderDepth = (folderId: string): number => {
     if (folderId === "root") return 0;
-    const folder = folders
-      .flatMap((f) => [f, ...(f.children || [])])
-      .find((f) => f.id === folderId);
+    const folder = allFolders.find((f) => f.id === folderId);
     if (!folder) return 0;
     
     let depth = 0;
     let current = folder;
     while (current.parentId && current.parentId !== "root") {
       depth++;
-      const parent = folders
-        .flatMap((f) => [f, ...(f.children || [])])
-        .find((f) => f.id === current.parentId);
+      const parent = allFolders.find((f) => f.id === current.parentId);
       if (!parent) break;
       current = parent;
     }
@@ -602,9 +610,7 @@ export default function FilesList() {
           // Check if folder would be moved into itself or its children
           const isDescendant = (folderId: string, ancestorId: string): boolean => {
             if (folderId === ancestorId) return true;
-            const folder = folders
-              .flatMap((f) => [f, ...(f.children || [])])
-              .find((f) => f.id === folderId);
+            const folder = allFolders.find((f) => f.id === folderId);
             if (!folder || !folder.parentId) return false;
             return isDescendant(folder.parentId, ancestorId);
           };
@@ -617,9 +623,7 @@ export default function FilesList() {
         
         // Check if folder name already exists in the same parent (if name changed or parent changed)
         if (editFolderName.trim() !== editingFolder.name || editFolderParent !== (editingFolder.parentId || "root")) {
-          const parent = folders
-            .flatMap((f) => [f, ...(f.children || [])])
-            .find((f) => f.id === editFolderParent);
+          const parent = allFolders.find((f) => f.id === editFolderParent);
           
           if (parent?.children?.some((f) => f.id !== editingFolder.id && f.name.toLowerCase() === editFolderName.trim().toLowerCase())) {
             setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
@@ -663,9 +667,7 @@ export default function FilesList() {
         }
         
         // Check if folder name already exists in the same parent
-        const parent = folders
-          .flatMap((f) => [f, ...(f.children || [])])
-          .find((f) => f.id === parentFolderId);
+        const parent = allFolders.find((f) => f.id === parentFolderId);
         
         if (parent?.children?.some((f) => f.name.toLowerCase() === newFolderName.trim().toLowerCase())) {
           setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
@@ -719,12 +721,12 @@ export default function FilesList() {
       setDeletingFolder(true);
       
       // Check if folder has children
-      const folder = folders
-        .flatMap((f) => [f, ...(f.children || [])])
-        .find((f) => f.id === deleteFolderModal.folder!.id);
+      const folder = allFolders.find((f) => f.id === deleteFolderModal.folder!.id);
       
       if (folder?.children && folder.children.length > 0) {
-        setUploadError("Tidak dapat menghapus folder yang masih memiliki subfolder. Hapus atau pindahkan subfolder terlebih dahulu.");
+        setFolderDeleteWarning(
+          `Folder "${folder.name}" tidak bisa dihapus karena masih memiliki subfolder. Hapus atau pindahkan subfolder terlebih dahulu.`
+        );
         setDeleteFolderModal({ open: false, folder: null });
         setDeletingFolder(false);
         return;
@@ -735,7 +737,9 @@ export default function FilesList() {
       const hasFiles = items.some((file) => file.category === folderPath || file.category?.startsWith(folderPath + "/"));
       
       if (hasFiles) {
-        setUploadError("Tidak dapat menghapus folder yang masih berisi file. Pindahkan atau hapus file terlebih dahulu.");
+        setFolderDeleteWarning(
+          `Folder "${folder?.name || "ini"}" tidak bisa dihapus karena masih berisi file. Pindahkan atau hapus file terlebih dahulu.`
+        );
         setDeleteFolderModal({ open: false, folder: null });
         setDeletingFolder(false);
         return;
@@ -765,9 +769,7 @@ export default function FilesList() {
     try {
       let category: string | null = null;
       if (targetFolderId !== "root") {
-        const folder = folders
-          .flatMap((f) => [f, ...(f.children || [])])
-          .find((f) => f.id === targetFolderId);
+        const folder = allFolders.find((f) => f.id === targetFolderId);
         if (folder && folder.id !== "root") {
           category = folder.path || folder.name;
         }
@@ -893,10 +895,36 @@ export default function FilesList() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-20 w-full" />
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <div className="mb-4">
+            <Skeleton className="mb-2 h-7 w-56" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <Skeleton className="h-11 w-40 rounded-lg" />
+            <Skeleton className="h-11 w-32 rounded-lg" />
+            <div className="ml-auto flex flex-wrap items-center gap-3">
+              <Skeleton className="h-10 w-56 rounded-lg" />
+              <Skeleton className="h-10 w-32 rounded-lg" />
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
+          </div>
+        </div>
         <div className="flex gap-6">
-          <Skeleton className="h-96 w-64" />
-          <Skeleton className="h-96 flex-1" />
+          <div className="w-64 space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-8 w-full rounded-lg" />
+            ))}
+          </div>
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-10 w-48 rounded-lg" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-40 rounded-xl" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1155,27 +1183,6 @@ export default function FilesList() {
             </div>
           ) : (
             <div className="space-y-2">
-              {/* Display Subfolders in List View */}
-              {currentSubfolders.map((subfolder) => (
-                <button
-                  key={subfolder.id}
-                  onClick={() => setSelectedFolder(subfolder.id)}
-                  className="group flex w-full items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-indigo-300 hover:bg-indigo-50/50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-indigo-950/20"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-                    <FolderIcon className="h-6 w-6" color="#eab308" />
-                  </div>
-                  <div className="grow">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {subfolder.name}
-                    </h3>
-                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Folder
-                    </div>
-                  </div>
-                </button>
-              ))}
-              
               {/* Display Files in List View */}
               {filtered.map((file) => {
                 const fileUrl = resolveAssetUrl((file as any).url || `/storage/${file.path}`);
@@ -1413,8 +1420,7 @@ export default function FilesList() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="root">Root</option>
-                  {folders
-                    .flatMap((f) => [f, ...(f.children || [])])
+                  {allFolders
                     .filter((f) => f.id !== "root" && f.id.startsWith("folder-"))
                     .map((folder) => (
                       <option key={folder.id} value={folder.id}>
@@ -1499,8 +1505,7 @@ export default function FilesList() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="root">Root</option>
-                  {folders
-                    .flatMap((f) => [f, ...(f.children || [])])
+                  {allFolders
                     .filter((f) => f.id !== "root")
                     .map((folder) => (
                       <option key={folder.id} value={folder.id}>
@@ -1625,8 +1630,7 @@ export default function FilesList() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="root">Root</option>
-                  {folders
-                    .flatMap((f) => [f, ...(f.children || [])])
+                  {allFolders
                     .filter((f) => f.id !== "root" && f.id.startsWith("folder-") && (!editingFolder || f.id !== editingFolder.id))
                     .map((folder) => (
                       <option key={folder.id} value={folder.id}>
@@ -1692,17 +1696,25 @@ export default function FilesList() {
 
       {/* Upload Error Modal */}
       <AlertModal
-        open={!!uploadError}
+        isOpen={!!uploadError}
         onClose={() => setUploadError(null)}
         title="Upload Gagal"
         message={uploadError || ""}
         type="error"
       />
 
+      <AlertModal
+        isOpen={!!folderDeleteWarning}
+        onClose={() => setFolderDeleteWarning(null)}
+        title="Tidak bisa menghapus folder"
+        message={folderDeleteWarning || ""}
+        type="warning"
+      />
+
       {/* Download Confirmation Modal */}
       {downloadConfirm && (
         <div
-          className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200`}
           onClick={() => setDownloadConfirm(null)}
         >
           <div
@@ -1739,7 +1751,7 @@ export default function FilesList() {
 
       {/* Download Notice Modal */}
       <AlertModal
-        open={!!downloadNotice}
+        isOpen={!!downloadNotice}
         onClose={() => setDownloadNotice(null)}
         title="Download"
         message={downloadNotice || ""}

@@ -3,7 +3,6 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 })
@@ -29,26 +28,25 @@ api.interceptors.request.use(
       console.warn('⚠️ No token found in localStorage');
     }
     
-    // For FormData, ensure Content-Type is not set (let browser/axios set it with boundary)
+    // For FormData, ensure Content-Type is not set so axios can set it with boundary
     if (config.data instanceof FormData) {
-      // Remove all Content-Type related headers
+      // Remove Content-Type header completely - axios will automatically set it with boundary
       delete config.headers['Content-Type'];
       delete config.headers['content-type'];
-      delete config.headers['Accept'];
-      
-      // Also remove from common headers
+      // Also remove from common headers if exists
       if (config.headers.common) {
         delete config.headers.common['Content-Type'];
         delete config.headers.common['content-type'];
       }
-      
-      // And from post headers
-      if (config.headers.post) {
-        delete config.headers.post['Content-Type'];
-        delete config.headers.post['content-type'];
+      console.log('✅ FormData detected, removed Content-Type - axios will set with boundary');
+      console.log('📦 FormData entries:', Array.from(config.data.entries()).map(([key, value]) => 
+        [key, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value]
+      ));
+    } else if (config.data && typeof config.data === 'object' && !(config.data instanceof Blob)) {
+      // For non-FormData object requests, set Content-Type to application/json
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
       }
-      
-      console.log('✅ Content-Type removed for FormData (browser will set it)');
     }
     
     console.log('📤 Final headers:', {

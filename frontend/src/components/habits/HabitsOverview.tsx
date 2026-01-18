@@ -1,4 +1,5 @@
 import { Habit, HabitLog } from "../../services/habitsService";
+import { TargetIcon, CheckCircleIcon, BoltIcon, ShootingStarIcon } from "../../icons";
 
 interface HabitsOverviewProps {
   habits: Habit[];
@@ -19,7 +20,7 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
     {
       label: "Active Habits",
       value: activeHabits.length,
-      icon: "🎯",
+      icon: TargetIcon,
       color: "from-blue-50 to-blue-100 border-blue-200 dark:from-blue-500/10 dark:to-blue-500/5 dark:border-gray-700",
       iconBg: "bg-blue-100 dark:bg-blue-500/20",
       iconColor: "text-blue-600 dark:text-blue-400",
@@ -27,7 +28,7 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
     {
       label: "Today's Progress",
       value: `${todayCompleted}/${todayTotal}`,
-      icon: "✅",
+      icon: CheckCircleIcon,
       color: "from-green-50 to-green-100 border-green-200 dark:from-green-500/10 dark:to-green-500/5 dark:border-gray-700",
       iconBg: "bg-green-100 dark:bg-green-500/20",
       iconColor: "text-green-600 dark:text-green-400",
@@ -36,7 +37,7 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
     {
       label: "Average Streak",
       value: `${averageStreak}`,
-      icon: "🔥",
+      icon: BoltIcon,
       color: "from-orange-50 to-orange-100 border-orange-200 dark:from-orange-500/10 dark:to-orange-500/5 dark:border-gray-700",
       iconBg: "bg-orange-100 dark:bg-orange-500/20",
       iconColor: "text-orange-600 dark:text-orange-400",
@@ -45,7 +46,7 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
     {
       label: "Longest Streak",
       value: `${longestStreak}`,
-      icon: "🏆",
+      icon: ShootingStarIcon,
       color: "from-yellow-50 to-yellow-100 border-yellow-200 dark:from-yellow-500/10 dark:to-yellow-500/5 dark:border-gray-700",
       iconBg: "bg-yellow-100 dark:bg-yellow-500/20",
       iconColor: "text-yellow-600 dark:text-yellow-400",
@@ -69,7 +70,7 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
               )}
             </div>
             <div className={`rounded-lg p-3 transition-transform group-hover:scale-110 ${stat.iconBg}`}>
-              <span className="text-3xl">{stat.icon}</span>
+              <stat.icon className={`h-7 w-7 ${stat.iconColor}`} />
             </div>
           </div>
 

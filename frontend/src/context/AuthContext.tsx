@@ -5,6 +5,8 @@ interface User {
   id: number;
   name: string;
   email: string;
+  avatar?: string;
+  is_admin?: boolean;
   [key: string]: any;
 }
 
@@ -12,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (credentials: { email: string; password: string }) => Promise<any>;
   register: (data: { name: string; email: string; password: string; password_confirmation: string }) => Promise<any>;
   logout: () => Promise<void>;
@@ -34,6 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
   const isAuthenticated = !!token;
+  const isAdmin = !!user?.is_admin;
 
   const login = async (credentials: { email: string; password: string }) => {
     try {
@@ -102,7 +106,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
-    initializeAuth();
+    try {
+      initializeAuth();
+    } catch (error) {
+      console.error('Error initializing auth in useEffect:', error);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -112,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         token,
         isAuthenticated,
+        isAdmin,
         login,
         register,
         logout,

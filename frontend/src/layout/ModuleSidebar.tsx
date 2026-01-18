@@ -44,12 +44,26 @@ const ModuleSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
+        className={`py-8 flex items-center gap-3 ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/dashboard" className="text-xl font-bold text-gray-800 dark:text-white">
-          {isExpanded || isHovered || isMobileOpen ? "26-step" : "26"}
+        <Link 
+          to="/dashboard" 
+          className={`flex items-center gap-3 ${
+            !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
+        >
+          <img 
+            src="/logo.svg" 
+            alt="26-step" 
+            className="h-8 w-8 flex-shrink-0"
+          />
+          {(isExpanded || isHovered || isMobileOpen) && (
+            <span className="text-xl font-bold text-gray-800 dark:text-white">
+              26-step
+            </span>
+          )}
         </Link>
       </div>
       <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear no-scrollbar">

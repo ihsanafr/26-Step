@@ -1,130 +1,249 @@
-import { useState } from "react";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { Dropdown } from "../ui/dropdown/Dropdown";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
+import { ChevronDownIcon } from "../../icons";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  function toggleDropdown() {
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const toggleDropdown = () => {
     setIsOpen(!isOpen);
-  }
+  };
 
-  function closeDropdown() {
+  const handleLogoutClick = () => {
     setIsOpen(false);
-  }
+    setIsLogoutOpen(true);
+  };
 
-  const handleLogout = async () => {
-    closeDropdown();
+  const handleLogoutConfirm = async () => {
+    setIsLogoutOpen(false);
     await logout();
     navigate("/login");
   };
 
+  const handleLogoutCancel = () => {
+    setIsLogoutOpen(false);
+  };
+
+  const handleProfile = () => {
+    setIsOpen(false);
+    navigate("/profile");
+  };
+
+  const handleHomepage = () => {
+    setIsOpen(false);
+    navigate("/");
+  };
+
+  const handleAdmin = () => {
+    setIsOpen(false);
+    navigate("/admin");
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
+      {/* Profile Photo Button */}
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
+        className="relative flex items-center gap-2 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-full"
+        aria-label="Profile Menu"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img 
-            src="/images/user/owner.jpg" 
-            alt="User" 
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=465fff&color=fff`;
-            }}
-          />
-        </span>
-
-        <span className="block mr-1 font-medium text-theme-sm">
-          {user?.name || "User"}
-        </span>
-        <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+        <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 hover:border-brand-400 dark:hover:border-brand-500">
+          {user?.avatar || user?.avatar_url ? (
+            <img 
+              src={user.avatar_url || user.avatar} 
+              alt={user?.name || "User"} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=465fff&color=fff&size=128`;
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-sm">
+              {user?.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+          )}
+        </div>
+        <ChevronDownIcon
+          className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
-          width="18"
-          height="20"
-          viewBox="0 0 18 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        />
       </button>
 
-      <Dropdown
-        isOpen={isOpen}
-        onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
-      >
-        <div>
-          <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {user?.name || "User"}
-          </span>
-          <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {user?.email || "user@example.com"}
-          </span>
-        </div>
+      {/* Dropdown Menu with smooth animation */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* User Info Section */}
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {user?.name || "User"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {user?.email || "user@example.com"}
+            </p>
+          </div>
 
-        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <li>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              tag="a"
-              to="/dashboard"
-              className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          {/* Menu Items */}
+          <div className="py-2">
+            <button
+              onClick={handleProfile}
+              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400"
             >
               <svg
-                className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                className="w-5 h-5"
                 fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
                 <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5Z"
-                  fill=""
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              Dashboard
-            </DropdownItem>
-          </li>
-        </ul>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-        >
-          <svg
-            className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.1007 19.247C14.6865 19.247 14.3507 18.9112 14.3507 18.497L14.3507 14.245H12.8507V18.497C12.8507 19.7396 13.8581 20.747 15.1007 20.747H18.5007C19.7434 20.747 20.7507 19.7396 20.7507 18.497L20.7507 5.49609C20.7507 4.25345 19.7433 3.24609 18.5007 3.24609H15.1007C13.8581 3.24609 12.8507 4.25345 12.8507 5.49609V9.74501L14.3507 9.74501V5.49609C14.3507 5.08188 14.6865 4.74609 15.1007 4.74609L18.5007 4.74609C18.9149 4.74609 19.2507 5.08188 19.2507 5.49609L19.2507 18.497C19.2507 18.9112 18.9149 19.247 18.5007 19.247H15.1007ZM3.25073 11.9984C3.25073 12.2144 3.34204 12.4091 3.48817 12.546L8.09483 17.1556C8.38763 17.4485 8.86251 17.4487 9.15549 17.1559C9.44848 16.8631 9.44863 16.3882 9.15583 16.0952L5.81116 12.7484L16.0007 12.7484C16.4149 12.7484 16.7507 12.4127 16.7507 11.9984C16.7507 11.5842 16.4149 11.2484 16.0007 11.2484L5.81528 11.2484L9.15585 7.90554C9.44864 7.61255 9.44847 7.13767 9.15547 6.84488C8.86248 6.55209 8.3876 6.55226 8.09481 6.84525L3.52309 11.4202C3.35673 11.5577 3.25073 11.7657 3.25073 11.9984Z"
-              fill=""
-            />
-          </svg>
-          Sign out
-        </button>
-      </Dropdown>
+              <span>Profile</span>
+            </button>
+
+            <button
+              onClick={handleHomepage}
+              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              <span>Back to Homepage</span>
+            </button>
+
+            {isAdmin && (
+              <>
+                <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                <button
+                  onClick={handleAdmin}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-purple-700 transition-colors hover:bg-purple-50 hover:text-purple-800 dark:text-purple-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <span>Admin Dashboard</span>
+                </button>
+              </>
+            )}
+
+            <hr className="my-2 border-gray-200 dark:border-gray-700" />
+            
+            <button
+              onClick={handleLogoutClick}
+              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isLogoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={handleLogoutCancel}
+          ></div>
+          <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v4m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0l-7.07 12a2 2 0 001.74 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Konfirmasi Logout
+              </h3>
+            </div>
+            <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+              Anda yakin ingin logout dari aplikasi?
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={handleLogoutCancel}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

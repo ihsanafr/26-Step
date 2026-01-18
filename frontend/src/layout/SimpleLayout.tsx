@@ -11,7 +11,7 @@ const SimpleLayout: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2">
@@ -36,7 +36,7 @@ const SimpleLayout: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 md:px-6 md:py-12">
+      <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8 md:py-12">
         <Outlet />
       </main>
     </div>

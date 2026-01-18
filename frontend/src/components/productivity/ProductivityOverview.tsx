@@ -70,13 +70,29 @@ export default function ProductivityOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white md:text-4xl">
-          Productivity & Time
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Track your time, run focus sessions, and plan your day.
-        </p>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 p-8 text-white shadow-xl">
+        <div className="relative z-10">
+          <h1 className="mb-2 text-4xl font-bold md:text-5xl">Productivity & Time</h1>
+          <p className="mb-6 text-lg text-indigo-100 md:text-xl">
+            Track your time, run focus sessions, and plan your day.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/productivity/pomodoro"
+              className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+            >
+              Start Pomodoro
+            </Link>
+            <Link
+              to="/productivity/schedule"
+              className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+            >
+              Manage Schedule
+            </Link>
+          </div>
+        </div>
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       </div>
 
       {/* Stats */}

@@ -188,6 +188,9 @@ const TargetDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
+        {/* Back Button Skeleton */}
+        <div className="h-4 w-36 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+
         {/* Header Skeleton */}
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
@@ -209,6 +212,12 @@ const TargetDetail: React.FC = () => {
             </div>
             <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mt-4"></div>
           </div>
+        </div>
+
+        {/* Progress Section Skeleton */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <div className="mb-4 h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
         </div>
 
         {/* Tasks Section Skeleton */}

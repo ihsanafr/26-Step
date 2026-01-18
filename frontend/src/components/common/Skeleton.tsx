@@ -180,29 +180,73 @@ export const StatCardSkeleton: React.FC = () => {
 export const OverviewSectionSkeleton: React.FC = () => {
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Skeleton variant="text" width={200} height={32} />
-        <Skeleton variant="rectangular" width={120} height={40} />
+      <Skeleton className="h-48 w-full rounded-3xl" />
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton variant="text" width={220} height={28} />
+          <Skeleton variant="text" width={160} height={16} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <StatCardSkeleton key={i} />
-        ))}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4">
+          <Skeleton variant="text" width={240} height={28} className="mb-2" />
+          <Skeleton variant="text" width={200} height={16} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+        <div className="mt-4 space-y-2">
+          <Skeleton variant="text" width={180} height={16} />
+          <Skeleton variant="rectangular" width="100%" height={8} />
+        </div>
       </div>
 
-      {/* Quick Insights */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <StatCardSkeleton key={i} />
-        ))}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton variant="text" width={180} height={24} />
+          <Skeleton variant="text" width={120} height={16} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
 
-      {/* Active Targets */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton variant="text" width={200} height={24} />
+          <Skeleton variant="rectangular" width={120} height={32} />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="mb-4">
+          <Skeleton variant="text" width={200} height={24} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+
       <div>
-        <Skeleton variant="text" width={200} height={28} className="mb-4" />
+        <Skeleton variant="text" width={220} height={24} className="mb-4" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <TargetCardSkeleton key={i} />

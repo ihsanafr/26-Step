@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
+        'is_admin',
     ];
 
     /**
@@ -44,6 +46,33 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    // Relationships
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function targets()
+    {
+        return $this->hasMany(Target::class);
+    }
+
+    public function habits()
+    {
+        return $this->hasMany(Habit::class);
+    }
+
+    public function journals()
+    {
+        return $this->hasMany(Journal::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(FinancialTransaction::class);
     }
 }

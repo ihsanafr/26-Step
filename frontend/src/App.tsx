@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Tasks from "./pages/modules/Tasks";
 import TasksGuide from "./pages/modules/TasksGuide";
 import TargetDetail from "./components/targets/TargetDetail";
@@ -21,6 +22,7 @@ import Habits from "./pages/modules/Habits";
 import HabitDetail from "./components/habits/HabitDetail";
 import Storage from "./pages/modules/Storage";
 import Journals from "./pages/modules/Journals";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Error Boundary Component
 class ErrorBoundary extends Component<
@@ -80,6 +82,26 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   } catch (error) {
     console.error("ProtectedRoute error:", error);
     return <Navigate to="/login" replace />;
+  }
+};
+
+// Admin Protected Route Component
+const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  try {
+    const { isAuthenticated, isAdmin } = useAuth();
+    
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (!isAdmin) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    return <>{children}</>;
+  } catch (error) {
+    console.error("AdminProtectedRoute error:", error);
+    return <Navigate to="/dashboard" replace />;
   }
 };
 
@@ -147,6 +169,15 @@ export default function App() {
                 }
               >
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AdminProtectedRoute>
+                      <AdminDashboard />
+                    </AdminProtectedRoute>
+                  } 
+                />
               </Route>
 
               {/* Module Routes - Module Layout (with sidebar) */}
