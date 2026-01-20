@@ -69,7 +69,7 @@ function StreakDayModal({
   const formatDateId = (dateStr?: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr + "T00:00:00");
-    return new Intl.DateTimeFormat("id-ID", {
+    return new Intl.DateTimeFormat("en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",

@@ -8,7 +8,7 @@ import { budgetsService, Budget } from "../../services/budgetsService";
 import { formatIndonesianDate } from "../../utils/date";
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0,
@@ -156,7 +156,7 @@ export default function FinanceOverview() {
         <div className="relative z-10">
           <h1 className="mb-2 text-4xl font-bold md:text-5xl">Personal Finance</h1>
           <p className="mb-6 text-lg text-emerald-50 md:text-xl">
-            Kelola pemasukan, pengeluaran, dan budget kamu dengan rapi
+            Manage your income, expenses, and budget efficiently
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
@@ -226,7 +226,7 @@ export default function FinanceOverview() {
             </div>
             {recentTransactions.length === 0 ? (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                Belum ada transaksi
+                No transactions yet
               </div>
             ) : (
               <div className="space-y-3">
@@ -237,10 +237,10 @@ export default function FinanceOverview() {
                   >
                     <div>
                       <div className="font-semibold text-gray-900 dark:text-white">
-                        {t.description || t.category || "Transaksi"}
+                        {t.description || t.category || "Transaction"}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {t.category || "Tanpa kategori"} • {formatIndonesianDate(t.date)}
+                        {t.category || "Uncategorized"} • {formatIndonesianDate(t.date)}
                       </div>
                     </div>
                     <div
@@ -260,17 +260,17 @@ export default function FinanceOverview() {
         <div>
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Budget Aktif</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Active Budgets</h2>
               <button
                 onClick={() => navigate("/finance/budget")}
                 className="text-sm font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
               >
-                Kelola →
+                Manage →
               </button>
             </div>
             {activeBudgets.length === 0 ? (
               <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                Belum ada budget aktif
+                No active budgets
               </div>
             ) : (
               <div className="space-y-4">

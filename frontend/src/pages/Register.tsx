@@ -68,13 +68,13 @@ export default function Register() {
       await register(form);
       navigate("/dashboard");
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Registrasi gagal";
+      const errorMessage = err.response?.data?.message || err.message || "Registration failed";
       if (typeof errorMessage === "object" && errorMessage.email) {
         setError(Array.isArray(errorMessage.email) ? errorMessage.email[0] : errorMessage.email);
       } else if (typeof errorMessage === "string") {
         setError(errorMessage);
       } else {
-        setError("Registrasi gagal. Periksa data yang Anda masukkan.");
+        setError("Registration failed. Please check your input data.");
       }
     } finally {
       setLoading(false);
@@ -85,7 +85,7 @@ export default function Register() {
     <>
       <PageMeta
         title="Register - 26-step"
-        description="Buat akun baru 26-step"
+        description="Create a new 26-step account"
       />
       <div className={`relative min-h-screen transition-colors duration-300 ${
         isDark 
@@ -122,7 +122,7 @@ export default function Register() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Kembali ke beranda
+                    Back to homepage
                   </Link>
 
                   <div className={`rounded-2xl border p-8 ${
@@ -148,7 +148,7 @@ export default function Register() {
                       <p className={`text-sm ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}>
-                        Buat akun baru Anda
+                        Create your new account
                       </p>
                     </div>
 
@@ -156,11 +156,11 @@ export default function Register() {
                       <div className="space-y-5">
                         <div>
                           <Label className="mb-2">
-                            Nama Lengkap <span className="text-error-500">*</span>
+                            Full Name <span className="text-error-500">*</span>
                           </Label>
                           <Input
                             type="text"
-                            placeholder="Nama Anda"
+                            placeholder="Your name"
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             className={`${
@@ -195,7 +195,7 @@ export default function Register() {
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
-                              placeholder="Minimal 8 karakter"
+                              placeholder="Minimum 8 characters"
                               value={form.password}
                               onChange={(e) => setForm({ ...form, password: e.target.value })}
                               className={`${
@@ -322,7 +322,7 @@ export default function Register() {
                               : "text-gray-900 hover:text-gray-700"
                           }`}
                         >
-                          Masuk di sini
+                          Login here
                         </Link>
                       </p>
                     </div>

@@ -1,5 +1,5 @@
 /**
- * Format date to Indonesian format: "13 Januari 2026"
+ * Format date to English format: "13 January 2026"
  */
 export function formatIndonesianDate(dateStr: string | Date | null | undefined): string {
   if (!dateStr) return "";
@@ -23,18 +23,18 @@ export function formatIndonesianDate(dateStr: string | Date | null | undefined):
     }
     
     const months = [
-      "Januari",
-      "Februari",
-      "Maret",
+      "January",
+      "February",
+      "March",
       "April",
-      "Mei",
-      "Juni",
-      "Juli",
-      "Agustus",
+      "May",
+      "June",
+      "July",
+      "August",
       "September",
-      "Oktober",
+      "October",
       "November",
-      "Desember",
+      "December",
     ];
     const day = date.getDate();
     const month = months[date.getMonth()];

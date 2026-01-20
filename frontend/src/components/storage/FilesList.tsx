@@ -561,7 +561,7 @@ export default function FilesList() {
       await load();
     } catch (error: any) {
       console.error("Error deleting file:", error);
-      setUploadError(error.response?.data?.message || "Gagal menghapus file");
+      setUploadError(error.response?.data?.message || "Failed to delete file");
       setDeleteModal({ open: false, item: null });
     } finally {
       setDeleting(false);
@@ -603,7 +603,7 @@ export default function FilesList() {
         if (editFolderParent !== editingFolder.parentId) {
           const newDepth = getFolderDepth(editFolderParent);
           if (newDepth >= 3) {
-            setUploadError("Maksimal tumpukan folder adalah 3 level. Tidak dapat memindahkan folder ke level ini.");
+            setUploadError("Maximum folder depth is 3 levels. Cannot move folder to this level.");
             return;
           }
           
@@ -616,7 +616,7 @@ export default function FilesList() {
           };
           
           if (isDescendant(editFolderParent, editingFolder.id)) {
-            setUploadError("Tidak dapat memindahkan folder ke dalam dirinya sendiri atau folder turunannya.");
+            setUploadError("Cannot move folder into itself or its subfolders.");
             return;
           }
         }
@@ -626,7 +626,7 @@ export default function FilesList() {
           const parent = allFolders.find((f) => f.id === editFolderParent);
           
           if (parent?.children?.some((f) => f.id !== editingFolder.id && f.name.toLowerCase() === editFolderName.trim().toLowerCase())) {
-            setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
+            setUploadError("A folder with this name already exists in this folder");
             return;
           }
         }
@@ -653,7 +653,7 @@ export default function FilesList() {
         }, 200);
       } catch (error) {
         console.error("Error updating folder:", error);
-        setUploadError("Gagal memperbarui folder");
+        setUploadError("Failed to update folder");
       }
     } else {
       // Create new folder
@@ -662,7 +662,7 @@ export default function FilesList() {
       try {
         const currentDepth = getFolderDepth(parentFolderId);
         if (currentDepth >= 3) {
-          setUploadError("Maksimal tumpukan folder adalah 3 level. Tidak dapat membuat folder di level ini.");
+          setUploadError("Maximum folder depth is 3 levels. Cannot create folder at this level.");
           return;
         }
         
@@ -698,14 +698,14 @@ export default function FilesList() {
         }, 200);
       } catch (error) {
         console.error("Error creating folder:", error);
-        setUploadError("Gagal membuat folder");
+        setUploadError("Failed to create folder");
       }
     }
   };
 
   const handleEditFolder = (folder: Folder) => {
     if (folder.id === "root" || folder.id.startsWith("category-")) {
-      setUploadError("Folder default tidak dapat diedit");
+      setUploadError("Default folders cannot be edited");
       return;
     }
     setEditingFolder(folder);
@@ -725,7 +725,7 @@ export default function FilesList() {
       
       if (folder?.children && folder.children.length > 0) {
         setFolderDeleteWarning(
-          `Folder "${folder.name}" tidak bisa dihapus karena masih memiliki subfolder. Hapus atau pindahkan subfolder terlebih dahulu.`
+          `Folder "${folder.name}" cannot be deleted because it still has subfolders. Delete or move subfolders first.`
         );
         setDeleteFolderModal({ open: false, folder: null });
         setDeletingFolder(false);
@@ -738,7 +738,7 @@ export default function FilesList() {
       
       if (hasFiles) {
         setFolderDeleteWarning(
-          `Folder "${folder?.name || "ini"}" tidak bisa dihapus karena masih berisi file. Pindahkan atau hapus file terlebih dahulu.`
+          `Folder "${folder?.name || "this"}" cannot be deleted because it still contains files. Move or delete files first.`
         );
         setDeleteFolderModal({ open: false, folder: null });
         setDeletingFolder(false);
@@ -1065,7 +1065,7 @@ export default function FilesList() {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <FolderIcon className="mb-4 h-16 w-16" color="#9ca3af" />
               <p className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                {items.length === 0 ? "Belum ada dokumen" : "Tidak ada dokumen ditemukan"}
+                {items.length === 0 ? "No documents yet" : "No documents found"}
               </p>
               <p className="text-gray-600 dark:text-gray-400">
                 {items.length === 0 ? "Upload dokumen pertama Anda untuk memulai" : "Coba ubah filter atau pilih folder lain"}
@@ -1354,11 +1354,11 @@ export default function FilesList() {
                   type="text"
                   value={uploadFileName}
                   onChange={(e) => setUploadFileName(e.target.value)}
-                  placeholder="Biarkan kosong untuk menggunakan nama file asli"
+                  placeholder="Leave empty to use original filename"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Jika dikosongkan, akan menggunakan nama file asli
+                  If left empty, will use the original filename
                 </p>
               </div>
 
@@ -1536,7 +1536,7 @@ export default function FilesList() {
                 disabled={saving || !editName.trim()}
                 className="grow"
               >
-                {saving ? "Menyimpan..." : "Simpan"}
+                {saving ? "Saving..." : "Save"}
               </Button>
               <Button
                 onClick={() => {
@@ -1680,8 +1680,8 @@ export default function FilesList() {
         onClose={() => setDeleteFolderModal({ open: false, folder: null })}
         onConfirm={handleDeleteFolder}
         isLoading={deletingFolder}
-        title="Hapus Folder"
-        message={`Apakah Anda yakin ingin menghapus folder "${deleteFolderModal.folder?.name}"? Folder yang berisi file atau subfolder tidak dapat dihapus.`}
+        title="Delete Folder"
+        message={`Are you sure you want to delete the folder "${deleteFolderModal.folder?.name}"? Folders containing files or subfolders cannot be deleted.`}
       />
 
       {/* Delete Modal */}
@@ -1690,15 +1690,15 @@ export default function FilesList() {
         onClose={() => setDeleteModal({ open: false, item: null })}
         onConfirm={handleDelete}
         isLoading={deleting}
-        title="Hapus File"
-        message={`Apakah Anda yakin ingin menghapus "${deleteModal.item?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        title="Delete File"
+        message={`Are you sure you want to delete "${deleteModal.item?.name}"? This action cannot be undone.`}
       />
 
       {/* Upload Error Modal */}
       <AlertModal
         isOpen={!!uploadError}
         onClose={() => setUploadError(null)}
-        title="Upload Gagal"
+        title="Upload Failed"
         message={uploadError || ""}
         type="error"
       />
@@ -1706,7 +1706,7 @@ export default function FilesList() {
       <AlertModal
         isOpen={!!folderDeleteWarning}
         onClose={() => setFolderDeleteWarning(null)}
-        title="Tidak bisa menghapus folder"
+        title="Cannot Delete Folder"
         message={folderDeleteWarning || ""}
         type="warning"
       />
@@ -1834,7 +1834,7 @@ export default function FilesList() {
                       if (parent) {
                         parent.innerHTML = `
                           <div class="flex flex-col items-center justify-center py-16 text-center">
-                            <p class="text-gray-500 dark:text-gray-400">Gagal memuat gambar</p>
+                            <p class="text-gray-500 dark:text-gray-400">Failed to load image</p>
                             <a href="${resolveAssetUrl((previewFile as any).url || `/storage/${previewFile.path}`)}" download class="mt-4 text-indigo-600 hover:underline dark:text-indigo-400">Download file</a>
                           </div>
                         `;
@@ -1857,7 +1857,7 @@ export default function FilesList() {
                     controls
                     className="max-h-[70vh] max-w-full rounded-lg"
                   >
-                    Browser Anda tidak mendukung video player.
+                    Your browser does not support video player.
                   </video>
                 </div>
               ) : previewFile.mime_type.startsWith("audio/") ? (
@@ -1870,7 +1870,7 @@ export default function FilesList() {
                     controls
                     className="w-full max-w-md"
                   >
-                    Browser Anda tidak mendukung audio player.
+                    Your browser does not support audio player.
                   </audio>
                   <a
                     href={resolveAssetUrl((previewFile as any).url || `/storage/${previewFile.path}`)}
@@ -1886,10 +1886,10 @@ export default function FilesList() {
                     {getFileIconComponent(previewFile.mime_type)}
                   </div>
                   <p className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                    Preview tidak tersedia
+                    Preview not available
                   </p>
                   <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                    File tipe ini tidak dapat ditampilkan di browser
+                    This file type cannot be displayed in the browser
                   </p>
                   <a
                     href={resolveAssetUrl((previewFile as any).url || `/storage/${previewFile.path}`)}

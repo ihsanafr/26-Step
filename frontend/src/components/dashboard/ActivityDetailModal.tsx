@@ -10,7 +10,7 @@ interface ActivityDetailModalProps {
 
 function formatDateId(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -19,7 +19,7 @@ function formatDateId(dateStr: string) {
 
 function formatTime(timeStr: string) {
   const d = new Date(timeStr);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
@@ -197,7 +197,7 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                           )}
                           <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-gray-500 dark:text-gray-400">
                             {task.due_date && (
-                              <span>Due: {new Date(task.due_date).toLocaleDateString("id-ID")}</span>
+                              <span>Due: {new Date(task.due_date).toLocaleDateString("en-US")}</span>
                             )}
                             {task.progress !== undefined && task.progress !== null && (
                               <span>Progress: {task.progress}%</span>
@@ -413,7 +413,7 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                           }`}
                         >
                           {transaction.type === "income" ? "+" : "-"}Rp{" "}
-                          {parseFloat(transaction.amount).toLocaleString("id-ID")}
+                          {parseFloat(transaction.amount).toLocaleString("en-US")}
                         </span>
                       </div>
                     </div>

@@ -62,7 +62,7 @@ export default function Login() {
       await login(form);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Login gagal. Periksa email dan password Anda.");
+      setError(err.response?.data?.message || err.message || "Login failed. Please check your email and password.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export default function Login() {
     <>
       <PageMeta
         title="Login - 26-step"
-        description="Masuk ke akun 26-step Anda"
+        description="Login to your 26-step account"
       />
       <div className={`relative min-h-screen transition-colors duration-300 ${
         isDark 
@@ -109,7 +109,7 @@ export default function Login() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Kembali ke beranda
+                    Back to homepage
                   </Link>
 
                   <div className={`rounded-2xl border p-8 ${
@@ -135,7 +135,7 @@ export default function Login() {
                       <p className={`text-sm ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}>
-                        Masuk ke akun Anda
+                        Login to your account
                       </p>
                     </div>
 
@@ -241,7 +241,7 @@ export default function Login() {
                       <p className={`text-sm ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}>
-                        Belum punya akun?{" "}
+                        Don't have an account?{" "}
                         <Link
                           to="/register"
                           className={`font-medium transition-colors ${

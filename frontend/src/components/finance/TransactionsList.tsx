@@ -12,7 +12,7 @@ import { formatIndonesianDate } from "../../utils/date";
 import { PlusIcon, PencilIcon, TrashBinIcon } from "../../icons";
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0,
@@ -73,7 +73,7 @@ export default function TransactionsList() {
       setCategories(cats);
     } catch (err) {
       console.error("Error loading transactions:", err);
-      setError("Gagal memuat transaksi");
+      setError("Failed to load transactions");
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export default function TransactionsList() {
 
   const handleSubmit = async () => {
     if (!form.amount || !form.date) {
-      setError("Mohon lengkapi jumlah dan tanggal transaksi");
+      setError("Please fill in the amount and transaction date");
       return;
     }
     const payload = {
@@ -113,7 +113,7 @@ export default function TransactionsList() {
       await load();
     } catch (err) {
       console.error("Error saving transaction:", err);
-      setError("Gagal menyimpan transaksi");
+      setError("Failed to save transaction");
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function TransactionsList() {
       await load();
     } catch (err) {
       console.error("Error deleting transaction:", err);
-      setError("Gagal menghapus transaksi");
+      setError("Failed to delete transaction");
     } finally {
       setDeleting(false);
     }
@@ -248,9 +248,9 @@ export default function TransactionsList() {
       {/* Table */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
         {loading ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Memuat transaksi...</div>
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Loading transactions...</div>
         ) : filteredItems.length === 0 ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Belum ada transaksi</div>
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">No transactions yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -314,7 +314,7 @@ export default function TransactionsList() {
                         <button
                           onClick={() => setDeleteModal({ open: true, item })}
                           className="text-rose-600 hover:text-rose-700"
-                          title="Hapus"
+                          title="Delete"
                         >
                           <TrashBinIcon className="h-5 w-5" />
                         </button>
@@ -547,14 +547,14 @@ export default function TransactionsList() {
         onClose={() => setDeleteModal({ open: false, item: null })}
         onConfirm={handleDelete}
         isLoading={deleting}
-        title="Hapus Transaksi"
-        message="Apakah Anda yakin ingin menghapus transaksi ini?"
+        title="Delete Transaction"
+        message="Are you sure you want to delete this transaction?"
       />
 
       <AlertModal
         isOpen={!!error}
         onClose={() => setError(null)}
-        title="Terjadi Kesalahan"
+        title="Error"
         message={error || ""}
         type="error"
       />

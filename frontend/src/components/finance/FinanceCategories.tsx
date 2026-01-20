@@ -13,18 +13,18 @@ type FinanceDefault = {
 };
 
 const financeDefaults: FinanceDefault[] = [
-  { name: "Belanja", icon: "🛒", color: "#8b5cf6", type: "Expense" },
+  { name: "Shopping", icon: "🛒", color: "#8b5cf6", type: "Expense" },
   { name: "Bonus", icon: "🎁", color: "#10b981", type: "Income" },
-  { name: "Gaji", icon: "💰", color: "#22c55e", type: "Income" },
-  { name: "Hiburan", icon: "🎬", color: "#f59e0b", type: "Expense" },
-  { name: "Investasi", icon: "📈", color: "#14b8a6", type: "Income" },
-  { name: "Kesehatan", icon: "🏥", color: "#ec4899", type: "Expense" },
-  { name: "Lainnya (Pemasukan)", icon: "💵", color: "#22c55e", type: "Income" },
-  { name: "Lainnya (Pengeluaran)", icon: "🧾", color: "#ef4444", type: "Expense" },
-  { name: "Makanan & Minuman", icon: "🍔", color: "#ef4444", type: "Expense" },
-  { name: "Pendidikan", icon: "📚", color: "#06b6d4", type: "Expense" },
-  { name: "Tagihan", icon: "💳", color: "#6366f1", type: "Expense" },
-  { name: "Transportasi", icon: "🚗", color: "#3b82f6", type: "Expense" },
+  { name: "Salary", icon: "💰", color: "#22c55e", type: "Income" },
+  { name: "Entertainment", icon: "🎬", color: "#f59e0b", type: "Expense" },
+  { name: "Investment", icon: "📈", color: "#14b8a6", type: "Income" },
+  { name: "Health", icon: "🏥", color: "#ec4899", type: "Expense" },
+  { name: "Other (Income)", icon: "💵", color: "#22c55e", type: "Income" },
+  { name: "Other (Expense)", icon: "🧾", color: "#ef4444", type: "Expense" },
+  { name: "Food & Drinks", icon: "🍔", color: "#ef4444", type: "Expense" },
+  { name: "Education", icon: "📚", color: "#06b6d4", type: "Expense" },
+  { name: "Bills", icon: "💳", color: "#6366f1", type: "Expense" },
+  { name: "Transportation", icon: "🚗", color: "#3b82f6", type: "Expense" },
 ];
 
 export default function FinanceCategories() {
@@ -126,7 +126,7 @@ export default function FinanceCategories() {
         if (!exists) {
           await categoriesService.create({
             name: def.name,
-            description: def.type === "Income" ? "Kategori pemasukan" : "Kategori pengeluaran",
+            description: def.type === "Income" ? "Income category" : "Expense category",
             color: def.color,
             icon: def.icon,
           });
@@ -183,7 +183,7 @@ export default function FinanceCategories() {
           <button
             onClick={() => handleDeleteClick(category)}
             className="rounded-lg p-2 text-rose-600 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/20"
-            title="Hapus"
+            title="Delete"
           >
             <TrashBinIcon className="h-4 w-4" />
           </button>
@@ -200,7 +200,7 @@ export default function FinanceCategories() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Categories</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Kelola kategori pemasukan dan pengeluaran
+              Manage income and expense categories
             </p>
           </div>
           <Button onClick={handleCreate} startIcon={<PlusIcon className="h-5 w-5" />}>
@@ -217,11 +217,11 @@ export default function FinanceCategories() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Custom Categories</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Kategori buatan Anda</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Your custom categories</p>
           </div>
         </div>
         {loading ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Memuat kategori...</div>
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Loading categories...</div>
         ) : customCategories.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-10 text-center dark:border-gray-800 dark:bg-gray-900/40">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-theme-xs dark:bg-gray-800">
@@ -272,8 +272,8 @@ export default function FinanceCategories() {
       {isDeleteModalOpen && selectedCategory && (
         <ConfirmDeleteModal
           isOpen={isDeleteModalOpen}
-          title="Hapus Category"
-          message={`Apakah Anda yakin ingin menghapus kategori "${selectedCategory.name}"?`}
+          title="Delete Category"
+          message={`Are you sure you want to delete the category "${selectedCategory.name}"?`}
           onConfirm={handleDelete}
           onClose={() => {
             setIsDeleteModalOpen(false);

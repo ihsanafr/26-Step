@@ -13,7 +13,7 @@ export default function Finance() {
   if (path === "/finance" || path === "/finance/") {
     return (
       <>
-        <PageMeta title="Personal Finance - Lifesync" description="Kelola transaksi, budget, dan kategori" />
+        <PageMeta title="Personal Finance - Lifesync" description="Manage transactions, budgets, and categories" />
         <FinanceOverview />
       </>
     );
@@ -22,7 +22,7 @@ export default function Finance() {
   if (path === "/finance/transactions") {
     return (
       <>
-        <PageMeta title="Transaksi - Lifesync" description="Catat pemasukan dan pengeluaran" />
+        <PageMeta title="Transactions - Lifesync" description="Record income and expenses" />
         <TransactionsList />
       </>
     );
@@ -31,7 +31,7 @@ export default function Finance() {
   if (path === "/finance/budget") {
     return (
       <>
-        <PageMeta title="Budget - Lifesync" description="Atur budget pengeluaran" />
+        <PageMeta title="Budget - Lifesync" description="Set expense budget" />
         <BudgetsList />
       </>
     );
@@ -40,7 +40,7 @@ export default function Finance() {
   if (path === "/finance/categories") {
     return (
       <>
-        <PageMeta title="Kategori - Lifesync" description="Kelola kategori transaksi" />
+        <PageMeta title="Categories - Lifesync" description="Manage transaction categories" />
         <FinanceCategories />
       </>
     );

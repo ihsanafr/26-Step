@@ -27,27 +27,27 @@ const navItems: NavItem[] = [
   },
   {
     icon: <TaskIcon />,
-    name: "Tugas & Target",
+    name: "Tasks & Targets",
     path: "/tasks",
   },
   {
     icon: <DollarLineIcon />,
-    name: "Keuangan",
+    name: "Finance",
     path: "/finance",
   },
   {
     icon: <TimeIcon />,
-    name: "Produktivitas",
+    name: "Productivity",
     path: "/productivity",
   },
   {
     icon: <CheckCircleIcon />,
-    name: "Kebiasaan",
+    name: "Habits",
     path: "/habits",
   },
   {
     icon: <FolderIcon />,
-    name: "Penyimpanan",
+    name: "Storage",
     path: "/storage",
   },
   {

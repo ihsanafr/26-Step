@@ -221,18 +221,18 @@ export default function UserDropdown() {
                 </svg>
               </div>
               <h3 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
-                Konfirmasi Logout
+                Confirm Logout
               </h3>
             </div>
             <p className="mb-4 text-xs text-gray-600 dark:text-gray-400 sm:mb-6 sm:text-sm">
-              Anda yakin ingin logout dari aplikasi?
+              Are you sure you want to logout from the application?
             </p>
             <div className="flex items-center justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleLogoutCancel}
                 className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-4 sm:py-2 sm:text-sm"
               >
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleLogoutConfirm}

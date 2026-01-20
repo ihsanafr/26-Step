@@ -51,7 +51,7 @@ export const moduleMenus: Record<string, MenuItem[]> = {
     },
     {
       icon: <DollarLineIcon className="w-5 h-5" />,
-      name: "Transaksi",
+      name: "Transactions",
       path: "/finance/transactions",
     },
     {
@@ -61,7 +61,7 @@ export const moduleMenus: Record<string, MenuItem[]> = {
     },
     {
       icon: <TagIcon className="w-5 h-5" />,
-      name: "Kategori",
+      name: "Categories",
       path: "/finance/categories",
     },
   ],

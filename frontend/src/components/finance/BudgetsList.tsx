@@ -7,7 +7,7 @@ import { budgetsService, Budget } from "../../services/budgetsService";
 import { categoriesService, Category } from "../../services/categoriesService";
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0,
@@ -62,7 +62,7 @@ export default function BudgetsList() {
       setCategories(cats);
     } catch (err) {
       console.error("Error loading budgets:", err);
-      setError("Gagal memuat budget");
+      setError("Failed to load budgets");
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function BudgetsList() {
 
   const handleSubmit = async () => {
     if (!form.category || !form.amount || !form.start_date || !form.end_date) {
-      setError("Mohon lengkapi kategori, jumlah, dan periode");
+      setError("Please fill in category, amount, and period");
       return;
     }
     const payload = {
@@ -131,7 +131,7 @@ export default function BudgetsList() {
       await load();
     } catch (err) {
       console.error("Error saving budget:", err);
-      setError("Gagal menyimpan budget");
+      setError("Failed to save budget");
     } finally {
       setSaving(false);
     }
@@ -159,7 +159,7 @@ export default function BudgetsList() {
       await load();
     } catch (err) {
       console.error("Error deleting budget:", err);
-      setError("Gagal menghapus budget");
+      setError("Failed to delete budget");
     } finally {
       setDeleting(false);
     }
@@ -178,7 +178,7 @@ export default function BudgetsList() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Budget</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Atur budget bulanan Anda untuk kontrol pengeluaran
+              Set your monthly budget for expense control
             </p>
           </div>
           <Button
@@ -210,9 +210,9 @@ export default function BudgetsList() {
       {/* List */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
         {loading ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Memuat budget...</div>
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Loading budgets...</div>
         ) : items.length === 0 ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">Belum ada budget</div>
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">No budgets yet</div>
         ) : (
           <div className="space-y-4">
             {items.map((item) => {
@@ -254,7 +254,7 @@ export default function BudgetsList() {
                       onClick={() => setDeleteModal({ open: true, item })}
                       className="rounded-md border border-rose-200 px-3 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/20"
                     >
-                      Hapus
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -427,14 +427,14 @@ export default function BudgetsList() {
         onClose={() => setDeleteModal({ open: false, item: null })}
         onConfirm={handleDelete}
         isLoading={deleting}
-        title="Hapus Budget"
-        message="Apakah Anda yakin ingin menghapus budget ini?"
+        title="Delete Budget"
+        message="Are you sure you want to delete this budget?"
       />
 
       <AlertModal
         isOpen={!!error}
         onClose={() => setError(null)}
-        title="Terjadi Kesalahan"
+        title="Error"
         message={error || ""}
         type="error"
       />
