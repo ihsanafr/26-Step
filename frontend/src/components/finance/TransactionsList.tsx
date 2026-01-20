@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/button/Button";
 import AlertModal from "../common/AlertModal";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import DatePicker from "../form/input/DatePicker";
 import { categoriesService, Category } from "../../services/categoriesService";
 import {
   financialTransactionsService,
@@ -219,14 +220,12 @@ export default function TransactionsList() {
               </option>
             ))}
           </select>
-          <input
-            type="date"
+          <DatePicker
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
-          <input
-            type="date"
+          <DatePicker
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
@@ -489,8 +488,7 @@ export default function TransactionsList() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Date *</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={form.date}
                     onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
+import DatePicker from "../form/input/DatePicker";
 import { TimeTracking } from "../../services/timeTrackingsService";
 import { formatLocalDate } from "./utils";
 
@@ -140,7 +141,7 @@ export default function TimeTrackingFormModal({
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-            <Input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+            <DatePicker value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
           </div>
 
           <div>

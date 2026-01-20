@@ -1,5 +1,11 @@
 import { Link } from "react-router";
+import { useState } from "react";
 import PageMeta from "../components/common/PageMeta";
+import DashboardCalendar from "../components/dashboard/DashboardCalendar";
+import ActivityDetailModal from "../components/dashboard/ActivityDetailModal";
+import DashboardFooter from "../components/dashboard/DashboardFooter";
+import LocalTimeDisplay from "../components/dashboard/LocalTimeDisplay";
+import { useAuth } from "../context/AuthContext";
 
 const modules = [
   {
@@ -65,40 +71,72 @@ const modules = [
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleDateClick = (date: string) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDate(null);
+  };
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
+
   return (
     <>
       <PageMeta
         title="Dashboard - 26-step"
         description="Welcome to 26-step dashboard"
       />
-      <div className="relative mx-auto max-w-[1400px] space-y-8">
+      <div className="relative mx-auto max-w-[1400px] space-y-12">
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-24 -right-32 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl"></div>
-          <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl"></div>
-          <div className="absolute top-1/3 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl"></div>
+          <div className="absolute -top-24 -right-32 h-64 w-64 rounded-full bg-blue-400/15 blur-3xl dark:bg-blue-500/10"></div>
+          <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-purple-400/15 blur-3xl dark:bg-purple-500/10"></div>
+          <div className="absolute top-1/3 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-indigo-400/15 blur-3xl dark:bg-indigo-500/10"></div>
         </div>
-        <div className="relative overflow-hidden rounded-3xl border border-gray-200/80 bg-gradient-to-r from-brand-500/10 via-blue-500/10 to-purple-500/10 p-6 shadow-theme-sm backdrop-blur-sm dark:border-gray-800/80 dark:from-brand-500/10 dark:via-blue-500/10 dark:to-purple-500/10 md:p-8">
-          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl"></div>
-          <div className="absolute -bottom-20 -left-16 h-52 w-52 rounded-full bg-purple-500/10 blur-3xl"></div>
+
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-6 text-white shadow-xl md:p-8">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
           <div className="relative z-10">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/50 px-3 py-1 text-xs font-semibold text-gray-700 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
-              Dashboard Overview
+            <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex-1">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
+                  Dashboard Overview
+                </div>
+                <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+                  {getGreeting()}, {user?.name || "there"}! 👋
+                </h1>
+                <p className="max-w-2xl text-sm text-blue-100 md:text-base">
+                  Manage your daily life more efficiently with focused modules built for productivity, finance, habits, and journaling.
+                </p>
+              </div>
+              
+              {/* Local Time Display inside welcome card */}
+              <div className="flex-shrink-0">
+                <LocalTimeDisplay />
+              </div>
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-              Welcome to 26-step
-            </h1>
-            <p className="max-w-2xl text-sm text-gray-600 dark:text-gray-400 md:text-base">
-              Manage your daily life more efficiently with focused modules built for productivity, finance, habits, and journaling.
-            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
           {modules.map((module) => (
             <Link
               key={module.path}
               to={module.path}
-              className="group relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white/90 p-6 shadow-theme-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-lg dark:border-gray-800/80 dark:bg-gray-900/60"
+              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-gray-300 dark:border-gray-800/80 dark:bg-gray-900/60"
             >
               <div className={`absolute inset-x-0 top-0 h-1.5 ${module.gradient}`}></div>
               <div
@@ -144,13 +182,26 @@ export default function Dashboard() {
                   {module.title}
                 </h2>
 
-                <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-400">
                   {module.description}
                 </p>
               </div>
             </Link>
           ))}
         </div>
+
+        {/* Activity Calendar */}
+        <DashboardCalendar onDateClick={handleDateClick} />
+
+        {/* Activity Detail Modal */}
+        <ActivityDetailModal
+          open={isModalOpen}
+          date={selectedDate}
+          onClose={handleCloseModal}
+        />
+
+        {/* Footer */}
+        <DashboardFooter />
       </div>
     </>
   );

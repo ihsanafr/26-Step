@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "../ui/button/Button";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import DatePicker from "../form/input/DatePicker";
 import { MoreDotIcon, PlusIcon, SearchIcon, PencilIcon, TrashBinIcon } from "../../icons";
 import { TimeTracking, timeTrackingsService } from "../../services/timeTrackingsService";
 import TimeTrackingFormModal from "./TimeTrackingFormModal";
@@ -145,16 +146,15 @@ export default function ReportsPage() {
               </option>
             ))}
           </select>
-          <input
-            type="date"
+          <DatePicker
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
             className="h-11 w-full rounded-xl border border-gray-200 bg-white/70 px-3 text-sm text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800"
           />
-          <input
-            type="date"
+          <DatePicker
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
+            min={dateFrom}
             className="h-11 w-full rounded-xl border border-gray-200 bg-white/70 px-3 text-sm text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800"
           />
         </div>

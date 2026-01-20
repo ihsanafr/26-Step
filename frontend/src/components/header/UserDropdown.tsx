@@ -66,10 +66,10 @@ export default function UserDropdown() {
       {/* Profile Photo Button */}
       <button
         onClick={toggleDropdown}
-        className="relative flex items-center gap-2 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-full"
+        className="relative flex items-center gap-1.5 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-full sm:gap-2"
         aria-label="Profile Menu"
       >
-        <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 hover:border-brand-400 dark:hover:border-brand-500">
+        <div className="relative w-8 h-8 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 hover:border-brand-400 dark:hover:border-brand-500 sm:w-9 sm:h-9 lg:w-10 lg:h-10">
           {user?.avatar || user?.avatar_url ? (
             <img 
               src={user.avatar_url || user.avatar} 
@@ -80,13 +80,13 @@ export default function UserDropdown() {
               }}
             />
           ) : (
-            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-sm">
+            <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-xs sm:text-sm">
               {user?.name?.charAt(0).toUpperCase() || "U"}
             </div>
           )}
         </div>
         <ChevronDownIcon
-          className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+          className={`h-3.5 w-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 sm:h-4 sm:w-4 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -94,25 +94,25 @@ export default function UserDropdown() {
 
       {/* Dropdown Menu with smooth animation */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-64">
           {/* User Info Section */}
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 sm:px-4 sm:py-3">
+            <p className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
               {user?.name || "User"}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate sm:text-xs">
               {user?.email || "user@example.com"}
             </p>
           </div>
 
           {/* Menu Items */}
-          <div className="py-2">
+          <div className="py-1.5 sm:py-2">
             <button
               onClick={handleProfile}
-              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400"
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400 sm:gap-3 sm:px-4 sm:py-3 sm:text-sm"
             >
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -129,10 +129,10 @@ export default function UserDropdown() {
 
             <button
               onClick={handleHomepage}
-              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400"
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-brand-400 sm:gap-3 sm:px-4 sm:py-3 sm:text-sm"
             >
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -149,13 +149,13 @@ export default function UserDropdown() {
 
             {isAdmin && (
               <>
-                <hr className="my-2 border-gray-200 dark:border-gray-700" />
+                <hr className="my-1.5 border-gray-200 dark:border-gray-700 sm:my-2" />
                 <button
                   onClick={handleAdmin}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-purple-700 transition-colors hover:bg-purple-50 hover:text-purple-800 dark:text-purple-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-xs text-purple-700 transition-colors hover:bg-purple-50 hover:text-purple-800 dark:text-purple-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300 sm:gap-3 sm:px-4 sm:py-3 sm:text-sm"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -172,14 +172,14 @@ export default function UserDropdown() {
               </>
             )}
 
-            <hr className="my-2 border-gray-200 dark:border-gray-700" />
+            <hr className="my-1.5 border-gray-200 dark:border-gray-700 sm:my-2" />
             
             <button
               onClick={handleLogoutClick}
-              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 sm:gap-3 sm:px-4 sm:py-3 sm:text-sm"
             >
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -198,16 +198,16 @@ export default function UserDropdown() {
       )}
 
       {isLogoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-3 sm:px-4">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={handleLogoutCancel}
           ></div>
-          <div className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-800 animate-in fade-in zoom-in-95 duration-200">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+          <div className="relative w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-2xl dark:border-gray-700 dark:bg-gray-800 animate-in fade-in zoom-in-95 duration-200 sm:rounded-2xl sm:p-6">
+            <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 sm:h-10 sm:w-10">
                 <svg
-                  className="h-5 w-5"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -220,23 +220,23 @@ export default function UserDropdown() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                 Konfirmasi Logout
               </h3>
             </div>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mb-4 text-xs text-gray-600 dark:text-gray-400 sm:mb-6 sm:text-sm">
               Anda yakin ingin logout dari aplikasi?
             </p>
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleLogoutCancel}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Batal
               </button>
               <button
                 onClick={handleLogoutConfirm}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-700 sm:px-4 sm:py-2 sm:text-sm"
               >
                 Logout
               </button>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Habit, CreateHabitData } from "../../services/habitsService";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
+import DatePicker from "../form/input/DatePicker";
 
 interface HabitFormProps {
   habit?: Habit;
@@ -181,8 +182,7 @@ const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel, isLoadin
               <label htmlFor="start_date" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Start Date
               </label>
-              <Input
-                type="date"
+              <DatePicker
                 id="start_date"
                 name="start_date"
                 value={formData.start_date}

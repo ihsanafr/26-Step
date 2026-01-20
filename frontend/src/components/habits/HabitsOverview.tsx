@@ -21,72 +21,91 @@ const HabitsOverview: React.FC<HabitsOverviewProps> = ({ habits, todayLogs }) =>
       label: "Active Habits",
       value: activeHabits.length,
       icon: TargetIcon,
-      color: "from-blue-50 to-blue-100 border-blue-200 dark:from-blue-500/10 dark:to-blue-500/5 dark:border-gray-700",
+      gradientFrom: "from-blue-50",
+      gradientTo: "to-blue-100",
+      borderColor: "border-blue-200 dark:border-gray-700",
       iconBg: "bg-blue-100 dark:bg-blue-500/20",
       iconColor: "text-blue-600 dark:text-blue-400",
+      darkGradientFrom: "dark:from-blue-500/10",
+      darkGradientTo: "dark:to-blue-500/5",
     },
     {
       label: "Today's Progress",
       value: `${todayCompleted}/${todayTotal}`,
       icon: CheckCircleIcon,
-      color: "from-green-50 to-green-100 border-green-200 dark:from-green-500/10 dark:to-green-500/5 dark:border-gray-700",
+      gradientFrom: "from-green-50",
+      gradientTo: "to-green-100",
+      borderColor: "border-green-200 dark:border-gray-700",
       iconBg: "bg-green-100 dark:bg-green-500/20",
       iconColor: "text-green-600 dark:text-green-400",
+      darkGradientFrom: "dark:from-green-500/10",
+      darkGradientTo: "dark:to-green-500/5",
       subtitle: `${completionRate}% complete`,
     },
     {
       label: "Average Streak",
       value: `${averageStreak}`,
       icon: BoltIcon,
-      color: "from-orange-50 to-orange-100 border-orange-200 dark:from-orange-500/10 dark:to-orange-500/5 dark:border-gray-700",
+      gradientFrom: "from-orange-50",
+      gradientTo: "to-orange-100",
+      borderColor: "border-orange-200 dark:border-gray-700",
       iconBg: "bg-orange-100 dark:bg-orange-500/20",
       iconColor: "text-orange-600 dark:text-orange-400",
+      darkGradientFrom: "dark:from-orange-500/10",
+      darkGradientTo: "dark:to-orange-500/5",
       subtitle: "days",
     },
     {
       label: "Longest Streak",
       value: `${longestStreak}`,
       icon: ShootingStarIcon,
-      color: "from-yellow-50 to-yellow-100 border-yellow-200 dark:from-yellow-500/10 dark:to-yellow-500/5 dark:border-gray-700",
+      gradientFrom: "from-yellow-50",
+      gradientTo: "to-yellow-100",
+      borderColor: "border-yellow-200 dark:border-gray-700",
       iconBg: "bg-yellow-100 dark:bg-yellow-500/20",
       iconColor: "text-yellow-600 dark:text-yellow-400",
+      darkGradientFrom: "dark:from-yellow-500/10",
+      darkGradientTo: "dark:to-yellow-500/5",
       subtitle: "days",
     },
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => (
-        <div
-          key={index}
-          className={`group rounded-xl border bg-gradient-to-br p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] ${stat.color}`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-              {stat.subtitle && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">{stat.subtitle}</p>
-              )}
-            </div>
-            <div className={`rounded-lg p-3 transition-transform group-hover:scale-110 ${stat.iconBg}`}>
-              <stat.icon className={`h-7 w-7 ${stat.iconColor}`} />
-            </div>
-          </div>
-
-          {/* Progress bar for today's progress */}
-          {stat.label === "Today's Progress" && todayTotal > 0 && (
-            <div className="mt-4">
-              <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
-                  style={{ width: `${completionRate}%` }}
-                />
+      {stats.map((stat, index) => {
+        const Icon = stat.icon;
+        return (
+          <div
+            key={index}
+            className={`rounded-xl border ${stat.borderColor} bg-gradient-to-br ${stat.gradientFrom} ${stat.gradientTo} ${stat.darkGradientFrom} ${stat.darkGradientTo} p-6 shadow-theme-xs`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`rounded-lg ${stat.iconBg} p-2`}>
+                <Icon className={`h-6 w-6 ${stat.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                {stat.subtitle && (
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">{stat.subtitle}</p>
+                )}
               </div>
             </div>
-          )}
-        </div>
-      ))}
+
+            {/* Progress bar for today's progress */}
+            {stat.label === "Today's Progress" && todayTotal > 0 && (
+              <div className="mt-4">
+                <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
+                    style={{ width: `${completionRate}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

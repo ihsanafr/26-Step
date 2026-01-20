@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\LinkController;
 use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\ActivityController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -82,6 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('journals/cover', [JournalController::class, 'uploadCover']);
     Route::post('journals/content-image', [JournalController::class, 'uploadContentImage']);
     Route::apiResource('journals', JournalController::class);
+
+    // Activities (for calendar)
+    Route::get('activities/date/{date}', [ActivityController::class, 'getByDate']);
+    Route::get('activities/range', [ActivityController::class, 'getByDateRange']);
 });
 
 // Admin routes

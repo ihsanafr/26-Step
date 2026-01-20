@@ -490,65 +490,53 @@ const TaskList: React.FC = () => {
         {/* Summary Statistics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Total Tasks - Blue */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-blue-300 dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5 dark:hover:border-blue-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                <ListIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tasks</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.completionRate > 0 ? `${Math.round(stats.completionRate)}% completed` : "No tasks yet"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-blue-100 p-3 transition-transform group-hover:scale-110 dark:bg-blue-500/20">
-                <ListIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
             </div>
           </div>
 
           {/* Completed - Purple */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-purple-300 dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5 dark:hover:border-purple-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
+                <CheckCircleIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.total > 0 ? `${Math.round((stats.completed / stats.total) * 100)}% of total` : "Great job!"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-purple-100 p-3 transition-transform group-hover:scale-110 dark:bg-purple-500/20">
-                <CheckCircleIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
               </div>
             </div>
           </div>
 
           {/* In Progress - Green */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-green-300 dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5 dark:hover:border-green-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
+                <BoltIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.onHold > 0 ? `${stats.onHold} on hold` : "Keep going!"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-green-100 p-3 transition-transform group-hover:scale-110 dark:bg-green-500/20">
-                <BoltIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
               </div>
             </div>
           </div>
 
           {/* Overdue - Red */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-red-50 to-red-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-red-300 dark:border-gray-700 dark:from-red-500/10 dark:to-red-500/5 dark:hover:border-red-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-red-500/10 dark:to-red-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-red-100 p-2 dark:bg-red-500/20">
+                <AlertIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Overdue</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{overdueTasks.length}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.highPriority > 0 ? `${stats.highPriority} high priority` : "All on track"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-red-100 p-3 transition-transform group-hover:scale-110 dark:bg-red-500/20">
-                <AlertIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{overdueTasks.length}</p>
               </div>
             </div>
           </div>
@@ -721,6 +709,16 @@ const TaskList: React.FC = () => {
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getPriorityColor(task.priority)}`}>
                             {task.priority === "high" ? "High" : task.priority === "medium" ? "Medium" : "Low"}
                           </span>
+                          {task.is_recurring && !task.parent_task_id && (
+                            <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">
+                              🔁 Recurring {task.recurring_type}
+                            </span>
+                          )}
+                          {task.parent_task_id && (
+                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                              🔁 Daily Task
+                            </span>
+                          )}
                           {task.category && (
                             <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                               {task.category}
@@ -834,6 +832,16 @@ const TaskList: React.FC = () => {
                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(task.status)}`}>
                         {getStatusLabel(task.status)}
                       </span>
+                      {task.is_recurring && !task.parent_task_id && (
+                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">
+                          🔁 Recurring {task.recurring_type}
+                        </span>
+                      )}
+                      {task.parent_task_id && (
+                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                          🔁 Daily Task
+                        </span>
+                      )}
                     </div>
 
                     {task.category && (
@@ -923,6 +931,16 @@ const TaskList: React.FC = () => {
                         <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusColor(task.status)}`}>
                           {getStatusLabel(task.status)}
                         </span>
+                        {task.is_recurring && !task.parent_task_id && (
+                          <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">
+                            🔁 Recurring {task.recurring_type}
+                          </span>
+                        )}
+                        {task.parent_task_id && (
+                          <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                            🔁 Daily Task
+                          </span>
+                        )}
                         {task.category && (
                           <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                             {task.category}

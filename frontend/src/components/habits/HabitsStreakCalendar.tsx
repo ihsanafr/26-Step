@@ -117,41 +117,41 @@ function StreakDayModal({
       onClick={requestClose}
     >
       <div
-        className={`relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 ${
+        className={`relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-2xl transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 ${
           isVisible ? "scale-100" : "scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Streak Details</h3>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{formatDateId(d?.date)}</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">Streak Details</h3>
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">{formatDateId(d?.date)}</p>
           </div>
           <button
             onClick={requestClose}
-            className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            className="absolute top-4 right-4 rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:relative sm:top-0 sm:right-0"
             aria-label="Close"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {d && d.habits.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {d.habits
               .sort((a, b) => b.streakOnThatDay - a.streakOnThatDay)
               .map(({ habit, streakOnThatDay }) => (
                 <div
                   key={habit.id}
-                  className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:rounded-xl sm:p-4"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="text-2xl">{habit.icon}</div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 dark:text-white truncate">{habit.name}</p>
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
+                    <div className="flex items-start gap-2 min-w-0 sm:gap-3">
+                      <div className="text-xl sm:text-2xl">{habit.icon}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate sm:text-base">{habit.name}</p>
                         {habit.description ? (
                           <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                             {habit.description}
@@ -160,7 +160,7 @@ function StreakDayModal({
                       </div>
                     </div>
 
-                    <div className="shrink-0 rounded-lg bg-linear-to-br from-red-500 to-orange-600 px-3 py-1 text-sm font-bold text-white">
+                    <div className="shrink-0 rounded-lg bg-linear-to-br from-red-500 to-orange-600 px-2 py-1 text-xs font-bold text-white sm:px-3 sm:text-sm">
                       🔥 {streakOnThatDay}
                     </div>
                   </div>
@@ -168,8 +168,8 @@ function StreakDayModal({
               ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
-            <p className="text-sm text-gray-600 dark:text-gray-400">No streaks recorded on this day.</p>
+          <div className="rounded-xl border border-gray-200 bg-white p-6 text-center dark:border-gray-700 dark:bg-gray-900 sm:p-10">
+            <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">No streaks recorded on this day.</p>
           </div>
         )}
       </div>
@@ -280,22 +280,26 @@ export default function HabitsStreakCalendar({
 
   return (
     <>
-      <div className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800 sm:p-6">
+        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="flex items-center gap-2">
-            <CalenderIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{monthLabel}</p>
+            <CalenderIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 sm:h-5 sm:w-5" />
+            <p className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">{monthLabel}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+              className="text-xs sm:text-sm"
             >
               Prev
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+              className="text-xs sm:text-sm"
             >
               Next
             </Button>
@@ -303,9 +307,9 @@ export default function HabitsStreakCalendar({
         </div>
 
         {title || subtitle ? (
-          <div className="mb-4">
-            {title ? <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h2> : null}
-            {subtitle ? <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p> : null}
+          <div className="mb-3 sm:mb-4">
+            {title ? <h2 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">{title}</h2> : null}
+            {subtitle ? <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">{subtitle}</p> : null}
           </div>
         ) : null}
 
@@ -313,15 +317,16 @@ export default function HabitsStreakCalendar({
           <Skeleton variant="rectangular" width="100%" height={360} className="rounded-2xl" />
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <div className="grid grid-cols-7 gap-1 text-[10px] text-gray-500 dark:text-gray-400 mb-1.5 sm:gap-2 sm:mb-2 sm:text-xs">
               {weekDays.map((d) => (
-                <div key={d} className="px-2 py-1 font-semibold">
-                  {d}
+                <div key={d} className="px-1 py-0.5 font-semibold text-center sm:px-2 sm:py-1">
+                  <span className="hidden sm:inline">{d}</span>
+                  <span className="sm:hidden">{d.slice(0, 1)}</span>
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {days.map((day, idx) => {
                 const dateStr =
                   day === null ? null : formatLocalDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
@@ -336,7 +341,7 @@ export default function HabitsStreakCalendar({
                     type="button"
                     disabled={!clickable}
                     onClick={() => openDetail(day)}
-                  className={`group relative h-20 rounded-2xl border p-2 text-left transition-all ${
+                    className={`group relative h-12 rounded-lg border p-1 text-left transition-all sm:h-20 sm:rounded-2xl sm:p-2 ${
                       hasData
                         ? "border-orange-300 bg-orange-50 ring-2 ring-orange-400/30 dark:border-orange-500 dark:bg-orange-500/10"
                         : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 dark:hover:bg-gray-800/40"
@@ -345,22 +350,22 @@ export default function HabitsStreakCalendar({
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm font-semibold ${today ? "text-blue-600 dark:text-blue-300" : "text-gray-900 dark:text-white"}`}>
+                      <span className={`text-xs font-semibold sm:text-sm ${today ? "text-blue-600 dark:text-blue-300" : "text-gray-900 dark:text-white"}`}>
                         {day ?? ""}
                       </span>
                       {hasData ? (
-                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+                        <span className="rounded-full bg-orange-100 px-1 py-0.5 text-[9px] font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300 sm:px-2 sm:text-xs">
                           {count}
                         </span>
                       ) : null}
                     </div>
 
                     {hasData ? (
-                      <div className="mt-2 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                      <div className="mt-1 text-[8px] font-semibold text-gray-600 dark:text-gray-300 sm:mt-2 sm:text-[10px]">
                         completions
                       </div>
                     ) : (
-                      <div className="mt-6 text-[10px] text-gray-400 opacity-0 transition group-hover:opacity-100 dark:text-gray-500">
+                      <div className="mt-3 text-[8px] text-gray-400 opacity-0 transition group-hover:opacity-100 dark:text-gray-500 sm:mt-6 sm:text-[10px]">
                         view
                       </div>
                     )}

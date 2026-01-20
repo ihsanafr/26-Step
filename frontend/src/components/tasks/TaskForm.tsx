@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
+import DatePicker from "../form/input/DatePicker";
 import Label from "../form/Label";
 import { Task, CreateTaskData, UpdateTaskData } from "../../services/tasksService";
 import { categoriesService } from "../../services/categoriesService";
@@ -23,6 +24,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, isLoading =
     due_date: "",
     progress: 0,
     target_id: undefined,
+    is_recurring: false,
+    recurring_type: "daily",
+    recurring_end_date: "",
   });
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
@@ -96,6 +100,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, isLoading =
         due_date: task.due_date ? task.due_date.split("T")[0] : "",
         progress: task.progress || 0,
         target_id: task.target_id || undefined,
+        is_recurring: task.is_recurring || false,
+        recurring_type: task.recurring_type || "daily",
+        recurring_end_date: task.recurring_end_date ? task.recurring_end_date.split("T")[0] : "",
       });
     }
   }, [task]);
@@ -246,10 +253,9 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, isLoading =
 
               <div>
                 <Label htmlFor="due_date">Due Date</Label>
-                <Input
+                <DatePicker
                   id="due_date"
                   name="due_date"
-                  type="date"
                   value={formData.due_date}
                   onChange={(e) => handleChange("due_date", e.target.value)}
                 />
@@ -287,6 +293,70 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSave, onCancel, isLoading =
                 />
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">%</span>
               </div>
+            </div>
+
+            {/* Recurring Task Section */}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+              <div className="flex items-center gap-3 mb-4">
+                <input
+                  type="checkbox"
+                  id="is_recurring"
+                  checked={formData.is_recurring || false}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      is_recurring: e.target.checked,
+                      recurring_type: e.target.checked ? prev.recurring_type || "daily" : undefined,
+                    }));
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <Label htmlFor="is_recurring" className="mb-0 cursor-pointer">
+                  Make this a recurring task
+                </Label>
+              </div>
+
+              {formData.is_recurring && (
+                <div className="space-y-4 mt-4 pl-7 border-l-2 border-brand-300 dark:border-brand-700">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="recurring_type">Repeat Every</Label>
+                      <select
+                        id="recurring_type"
+                        name="recurring_type"
+                        value={formData.recurring_type || "daily"}
+                        onChange={(e) => handleChange("recurring_type", e.target.value)}
+                        className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="recurring_end_date">End Date (Optional)</Label>
+                      <DatePicker
+                        id="recurring_end_date"
+                        name="recurring_end_date"
+                        value={formData.recurring_end_date || ""}
+                        onChange={(e) => handleChange("recurring_end_date", e.target.value)}
+                        min={formData.due_date || new Date().toISOString().split("T")[0]}
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Leave empty to repeat indefinitely
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-500/10">
+                    <p className="text-xs text-blue-800 dark:text-blue-300">
+                      <strong>💡 Note:</strong> This task will automatically be created every{" "}
+                      {formData.recurring_type === "daily" ? "day" : formData.recurring_type === "weekly" ? "week" : "month"}{" "}
+                      starting from the due date. Each instance will appear as a separate task.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

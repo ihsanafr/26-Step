@@ -42,6 +42,10 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'progress' => 'nullable|integer|min:0|max:100',
             'target_id' => 'nullable|exists:targets,id',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_type' => 'nullable|in:daily,weekly,monthly',
+            'recurring_end_date' => 'nullable|date|after_or_equal:today',
+            'task_date' => 'nullable|date',
         ]);
 
         // Verify target belongs to user
@@ -56,6 +60,27 @@ class TaskController extends Controller
         }
 
         $validated['user_id'] = $request->user()->id;
+        
+        // Set default values for recurring fields
+        $validated['is_recurring'] = $validated['is_recurring'] ?? false;
+        
+        // If recurring task, validate and set required fields
+        if ($validated['is_recurring']) {
+            // Require recurring_type if is_recurring is true
+            if (empty($validated['recurring_type'])) {
+                return response()->json(['message' => 'recurring_type is required when is_recurring is true'], 422);
+            }
+            
+            // Set task_date to today or due_date
+            $validated['task_date'] = $validated['task_date'] ?? $validated['due_date'] ?? now()->toDateString();
+            if (!$validated['due_date']) {
+                $validated['due_date'] = $validated['task_date'];
+            }
+        } else {
+            // Clear recurring fields if not recurring
+            $validated['recurring_type'] = null;
+            $validated['recurring_end_date'] = null;
+        }
 
         $task = Task::create($validated);
 
@@ -99,6 +124,10 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'progress' => 'nullable|integer|min:0|max:100',
             'target_id' => 'nullable|exists:targets,id',
+            'is_recurring' => 'nullable|boolean',
+            'recurring_type' => 'nullable|in:daily,weekly,monthly',
+            'recurring_end_date' => 'nullable|date',
+            'task_date' => 'nullable|date',
         ]);
 
         // Verify target belongs to user

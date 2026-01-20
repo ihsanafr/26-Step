@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
+import DatePicker from "../form/input/DatePicker";
 import { Journal } from "../../services/journalsService";
 import { formatLocalDate } from "../productivity/utils";
 import RichTextEditor from "../common/RichTextEditor";
@@ -196,7 +197,7 @@ export default function JournalFormModal({
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-              <Input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} disabled={readOnly} />
+              <DatePicker value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} disabled={readOnly} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

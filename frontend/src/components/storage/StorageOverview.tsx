@@ -103,37 +103,49 @@ export default function StorageOverview() {
       label: "Total Files",
       value: files.length,
       icon: FolderIcon,
-      color: "from-blue-500 to-blue-600",
-      borderColor: "border-blue-200 dark:border-blue-800",
-      bgColor: "bg-blue-50 dark:bg-blue-950/30",
-      textColor: "text-blue-600 dark:text-blue-400",
+      gradientFrom: "from-blue-50",
+      gradientTo: "to-blue-100",
+      borderColor: "border-blue-200 dark:border-gray-700",
+      iconBg: "bg-blue-100 dark:bg-blue-500/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      darkGradientFrom: "dark:from-blue-500/10",
+      darkGradientTo: "dark:to-blue-500/5",
     },
     {
       label: "Total Links",
       value: links.length,
       icon: LinkIcon,
-      color: "from-green-500 to-green-600",
-      borderColor: "border-green-200 dark:border-green-800",
-      bgColor: "bg-green-50 dark:bg-green-950/30",
-      textColor: "text-green-600 dark:text-green-400",
+      gradientFrom: "from-green-50",
+      gradientTo: "to-green-100",
+      borderColor: "border-green-200 dark:border-gray-700",
+      iconBg: "bg-green-100 dark:bg-green-500/20",
+      iconColor: "text-green-600 dark:text-green-400",
+      darkGradientFrom: "dark:from-green-500/10",
+      darkGradientTo: "dark:to-green-500/5",
     },
     {
       label: "Storage Used",
       value: formatFileSize(totalSize),
       icon: FolderIcon,
-      color: "from-orange-500 to-orange-600",
-      borderColor: "border-orange-200 dark:border-orange-800",
-      bgColor: "bg-orange-50 dark:bg-orange-950/30",
-      textColor: "text-orange-600 dark:text-orange-400",
+      gradientFrom: "from-orange-50",
+      gradientTo: "to-orange-100",
+      borderColor: "border-orange-200 dark:border-gray-700",
+      iconBg: "bg-orange-100 dark:bg-orange-500/20",
+      iconColor: "text-orange-600 dark:text-orange-400",
+      darkGradientFrom: "dark:from-orange-500/10",
+      darkGradientTo: "dark:to-orange-500/5",
     },
     {
       label: "Categories",
       value: categories.length,
       icon: FolderIcon,
-      color: "from-indigo-500 to-indigo-600",
-      borderColor: "border-indigo-200 dark:border-indigo-800",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/30",
-      textColor: "text-indigo-600 dark:text-indigo-400",
+      gradientFrom: "from-indigo-50",
+      gradientTo: "to-indigo-100",
+      borderColor: "border-indigo-200 dark:border-gray-700",
+      iconBg: "bg-indigo-100 dark:bg-indigo-500/20",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      darkGradientFrom: "dark:from-indigo-500/10",
+      darkGradientTo: "dark:to-indigo-500/5",
     },
   ];
 
@@ -216,24 +228,21 @@ export default function StorageOverview() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <div
               key={idx}
-              className={`group relative overflow-hidden rounded-2xl border-2 ${stat.borderColor} ${stat.bgColor} p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+              className={`rounded-xl border ${stat.borderColor} bg-gradient-to-br ${stat.gradientFrom} ${stat.gradientTo} ${stat.darkGradientFrom} ${stat.darkGradientTo} p-6 shadow-theme-xs`}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 transition-opacity duration-300 group-hover:opacity-10`} />
-              <div className="relative z-10">
-                <div className={`mb-3 inline-flex rounded-xl ${stat.bgColor} p-3`}>
-                  <Icon className={`h-6 w-6 ${stat.textColor}`} />
+              <div className="flex items-center gap-3">
+                <div className={`rounded-lg ${stat.iconBg} p-2`}>
+                  <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                 </div>
-                <div className={`text-3xl font-bold ${stat.textColor} mb-1`}>
-                  {stat.value}
-                </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {stat.label}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                 </div>
               </div>
             </div>

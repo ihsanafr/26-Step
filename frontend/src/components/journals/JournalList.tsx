@@ -127,10 +127,10 @@ export default function JournalList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Journal Entries</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">Journal Entries</h2>
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
             Write reflections and track your mood.
           </p>
         </div>
@@ -138,30 +138,32 @@ export default function JournalList() {
           onClick={() => {
             navigate("/journals/new");
           }}
-          startIcon={<PlusIcon className="h-5 w-5" />}
+          startIcon={<PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />}
+          size="sm"
+          className="text-xs sm:text-sm"
         >
           New Entry
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-800">
-        <div className="grid gap-3 md:grid-cols-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-theme-xs dark:border-gray-800 dark:bg-gray-800 sm:p-4 md:p-5">
+        <div className="grid gap-2 sm:gap-3 md:grid-cols-4">
           <div className="relative md:col-span-2">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <SearchIcon className="h-4 w-4" />
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 sm:left-3">
+              <SearchIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search title/content..."
-              className="w-full rounded-lg border border-gray-200 bg-white/70 py-2.5 pl-9 pr-3 text-sm text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              className="w-full rounded-lg border border-gray-200 bg-white/70 py-2 pl-8 pr-2.5 text-xs text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:placeholder:text-white/30 dark:focus:border-brand-800 sm:py-2.5 sm:pl-9 sm:pr-3 sm:text-sm"
             />
           </div>
           <select
             value={privacy}
             onChange={(e) => setPrivacy(e.target.value as any)}
-            className="h-11 w-full rounded-lg border border-gray-200 bg-white/70 px-3 text-sm text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800"
+            className="h-10 w-full rounded-lg border border-gray-200 bg-white/70 px-2.5 text-xs text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800 sm:h-11 sm:px-3 sm:text-sm"
           >
             <option value="all">All</option>
             <option value="public">Public</option>
@@ -170,7 +172,7 @@ export default function JournalList() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-11 w-full rounded-lg border border-gray-200 bg-white/70 px-3 text-sm text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800"
+            className="h-10 w-full rounded-lg border border-gray-200 bg-white/70 px-2.5 text-xs text-gray-900 shadow-theme-xs ring-1 ring-gray-200/60 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:border-brand-800 sm:h-11 sm:px-3 sm:text-sm"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -190,24 +192,25 @@ export default function JournalList() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-16 text-center dark:border-gray-800 dark:bg-gray-800">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-            <FileIcon className="h-8 w-8 text-gray-500 dark:text-gray-300" />
+        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-gray-800 sm:p-12 md:p-16">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 sm:mb-4 sm:h-16 sm:w-16">
+            <FileIcon className="h-6 w-6 text-gray-500 dark:text-gray-300 sm:h-8 sm:w-8" />
           </div>
-          <p className="text-lg font-medium text-gray-900 dark:text-white">No journal entries found</p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-base font-medium text-gray-900 dark:text-white sm:text-lg">No journal entries found</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:mt-2 sm:text-sm">
             Start writing your thoughts and reflections
           </p>
           <Button
             onClick={() => navigate("/journals/new")}
-            className="mt-4"
-            startIcon={<PlusIcon className="h-5 w-5" />}
+            className="mt-3 sm:mt-4"
+            startIcon={<PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />}
+            size="sm"
           >
             Create Your First Entry
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((j) => {
             const cardColor = j.color || "#6366F1";
             const hasCover = !!j.cover_image;
@@ -232,7 +235,7 @@ export default function JournalList() {
                 }}
               >
                 {/* Header: Cover Image or Color */}
-                <div className="relative h-24 w-full overflow-hidden">
+                <div className="relative h-20 w-full overflow-hidden sm:h-24">
                   {j.cover_image ? (
                     <img
                       src={resolveAssetUrl(j.cover_image)}
@@ -257,28 +260,28 @@ export default function JournalList() {
                   {/* Mood Emoji Box - Top Left Corner */}
                   {j.mood && (
                     <div 
-                      className="absolute left-3 top-3 flex items-center justify-center rounded-2xl shadow-2xl backdrop-blur-md bg-white/85 dark:bg-black/70"
+                      className="absolute left-2 top-2 flex items-center justify-center rounded-xl shadow-2xl backdrop-blur-md bg-white/85 dark:bg-black/70 sm:left-3 sm:top-3 sm:rounded-2xl"
                       style={{
                         boxShadow: `0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
                       }}
                     >
-                      <span className="p-2.5 text-2xl">{getMoodEmoji(j.mood)}</span>
+                      <span className="p-1.5 text-lg sm:p-2.5 sm:text-2xl">{getMoodEmoji(j.mood)}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Title and Menu between header and content */}
                 <div 
-                  className="flex items-start justify-between gap-3 border-b px-6 py-4"
+                  className="flex items-start justify-between gap-2 border-b px-4 py-3 sm:gap-3 sm:px-6 sm:py-4"
                   style={{
                     borderColor: hexToRgba(cardColor, 0.2),
                   }}
                 >
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2">{j.title}</h3>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white line-clamp-2 sm:text-lg">{j.title}</h3>
                     {j.is_private && (
-                      <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-gray-200/60 px-2 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-700/60 dark:text-gray-200">
-                        <LockIcon className="h-3 w-3" />
+                      <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-gray-200/60 px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-gray-700/60 dark:text-gray-200 sm:mt-1.5 sm:gap-1 sm:px-2 sm:text-xs">
+                        <LockIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         Private
                       </span>
                     )}
@@ -290,13 +293,13 @@ export default function JournalList() {
                         e.stopPropagation();
                         setMenuOpenId((id) => (id === j.id ? null : j.id));
                       }}
-                      className="rounded-lg p-1.5 text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                      className="rounded-lg p-1 text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:p-1.5"
                       title="Options"
                     >
-                      <MoreDotIcon className="h-5 w-5" />
+                      <MoreDotIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                     {menuOpenId === j.id ? (
-                      <div className="absolute right-0 top-9 z-[100] w-44 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+                      <div className="absolute right-0 top-8 z-[100] w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:top-9 sm:w-44 sm:rounded-xl">
                         <button
                           type="button"
                           onClick={() => {
@@ -305,9 +308,9 @@ export default function JournalList() {
                             setFormMode("view");
                             setShowForm(true);
                           }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                         >
-                          <FileIcon className="h-4 w-4" />
+                          <FileIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           View
                         </button>
                         <button
@@ -316,9 +319,9 @@ export default function JournalList() {
                             setMenuOpenId(null);
                             navigate(`/journals/edit/${j.id}`);
                           }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           Edit
                         </button>
                         <button
@@ -327,9 +330,9 @@ export default function JournalList() {
                             setMenuOpenId(null);
                             setDeleteModal({ open: true, item: j });
                           }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                          className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                         >
-                          <TrashBinIcon className="h-4 w-4" />
+                          <TrashBinIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           Delete
                         </button>
                       </div>
@@ -339,32 +342,32 @@ export default function JournalList() {
 
                 {/* Content - flex-grow to push button to bottom */}
                 <div 
-                  className="flex-grow p-6"
+                  className="flex-grow p-4 sm:p-6"
                   style={{
                     backgroundColor: hexToRgba(cardColor, 0.05),
                   }}
                 >
                   {/* Metadata and Content */}
-                  <div className="space-y-3">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  <div className="space-y-2 sm:space-y-3">
+                    <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 sm:text-xs">
                       {formatIndonesianDate(j.date || "")}
                       {j.weather ? ` • ${getWeatherEmoji(j.weather)} ${j.weather}` : ""}
                       {j.location ? ` • ${j.location}` : ""}
                     </p>
 
                     {/* Content preview */}
-                    <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 line-clamp-3">
+                    <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300 line-clamp-3 sm:text-sm">
                       {stripHtml(j.content)}
                     </p>
                   </div>
                 </div>
 
                 {/* View button - at the bottom of card */}
-                <div className="p-4 pt-0 mt-auto">
+                <div className="p-3 pt-0 mt-auto sm:p-4">
                   <button
                     type="button"
                     onClick={() => navigate(`/journals/view/${j.id}`)}
-                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition"
+                    className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-white transition sm:px-4 sm:py-2.5 sm:text-sm"
                     style={{
                       backgroundColor: cardColor,
                     }}

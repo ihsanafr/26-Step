@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/button/Button";
 import AlertModal from "../common/AlertModal";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import DatePicker from "../form/input/DatePicker";
 import { budgetsService, Budget } from "../../services/budgetsService";
 import { categoriesService, Category } from "../../services/categoriesService";
 
@@ -362,8 +363,7 @@ export default function BudgetsList() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date *</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={form.start_date}
                     onChange={(e) => {
                       const nextStart = e.target.value;
@@ -378,13 +378,13 @@ export default function BudgetsList() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">End Date *</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={form.end_date}
                     onChange={(e) => {
                       setEndDateTouched(true);
                       setForm((prev) => ({ ...prev, end_date: e.target.value }));
                     }}
+                    min={form.start_date}
                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   />
                 </div>

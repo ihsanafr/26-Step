@@ -62,37 +62,49 @@ export default function FinanceOverview() {
       label: "Total Income",
       value: formatCurrency(totals.income),
       icon: DollarLineIcon,
-      color: "from-emerald-500 to-emerald-600",
-      borderColor: "border-emerald-200 dark:border-emerald-800",
-      bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
-      textColor: "text-emerald-600 dark:text-emerald-400",
+      gradientFrom: "from-emerald-50",
+      gradientTo: "to-emerald-100",
+      borderColor: "border-emerald-200 dark:border-gray-700",
+      iconBg: "bg-emerald-100 dark:bg-emerald-500/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      darkGradientFrom: "dark:from-emerald-500/10",
+      darkGradientTo: "dark:to-emerald-500/5",
     },
     {
       label: "Total Expense",
       value: formatCurrency(totals.expense),
       icon: DollarLineIcon,
-      color: "from-rose-500 to-rose-600",
-      borderColor: "border-rose-200 dark:border-rose-800",
-      bgColor: "bg-rose-50 dark:bg-rose-950/30",
-      textColor: "text-rose-600 dark:text-rose-400",
+      gradientFrom: "from-rose-50",
+      gradientTo: "to-rose-100",
+      borderColor: "border-rose-200 dark:border-gray-700",
+      iconBg: "bg-rose-100 dark:bg-rose-500/20",
+      iconColor: "text-rose-600 dark:text-rose-400",
+      darkGradientFrom: "dark:from-rose-500/10",
+      darkGradientTo: "dark:to-rose-500/5",
     },
     {
       label: "Balance",
       value: formatCurrency(totals.balance),
       icon: GridIcon,
-      color: "from-indigo-500 to-indigo-600",
-      borderColor: "border-indigo-200 dark:border-indigo-800",
-      bgColor: "bg-indigo-50 dark:bg-indigo-950/30",
-      textColor: "text-indigo-600 dark:text-indigo-400",
+      gradientFrom: "from-indigo-50",
+      gradientTo: "to-indigo-100",
+      borderColor: "border-indigo-200 dark:border-gray-700",
+      iconBg: "bg-indigo-100 dark:bg-indigo-500/20",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      darkGradientFrom: "dark:from-indigo-500/10",
+      darkGradientTo: "dark:to-indigo-500/5",
     },
     {
       label: "Active Budgets",
       value: activeBudgets.length,
       icon: FileIcon,
-      color: "from-amber-500 to-amber-600",
-      borderColor: "border-amber-200 dark:border-amber-800",
-      bgColor: "bg-amber-50 dark:bg-amber-950/30",
-      textColor: "text-amber-600 dark:text-amber-400",
+      gradientFrom: "from-amber-50",
+      gradientTo: "to-amber-100",
+      borderColor: "border-amber-200 dark:border-gray-700",
+      iconBg: "bg-amber-100 dark:bg-amber-500/20",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      darkGradientFrom: "dark:from-amber-500/10",
+      darkGradientTo: "dark:to-amber-500/5",
     },
   ];
 
@@ -140,10 +152,10 @@ export default function FinanceOverview() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-8 text-white shadow-xl">
         <div className="relative z-10">
           <h1 className="mb-2 text-4xl font-bold md:text-5xl">Personal Finance</h1>
-          <p className="mb-6 text-lg text-emerald-100 md:text-xl">
+          <p className="mb-6 text-lg text-emerald-50 md:text-xl">
             Kelola pemasukan, pengeluaran, dan budget kamu dengan rapi
           </p>
           <div className="flex flex-wrap gap-3">
@@ -176,24 +188,21 @@ export default function FinanceOverview() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <div
               key={idx}
-              className={`group relative overflow-hidden rounded-2xl border-2 ${stat.borderColor} ${stat.bgColor} p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+              className={`rounded-xl border ${stat.borderColor} bg-gradient-to-br ${stat.gradientFrom} ${stat.gradientTo} ${stat.darkGradientFrom} ${stat.darkGradientTo} p-6 shadow-theme-xs`}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 transition-opacity duration-300 group-hover:opacity-10`} />
-              <div className="relative z-10">
-                <div className={`mb-3 inline-flex rounded-xl ${stat.bgColor} p-3`}>
-                  <Icon className={`h-6 w-6 ${stat.textColor}`} />
+              <div className="flex items-center gap-3">
+                <div className={`rounded-lg ${stat.iconBg} p-2`}>
+                  <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                 </div>
-                <div className={`text-2xl font-bold ${stat.textColor} mb-1`}>
-                  {stat.value}
-                </div>
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {stat.label}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                 </div>
               </div>
             </div>

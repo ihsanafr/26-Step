@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
+import DatePicker from "../form/input/DatePicker";
 import Label from "../form/Label";
 import { Target, CreateTargetData, UpdateTargetData } from "../../services/targetsService";
 
@@ -174,10 +175,9 @@ const TargetForm: React.FC<TargetFormProps> = ({ target, onSave, onCancel, isLoa
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="start_date">Start Date *</Label>
-                <Input
+                <DatePicker
                   id="start_date"
                   name="start_date"
-                  type="date"
                   value={formData.start_date}
                   onChange={(e) => handleChange("start_date", e.target.value)}
                   required
@@ -186,10 +186,9 @@ const TargetForm: React.FC<TargetFormProps> = ({ target, onSave, onCancel, isLoa
 
               <div>
                 <Label htmlFor="end_date">End Date</Label>
-                <Input
+                <DatePicker
                   id="end_date"
                   name="end_date"
-                  type="date"
                   value={formData.end_date}
                   onChange={(e) => handleChange("end_date", e.target.value)}
                   min={formData.start_date}

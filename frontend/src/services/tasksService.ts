@@ -17,6 +17,11 @@ export interface Task {
   progress: number;
   target_id?: number;
   target?: Target;
+  is_recurring?: boolean;
+  recurring_type?: 'daily' | 'weekly' | 'monthly';
+  recurring_end_date?: string;
+  parent_task_id?: number;
+  task_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +35,10 @@ export interface CreateTaskData {
   due_date?: string;
   progress?: number;
   target_id?: number;
+  is_recurring?: boolean;
+  recurring_type?: 'daily' | 'weekly' | 'monthly';
+  recurring_end_date?: string;
+  task_date?: string;
 }
 
 export interface UpdateTaskData extends Partial<CreateTaskData> {}

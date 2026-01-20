@@ -250,56 +250,53 @@ const TargetList: React.FC = () => {
         {/* Summary Statistics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Total Targets - Blue */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-blue-300 dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5 dark:hover:border-blue-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                <TargetIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Targets</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-              </div>
-              <div className="rounded-lg bg-blue-100 p-3 transition-transform group-hover:scale-110 dark:bg-blue-500/20">
-                <TargetIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
             </div>
           </div>
 
           {/* Active - Purple */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-purple-300 dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5 dark:hover:border-purple-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
+                <CheckCircleIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.active}</p>
-              </div>
-              <div className="rounded-lg bg-purple-100 p-3 transition-transform group-hover:scale-110 dark:bg-purple-500/20">
-                <CheckCircleIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.active}</p>
               </div>
             </div>
           </div>
 
           {/* Average Progress - Green */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-green-300 dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5 dark:hover:border-green-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
+                <TimeIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Progress</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{Math.round(stats.averageProgress)}%</p>
-              </div>
-              <div className="rounded-lg bg-green-100 p-3 transition-transform group-hover:scale-110 dark:bg-green-500/20">
-                <TimeIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(stats.averageProgress)}%</p>
               </div>
             </div>
           </div>
 
           {/* Total Tasks - Yellow */}
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-yellow-300 dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5 dark:hover:border-yellow-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-500/20">
+                <ListIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tasks</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalTasks}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.completedTasks} completed {stats.totalTasks > 0 ? `(${Math.round((stats.completedTasks / stats.totalTasks) * 100)}%)` : ""}
-                </p>
-              </div>
-              <div className="rounded-lg bg-yellow-100 p-3 transition-transform group-hover:scale-110 dark:bg-yellow-500/20">
-                <ListIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalTasks}</p>
               </div>
             </div>
           </div>

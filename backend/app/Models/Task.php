@@ -22,6 +22,11 @@ class Task extends Model
         'due_date',
         'completed_at',
         'progress',
+        'is_recurring',
+        'recurring_type',
+        'recurring_end_date',
+        'parent_task_id',
+        'task_date',
     ];
 
     protected function casts(): array
@@ -30,6 +35,9 @@ class Task extends Model
             'due_date' => 'date',
             'completed_at' => 'datetime',
             'progress' => 'integer',
+            'is_recurring' => 'boolean',
+            'recurring_end_date' => 'date',
+            'task_date' => 'date',
         ];
     }
 
@@ -41,5 +49,15 @@ class Task extends Model
     public function target(): BelongsTo
     {
         return $this->belongsTo(Target::class);
+    }
+
+    public function parentTask(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'parent_task_id');
+    }
+
+    public function recurringInstances(): HasMany
+    {
+        return $this->hasMany(Task::class, 'parent_task_id');
     }
 }

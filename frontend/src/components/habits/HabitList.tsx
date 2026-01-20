@@ -112,8 +112,21 @@ const HabitList: React.FC = () => {
     }
 
     try {
-      await habitsService.toggleToday(habit.id);
-      await loadHabits();
+      const log = await habitsService.toggleToday(habit.id);
+      
+      // Update todayLogs state locally
+      setTodayLogs((prev) => ({
+        ...prev,
+        [habit.id]: log,
+      }));
+
+      // Fetch updated habit to get new streak values
+      const updatedHabit = await habitsService.getById(habit.id);
+      
+      // Update habit in state locally
+      setHabits((prev) =>
+        prev.map((h) => (h.id === habit.id ? updatedHabit : h))
+      );
     } catch (error) {
       console.error("Error toggling habit:", error);
     }

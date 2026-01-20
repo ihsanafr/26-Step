@@ -159,63 +159,51 @@ const TasksOverview: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-blue-300 dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5 dark:hover:border-blue-500/50">
-            <div className="flex items-center justify-between">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                <ListIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tasks</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.total}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.tasks.completionRate > 0 ? `${Math.round(stats.tasks.completionRate)}% completed` : "No tasks yet"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-blue-100 p-3 transition-transform group-hover:scale-110 dark:bg-blue-500/20">
-                <ListIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.tasks.total}</p>
               </div>
             </div>
           </div>
 
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-green-300 dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5 dark:hover:border-green-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
+                <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.completed}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.tasks.total > 0 ? `${Math.round((stats.tasks.completed / stats.tasks.total) * 100)}% of total` : "Great job!"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-green-100 p-3 transition-transform group-hover:scale-110 dark:bg-green-500/20">
-                <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.tasks.completed}</p>
               </div>
             </div>
           </div>
 
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-yellow-300 dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5 dark:hover:border-yellow-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-500/20">
+                <TimeIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.inProgress}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {stats.tasks.onHold > 0 ? `${stats.tasks.onHold} on hold` : "Keep going!"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-yellow-100 p-3 transition-transform group-hover:scale-110 dark:bg-yellow-500/20">
-                <TimeIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.tasks.inProgress}</p>
               </div>
             </div>
           </div>
 
-          <div className="group rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-5 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-gray-300 dark:border-gray-700 dark:from-gray-500/10 dark:to-gray-500/5 dark:hover:border-gray-500/50">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-gray-500/10 dark:to-gray-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-500/20">
+                <GridIcon className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.pending}</p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  {overdueTasks.length > 0 ? `${overdueTasks.length} overdue` : "All on track"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-gray-100 p-3 transition-transform group-hover:scale-110 dark:bg-gray-500/20">
-                <GridIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.tasks.pending}</p>
               </div>
             </div>
           </div>
@@ -254,51 +242,51 @@ const TasksOverview: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-purple-50 to-purple-100 p-5 shadow-theme-xs transition-all hover:shadow-theme-sm dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5">
-            <div className="flex items-center justify-between">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
+                <TargetIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Targets</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.targets.total}</p>
-              </div>
-              <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-500/20">
-                <TargetIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.targets.total}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-theme-xs transition-all hover:shadow-theme-sm dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                <CheckCircleIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.targets.active}</p>
-              </div>
-              <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-500/20">
-                <CheckCircleIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.targets.active}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-green-100 p-5 shadow-theme-xs transition-all hover:shadow-theme-sm dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
+                <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.targets.completed}</p>
-              </div>
-              <div className="rounded-lg bg-green-100 p-3 dark:bg-green-500/20">
-                <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.targets.completed}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 shadow-theme-xs transition-all hover:shadow-theme-sm dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-500/20">
+                <TimeIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Paused</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{stats.targets.paused}</p>
-              </div>
-              <div className="rounded-lg bg-yellow-100 p-3 dark:bg-yellow-500/20">
-                <TimeIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.targets.paused}</p>
               </div>
             </div>
           </div>
@@ -340,18 +328,15 @@ const TasksOverview: React.FC = () => {
           {/* Overdue Tasks */}
           <Link
             to="/tasks/list"
-            className="group rounded-xl border border-red-200 bg-red-50 p-4 shadow-theme-sm transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-red-300 dark:border-red-500/30 dark:bg-red-500/10 dark:hover:border-red-500/50"
+            className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-red-500/10 dark:to-red-500/5"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-red-700 dark:text-red-400">Overdue Tasks</p>
-                <p className="mt-1 text-2xl font-bold text-red-900 dark:text-red-300">{overdueTasks.length}</p>
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {overdueTasks.length > 0 ? "Needs attention" : "All on time"}
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-red-100 p-2 dark:bg-red-500/20">
+                <AlertIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <div className="rounded-lg bg-red-100 p-2.5 transition-transform group-hover:scale-110 dark:bg-red-500/20">
-                <AlertIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Overdue Tasks</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{overdueTasks.length}</p>
               </div>
             </div>
           </Link>
@@ -359,18 +344,15 @@ const TasksOverview: React.FC = () => {
           {/* Upcoming Tasks */}
           <Link
             to="/tasks/list"
-            className="group rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-theme-sm transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:hover:border-blue-500/50"
+            className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Upcoming (7 days)</p>
-                <p className="mt-1 text-2xl font-bold text-blue-900 dark:text-blue-300">{upcomingTasks.length}</p>
-                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                  Due this week
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                <TimeIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="rounded-lg bg-blue-100 p-2.5 transition-transform group-hover:scale-110 dark:bg-blue-500/20">
-                <TimeIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Upcoming (7 days)</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{upcomingTasks.length}</p>
               </div>
             </div>
           </Link>
@@ -378,18 +360,15 @@ const TasksOverview: React.FC = () => {
           {/* High Priority Tasks */}
           <Link
             to="/tasks/list"
-            className="group rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-theme-sm transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-orange-300 dark:border-orange-500/30 dark:bg-orange-500/10 dark:hover:border-orange-500/50"
+            className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-700 dark:text-orange-400">High Priority</p>
-                <p className="mt-1 text-2xl font-bold text-orange-900 dark:text-orange-300">{tasksByPriority.high}</p>
-                <p className="mt-1 text-xs text-orange-600 dark:text-orange-400">
-                  Urgent tasks
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-500/20">
+                <BoltIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
-              <div className="rounded-lg bg-orange-100 p-2.5 transition-transform group-hover:scale-110 dark:bg-orange-500/20">
-                <BoltIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">High Priority</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{tasksByPriority.high}</p>
               </div>
             </div>
           </Link>
@@ -397,18 +376,15 @@ const TasksOverview: React.FC = () => {
           {/* Active Targets */}
           <Link
             to="/tasks/targets"
-            className="group rounded-xl border border-purple-200 bg-purple-50 p-4 shadow-theme-sm transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-purple-300 dark:border-purple-500/30 dark:bg-purple-500/10 dark:hover:border-purple-500/50"
+            className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-700 dark:text-purple-400">Active Targets</p>
-                <p className="mt-1 text-2xl font-bold text-purple-900 dark:text-purple-300">{stats.targets.active}</p>
-                <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
-                  In progress
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
+                <TargetIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="rounded-lg bg-purple-100 p-2.5 transition-transform group-hover:scale-110 dark:bg-purple-500/20">
-                <TargetIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Targets</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.targets.active}</p>
               </div>
             </div>
           </Link>
@@ -599,37 +575,40 @@ const TasksOverview: React.FC = () => {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-5 dark:border-red-500/30 dark:bg-red-500/10">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-red-700 dark:text-red-400">High Priority</span>
+            <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-red-500/10 dark:to-red-500/5">
+              <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-red-100 p-2 dark:bg-red-500/20">
-                  <BoltIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <BoltIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">High Priority</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{tasksByPriority.high}</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-red-900 dark:text-red-300">{tasksByPriority.high}</p>
-              <p className="mt-1 text-xs text-red-700 dark:text-red-400">Tasks requiring immediate attention</p>
             </div>
 
-            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-5 dark:border-yellow-500/30 dark:bg-yellow-500/10">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">Medium Priority</span>
+            <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+              <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-500/20">
-                  <TimeIcon className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                  <TimeIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Medium Priority</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{tasksByPriority.medium}</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-300">{tasksByPriority.medium}</p>
-              <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-400">Tasks that can wait a bit</p>
             </div>
 
-            <div className="rounded-xl border border-green-200 bg-green-50 p-5 dark:border-green-500/30 dark:bg-green-500/10">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-green-700 dark:text-green-400">Low Priority</span>
+            <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+              <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
-                  <CheckCircleIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Low Priority</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{tasksByPriority.low}</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-green-900 dark:text-green-300">{tasksByPriority.low}</p>
-              <p className="mt-1 text-xs text-green-700 dark:text-green-400">Tasks with flexible deadlines</p>
             </div>
           </div>
         </section>
