@@ -13,6 +13,13 @@ export type Journal = {
   location?: string | null;
   color?: string | null; // Hex color code
   cover_image?: string | null; // Base64 or URL
+  category_id?: number | null;
+  category?: {
+    id: number;
+    name: string;
+    color: string | null;
+    icon?: string | null;
+  } | null;
   created_at: string;
   updated_at: string;
 };
@@ -28,6 +35,7 @@ export type CreateJournalData = {
   location?: string | null;
   color?: string | null;
   cover_image?: string | null;
+  category_id?: number | null;
 };
 
 export type UpdateJournalData = Partial<CreateJournalData>;

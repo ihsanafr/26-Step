@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { Habit, HabitLog, habitsService } from "../../services/habitsService";
+import { formatLocalDate as formatLocalDateUtil } from "../../utils/date";
+import { CalenderIcon } from "../../icons";
+import Button from "../ui/button/Button";
+import { Skeleton } from "../common/Skeleton";
 
 interface HabitCalendarProps {
   habit: Habit;
@@ -11,13 +15,8 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({ habit, onDateClick }) => 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  // IMPORTANT: Use local date formatting (not toISOString) to avoid timezone shifting issues.
-  const formatLocalDate = (date: Date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  };
+  // Use utility function to ensure consistent local timezone handling
+  const formatLocalDate = formatLocalDateUtil;
 
   useEffect(() => {
     loadLogs();
@@ -25,7 +24,12 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({ habit, onDateClick }) => 
 
   const loadLogs = async () => {
     try {
-      setLoading(true);
+      // Only show loading skeleton if we don't have any logs yet (first load)
+      const hasExistingLogs = logs.length > 0;
+      if (!hasExistingLogs) {
+        setLoading(true);
+      }
+
       // Load logs for the current month
       const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -176,70 +180,68 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({ habit, onDateClick }) => 
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const days = getDaysInMonth();
+  const monthLabel = currentMonth.toLocaleString("en-US", { month: "long", year: "numeric" });
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
-        <div className="h-64 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+      <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800 sm:p-6">
+        <Skeleton variant="rectangular" width="100%" height={360} className="rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="w-full rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800 sm:p-6">
       {/* Header with Habit Info */}
-      <div className="mb-6 flex items-center gap-4">
-        <div className="text-4xl">{habit.icon}</div>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{habit.name}</h3>
-          <div className="mt-1 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+      <div className="mb-4 flex items-center gap-3 sm:mb-6 sm:gap-4">
+        <div className="text-3xl sm:text-4xl">{habit.icon}</div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate sm:text-xl">{habit.name}</h3>
+          <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 sm:gap-4 sm:text-sm">
             <span>🔥 {habit.current_streak} days</span>
             <span>🏆 {habit.longest_streak} days</span>
           </div>
         </div>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={previousMonth}
-          className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-        </h3>
-        <button
-          onClick={nextMonth}
-          className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+      <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex items-center gap-2">
+          <CalenderIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 sm:h-5 sm:w-5" />
+          <p className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">{monthLabel}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={previousMonth}
+            className="text-xs sm:text-sm"
+          >
+            ← Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={nextMonth}
+            className="text-xs sm:text-sm"
+          >
+            Next →
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-3">
-        {/* Week day headers */}
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="p-3 text-center text-sm font-bold text-gray-600 dark:text-gray-400"
-          >
-            {day}
+      <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-xs mb-2">
+        {weekDays.map((d) => (
+          <div key={d} className="px-1 py-1 text-center sm:px-2">
+            <span className="hidden sm:inline">{d}</span>
+            <span className="sm:hidden">{d.slice(0, 1)}</span>
           </div>
         ))}
+      </div>
 
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Calendar days */}
         {days.map((day, index) => {
           const completed = day !== null && isDateCompleted(day);
@@ -250,55 +252,48 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({ habit, onDateClick }) => 
           return (
             <button
               key={index}
+              type="button"
               onClick={() => handleDateClick(day!)}
               disabled={day === null || !onDateClick}
-              className={`group relative h-20 rounded-2xl text-base transition-all duration-200 ${
-                day === null
-                  ? "cursor-default"
-                  : onDateClick
-                    ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
-                    : "cursor-default"
-              } ${
+              className={`group relative h-12 rounded-lg border p-1 text-left transition-all sm:h-20 sm:rounded-2xl sm:p-2 ${
                 completed
-                  ? "bg-gradient-to-br from-rose-500/90 to-orange-500/90 text-white font-bold shadow-lg ring-1 ring-white/20 dark:ring-white/10"
-                  : "bg-gray-100/70 text-gray-700 shadow-sm ring-1 ring-gray-200/60 dark:bg-gray-700/60 dark:text-gray-200 dark:ring-gray-700"
-              } ${
-                today && !completed
-                  ? "ring-2 ring-brand-500 dark:ring-brand-400"
-                  : ""
-              } ${day !== null && onDateClick ? "hover:shadow-xl" : ""}`}
+                  ? "border-orange-300 bg-orange-50 ring-2 ring-orange-400/30 dark:border-orange-500 dark:bg-orange-500/10"
+                  : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40 dark:hover:bg-gray-800/40"
+              } ${day === null ? "opacity-40 cursor-default" : onDateClick ? "cursor-pointer" : "cursor-default"} ${
+                today ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
+              }`}
             >
-              {completed ? (
-                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-70" />
-              ) : null}
-
-              <div className="relative flex flex-col items-center justify-center h-full">
-                <span className={`text-lg font-bold ${day === null ? "opacity-0" : ""}`}>{day}</span>
-
+              <div className="flex items-center justify-between">
+                <span className={`text-xs font-semibold sm:text-sm ${today ? "text-blue-600 dark:text-blue-300" : completed ? "text-orange-700 dark:text-orange-300" : "text-gray-900 dark:text-white"}`}>
+                  {day ?? ""}
+                </span>
                 {completed ? (
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-black/15 px-2 py-0.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm">
-                    <span className="text-[11px]">🔥</span>
-                    {streak > 0 ? streak : 1}
-                  </span>
-                ) : (
-                  <span className="mt-1 text-[11px] text-gray-500 opacity-0 group-hover:opacity-70 dark:text-gray-400">
-                    view
-                  </span>
-                )}
+                  <span className="text-[10px] sm:text-xs">🔥</span>
+                ) : null}
               </div>
+
+              {completed ? (
+                <div className="mt-1 text-[8px] font-semibold text-gray-600 dark:text-gray-300 sm:mt-2 sm:text-[10px]">
+                  completed
+                </div>
+              ) : (
+                <div className="mt-2 text-[8px] text-gray-400 opacity-0 transition group-hover:opacity-100 dark:text-gray-500 sm:mt-6 sm:text-[10px]">
+                  {onDateClick ? "click" : "view"}
+                </div>
+              )}
             </button>
           );
         })}
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex items-center justify-center gap-6 text-sm">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs sm:mt-6 sm:gap-6 sm:text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-gray-200/80 ring-1 ring-gray-200 dark:bg-gray-700/70 dark:ring-gray-700"></div>
+          <div className="h-4 w-4 rounded border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/40"></div>
           <span className="text-gray-600 dark:text-gray-400">Not completed</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-gradient-to-br from-rose-500/90 to-orange-500/90 ring-1 ring-white/20 dark:ring-white/10"></div>
+          <div className="h-4 w-4 rounded border border-orange-300 bg-orange-50 ring-2 ring-orange-400/30 dark:border-orange-500 dark:bg-orange-500/10"></div>
           <span className="text-gray-600 dark:text-gray-400">Completed / Streak 🔥</span>
         </div>
       </div>

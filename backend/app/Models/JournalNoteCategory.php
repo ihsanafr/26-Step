@@ -5,32 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Journal extends Model
+class JournalNoteCategory extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'title',
-        'content',
-        'date',
-        'mood',
-        'tags',
-        'is_private',
-        'weather',
-        'location',
+        'name',
         'color',
-        'cover_image',
-        'category_id',
+        'icon',
+        'is_default',
     ];
 
     protected function casts(): array
     {
         return [
-            'date' => 'date',
-            'tags' => 'array',
-            'is_private' => 'boolean',
+            'is_default' => 'boolean',
         ];
     }
 
@@ -39,9 +31,13 @@ class Journal extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function category(): BelongsTo
+    public function journals(): HasMany
     {
-        return $this->belongsTo(JournalNoteCategory::class, 'category_id');
+        return $this->hasMany(Journal::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
     }
 }
-

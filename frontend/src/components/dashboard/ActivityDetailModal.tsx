@@ -84,6 +84,18 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
     };
   }, []);
 
+  useEffect(() => {
+    if (open) {
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   if (!open && !isMounted) return null;
 
   const totalActivities =
@@ -99,16 +111,29 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
 
   return (
     <div
-      className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
-        isVisible ? "opacity-100" : "opacity-0"
+      className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md transition-opacity duration-200 ${
+        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       onClick={requestClose}
+      style={{ 
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        minHeight: '100vh'
+      }}
     >
       <div
         className={`relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-transform duration-200 dark:border-gray-700 dark:bg-gray-800 ${
           isVisible ? "scale-100" : "scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
+        style={{ pointerEvents: 'auto' }}
       >
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -294,8 +319,9 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
               </div>
             )}
 
-            {/* Journals Section */}
-            {activityDetail?.journals && activityDetail.journals.length > 0 && (
+            {/* Journal & Notes Section */}
+            {((activityDetail?.journals && activityDetail.journals.length > 0) || 
+              (activityDetail?.notes && activityDetail.notes.length > 0)) && (
               <div className="rounded-xl border border-pink-200 bg-pink-50/50 p-4 dark:border-pink-800/50 dark:bg-pink-500/10">
                 <Link
                   to="/journals"
@@ -311,7 +337,7 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                       Journal & Notes
                     </h4>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {activityDetail.journals.length} {activityDetail.journals.length === 1 ? "entry" : "entries"}
+                      {((activityDetail.journals?.length || 0) + (activityDetail.notes?.length || 0))} {((activityDetail.journals?.length || 0) + (activityDetail.notes?.length || 0)) === 1 ? "entry" : "entries"}
                     </p>
                   </div>
                   <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +345,8 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                   </svg>
                 </Link>
                 <div className="space-y-2">
-                  {activityDetail.journals.map((journal) => (
+                  {/* Journals */}
+                  {activityDetail.journals && activityDetail.journals.map((journal) => (
                     <div
                       key={journal.id}
                       className="rounded-lg border border-pink-200 bg-white p-3 dark:border-pink-800/50 dark:bg-gray-800"
@@ -355,6 +382,48 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                                     +{journal.tags.length - 3} more
                                   </span>
                                 )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {/* Notes */}
+                  {activityDetail.notes && activityDetail.notes.map((note: any) => (
+                    <div
+                      key={note.id}
+                      className="rounded-lg border border-pink-200 bg-white p-3 dark:border-pink-800/50 dark:bg-gray-800"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">📝</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{note.title}</p>
+                            {note.is_pinned && (
+                              <span className="text-xs text-yellow-600 dark:text-yellow-400">📌</span>
+                            )}
+                          </div>
+                          {note.content && (
+                            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
+                              {note.content.substring(0, 150)}
+                              {note.content.length > 150 && "..."}
+                            </p>
+                          )}
+                          <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-gray-500 dark:text-gray-400">
+                            {note.category && typeof note.category === 'object' && note.category.name && (
+                              <span>Category: {note.category.icon ? `${note.category.icon} ` : ''}{note.category.name}</span>
+                            )}
+                            {note.category && typeof note.category === 'string' && (
+                              <span>Category: {note.category}</span>
+                            )}
+                            {note.color && (
+                              <div className="flex items-center gap-1">
+                                <span>Color:</span>
+                                <div
+                                  className="h-3 w-3 rounded-full"
+                                  style={{ backgroundColor: note.color }}
+                                />
                               </div>
                             )}
                           </div>
@@ -514,9 +583,8 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
               </div>
             )}
 
-            {/* Storage Section (Combined Files + Notes + Links) */}
+            {/* Storage Section (Files + Links only) */}
             {((activityDetail?.files && activityDetail.files.length > 0) || 
-              (activityDetail?.notes && activityDetail.notes.length > 0) ||
               (activityDetail?.links && activityDetail.links.length > 0)) && (
               <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 dark:border-indigo-800/50 dark:bg-indigo-500/10">
                 <Link
@@ -533,7 +601,7 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                       Storage
                     </h4>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {((activityDetail?.files?.length || 0) + (activityDetail?.notes?.length || 0) + (activityDetail?.links?.length || 0))} items
+                      {((activityDetail?.files?.length || 0) + (activityDetail?.links?.length || 0))} items
                     </p>
                   </div>
                   <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -567,50 +635,6 @@ export default function ActivityDetailModal({ open, date, onClose }: ActivityDet
                             )}
                             {file.mime_type && (
                               <span>Type: {file.mime_type}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {/* Notes */}
-                  {activityDetail?.notes && activityDetail.notes.map((note: any) => (
-                    <div
-                      key={note.id}
-                      className="rounded-lg border border-indigo-200 bg-white p-3 dark:border-indigo-800/50 dark:bg-gray-800"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">📝</span>
-                            <p className="font-medium text-gray-900 dark:text-white">{note.title}</p>
-                            {note.is_pinned && (
-                              <span className="text-xs text-yellow-600 dark:text-yellow-400">📌</span>
-                            )}
-                          </div>
-                          {note.content && (
-                            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
-                              {note.content.substring(0, 150)}
-                              {note.content.length > 150 && "..."}
-                            </p>
-                          )}
-                          <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-gray-500 dark:text-gray-400">
-                            {note.category && (
-                              <span>Category: {note.category}</span>
-                            )}
-                            {note.tags && Array.isArray(note.tags) && note.tags.length > 0 && (
-                              <div className="flex items-center gap-1 flex-wrap">
-                                {note.tags.slice(0, 3).map((tag: string, idx: number) => (
-                                  <span key={idx} className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">
-                                    #{tag}
-                                  </span>
-                                ))}
-                                {note.tags.length > 3 && (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    +{note.tags.length - 3} more
-                                  </span>
-                                )}
-                              </div>
                             )}
                           </div>
                         </div>

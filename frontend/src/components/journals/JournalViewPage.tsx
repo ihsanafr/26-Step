@@ -166,11 +166,17 @@ export default function JournalViewPage() {
           {/* Title */}
           <h2 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">{journal.title}</h2>
 
-          {/* Date, Mood, Weather, Location */}
+          {/* Date, Category, Mood, Weather, Location */}
           <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-gray-200 pb-6 dark:border-gray-700">
             <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
               {formatIndonesianDate(journal.date)}
             </p>
+            {journal.category && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-200/60 px-3 py-1.5 text-sm font-semibold text-gray-700 dark:bg-gray-700/60 dark:text-gray-200">
+                {journal.category.icon && <span>{journal.category.icon}</span>}
+                <span>{journal.category.name}</span>
+              </span>
+            )}
             {journal.mood && (
               <p className="text-base font-semibold text-gray-700 dark:text-gray-300">
                 {getMoodEmoji(journal.mood)} {journal.mood}

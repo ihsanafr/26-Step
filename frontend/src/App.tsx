@@ -4,6 +4,7 @@ import SimpleLayout from "./layout/SimpleLayout";
 import ModuleLayout from "./layout/ModuleLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import { PomodoroProvider } from "./context/PomodoroContext";
+import { HabitsProvider } from "./context/HabitsContext";
 import PomodoroMiniWidget from "./components/productivity/PomodoroMiniWidget";
 import { Component, ReactNode } from "react";
 
@@ -22,6 +23,7 @@ import Habits from "./pages/modules/Habits";
 import HabitDetail from "./components/habits/HabitDetail";
 import Storage from "./pages/modules/Storage";
 import Journals from "./pages/modules/Journals";
+import Categories from "./pages/modules/Categories";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Error Boundary Component
@@ -130,10 +132,11 @@ export default function App() {
         <Router>
           <ScrollToTop />
           <PomodoroProvider>
-            {/* Show the mini widget across the whole app (while authenticated) */}
-            {isAuthenticated ? <PomodoroMiniWidget /> : null}
+            <HabitsProvider>
+              {/* Show the mini widget across the whole app (while authenticated) */}
+              {isAuthenticated ? <PomodoroMiniWidget /> : null}
 
-            <Routes>
+              <Routes>
               {/* Public Routes */}
               <Route
                 path="/login"
@@ -226,15 +229,17 @@ export default function App() {
                 <Route path="/journals/calendar" element={<Journals />} />
                 <Route path="/journals/notes" element={<Journals />} />
                 <Route path="/journals/guide" element={<Journals />} />
+                <Route path="/journals/categories" element={<Categories />} />
                 <Route path="/journals" element={<Journals />} />
               </Route>
 
               {/* 404 */}
               <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </PomodoroProvider>
-    </Router>
-  </ErrorBoundary>
+              </Routes>
+            </HabitsProvider>
+          </PomodoroProvider>
+        </Router>
+      </ErrorBoundary>
   );
   } catch (error) {
     console.error("App error:", error);

@@ -5,7 +5,16 @@ export type Note = {
   user_id: number;
   title: string;
   content: string;
-  category?: string | null;
+  // category can be either string (legacy) or object (relationship)
+  // When loaded with relationship, it will be an object
+  category?: string | {
+    id: number;
+    name: string;
+    color: string | null;
+    icon?: string | null;
+  } | null;
+  category_id?: number | null;
+  color?: string | null;
   tags?: string[] | null;
   is_pinned: boolean;
   created_at: string;
@@ -16,6 +25,8 @@ export type CreateNoteData = {
   title: string;
   content: string;
   category?: string | null;
+  category_id?: number | null;
+  color?: string | null;
   tags?: string[];
   is_pinned?: boolean;
 };

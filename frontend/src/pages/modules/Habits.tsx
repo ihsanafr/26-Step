@@ -4,8 +4,9 @@ import HabitList from "../../components/habits/HabitList";
 import HabitsOverview from "../../components/habits/HabitsOverview";
 import HabitsGuide from "../../components/habits/HabitsGuide";
 import HabitsStreakCalendar from "../../components/habits/HabitsStreakCalendar";
-import { useState, useEffect } from "react";
-import { Habit, HabitLog, habitsService } from "../../services/habitsService";
+import { useState, useEffect, useMemo } from "react";
+import { Habit, habitsService } from "../../services/habitsService";
+import { useHabits } from "../../context/HabitsContext";
 
 export default function Habits() {
   const location = useLocation();
@@ -53,27 +54,13 @@ export default function Habits() {
 
 // Streaks View Component - Shows only habits with streaks
 function HabitsStreaksView() {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { habits, loading } = useHabits();
 
-  useEffect(() => {
-    loadHabits();
-  }, []);
-
-  const loadHabits = async () => {
-    try {
-      setLoading(true);
-      const habitsData = await habitsService.getAll();
-      setHabits(habitsData);
-    } catch (error) {
-      console.error("Error loading habits:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const activeHabits = habits.filter((h) => h.is_active);
-  const habitsWithStreaks = activeHabits.filter((h) => h.current_streak > 0 || h.longest_streak > 0);
+  const activeHabits = useMemo(() => habits.filter((h) => h.is_active), [habits]);
+  const habitsWithStreaks = useMemo(
+    () => activeHabits.filter((h) => h.current_streak > 0 || h.longest_streak > 0),
+    [activeHabits]
+  );
 
   return (
     <>
@@ -240,53 +227,9 @@ function HabitsStreaksView() {
 
 // Dashboard Component
 function HabitsDashboard() {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [todayLogs, setTodayLogs] = useState<{ [key: number]: HabitLog }>({});
-  const [loading, setLoading] = useState(true);
+  const { habits, todayLogs, loading } = useHabits();
 
-  const activeHabits = habits.filter((h) => h.is_active);
-
-  const formatLocalDate = (date: Date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const habitsData = await habitsService.getAll();
-      setHabits(habitsData);
-      
-      // Load today's logs for each habit
-      const today = formatLocalDate(new Date());
-      const logsMap: { [key: number]: HabitLog } = {};
-      
-      await Promise.all(
-        habitsData.map(async (habit) => {
-          try {
-            const logs = await habitsService.getLogs(habit.id, today, today);
-            if (logs.length > 0 && logs[0].completed) {
-              logsMap[habit.id] = logs[0];
-            }
-          } catch (error) {
-            console.error(`Error loading logs for habit ${habit.id}:`, error);
-          }
-        })
-      );
-      
-      setTodayLogs(logsMap);
-    } catch (error) {
-      console.error("Error loading habits data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const activeHabits = useMemo(() => habits.filter((h) => h.is_active), [habits]);
 
   return (
     <>

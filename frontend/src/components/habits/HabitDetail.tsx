@@ -6,10 +6,12 @@ import HabitCalendar from "./HabitCalendar";
 import HabitForm from "./HabitForm";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
+import { useHabits } from "../../context/HabitsContext";
 
 const HabitDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { refreshHabits, updateHabit } = useHabits();
   const [habit, setHabit] = useState<Habit | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -46,9 +48,12 @@ const HabitDetail: React.FC = () => {
     if (!habit) return;
     try {
       setSaving(true);
-      await habitsService.update(habit.id, data);
+      const updatedHabit = await habitsService.update(habit.id, data);
       setShowForm(false);
       await loadHabit();
+      // Update context to keep data in sync
+      updateHabit(updatedHabit);
+      await refreshHabits();
     } catch (error) {
       console.error("Error saving habit:", error);
       throw error;
@@ -69,6 +74,8 @@ const HabitDetail: React.FC = () => {
     try {
       setDeleting(true);
       await habitsService.delete(deleteModal.habit.id);
+      // Refresh context to remove deleted habit
+      await refreshHabits();
       navigate("/habits/list");
     } catch (error) {
       console.error("Error deleting habit:", error);

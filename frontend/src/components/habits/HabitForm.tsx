@@ -3,6 +3,7 @@ import { Habit, CreateHabitData } from "../../services/habitsService";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import DatePicker from "../form/input/DatePicker";
+import { formatLocalDate } from "../../utils/date";
 
 interface HabitFormProps {
   habit?: Habit;
@@ -19,7 +20,7 @@ const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel, isLoadin
     name: habit?.name || "",
     description: habit?.description || "",
     target_days: habit?.target_days || undefined,
-    start_date: habit?.start_date || new Date().toISOString().split("T")[0],
+    start_date: habit?.start_date || formatLocalDate(new Date()),
     is_active: habit?.is_active ?? true,
     color: habit?.color || "blue",
     icon: habit?.icon || "🔥",

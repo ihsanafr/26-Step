@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\JournalNoteCategoryController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -70,6 +71,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Notes
     Route::apiResource('notes', NoteController::class);
+
+    // Journal & Note Categories
+    Route::apiResource('journal-note-categories', JournalNoteCategoryController::class);
 
     // Files
     Route::apiResource('files', FileController::class);

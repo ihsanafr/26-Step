@@ -15,6 +15,8 @@ class Note extends Model
         'title',
         'content',
         'category',
+        'category_id',
+        'color',
         'tags',
         'is_pinned',
     ];
@@ -30,5 +32,10 @@ class Note extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(JournalNoteCategory::class, 'category_id');
     }
 }

@@ -1,4 +1,5 @@
 import api from "./api";
+import { formatLocalDate } from "../utils/date";
 
 export interface Habit {
   id: number;
@@ -117,7 +118,8 @@ export const habitsService = {
 
   // Helper methods
   async toggleToday(habitId: number): Promise<HabitLog> {
-    const today = new Date().toISOString().split("T")[0];
+    // Use local timezone, not UTC, to match user's calendar day
+    const today = formatLocalDate(new Date());
     return this.createLog(habitId, { date: today, completed: true });
   },
 

@@ -95,16 +95,25 @@ export default function JournalsOverview() {
   const monthLabel = cursor.toLocaleString("en-US", { month: "long", year: "numeric" });
   
   const byDate = useMemo(() => {
-    const map = new Map<string, Journal[]>();
+    const map = new Map<string, (Journal | Note)[]>();
+    // Add journals
     journals.forEach((j) => {
       const key = (j.date || "").slice(0, 10);
       map.set(key, [...(map.get(key) || []), j]);
     });
+    // Add notes (using created_at as date)
+    notes.forEach((n) => {
+      const key = (n.created_at || "").slice(0, 10);
+      map.set(key, [...(map.get(key) || []), n]);
+    });
     return map;
-  }, [journals]);
+  }, [journals, notes]);
 
   const grid = useMemo(() => getMonthGrid(year, monthIndex), [year, monthIndex]);
-  const selectedEntries = useMemo(() => (selectedDate ? byDate.get(selectedDate) || [] : []), [byDate, selectedDate]);
+  const selectedEntries = useMemo(() => {
+    if (!selectedDate) return [];
+    return byDate.get(selectedDate) || [];
+  }, [byDate, selectedDate]);
 
   return (
     <div className="space-y-8">
@@ -424,8 +433,8 @@ export default function JournalsOverview() {
                   <div className="mb-2 flex flex-col gap-2 sm:mb-3 sm:flex-row sm:items-center sm:justify-between">
                     <h4 className="text-xs font-bold text-gray-900 dark:text-white sm:text-sm">
                       {selectedEntries.length > 0
-                        ? `${selectedEntries.length} ${selectedEntries.length === 1 ? "entry" : "entries"} on ${selectedDate}`
-                        : `No entries on ${selectedDate}`}
+                        ? `${selectedEntries.length} ${selectedEntries.length === 1 ? "entry" : "entries"} on ${formatIndonesianDate(selectedDate)}`
+                        : `No entries on ${formatIndonesianDate(selectedDate)}`}
                     </h4>
                     <Button
                       variant="outline"

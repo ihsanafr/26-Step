@@ -137,6 +137,11 @@ export const moduleMenus: Record<string, MenuItem[]> = {
       name: "Notes",
       path: "/journals/notes",
     },
+    {
+      icon: <TagIcon className="w-5 h-5" />,
+      name: "Categories",
+      path: "/journals/categories",
+    },
   ],
 };
 

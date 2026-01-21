@@ -116,7 +116,9 @@ class HabitLogController extends Controller
         $logs = HabitLog::where('habit_id', $habit->id)
             ->where('completed', true)
             ->orderBy('date', 'desc')
-            ->get();
+            ->get()
+            ->unique('date')
+            ->values();
 
         if ($logs->isEmpty()) {
             $habit->update([
@@ -141,28 +143,51 @@ class HabitLogController extends Controller
             }
         }
 
-        // Calculate longest streak
+        // Calculate longest streak from all logs (need to iterate from oldest to newest)
+        // Get logs sorted by date ascending for streak calculation
+        $logsAscending = HabitLog::where('habit_id', $habit->id)
+            ->where('completed', true)
+            ->orderBy('date', 'asc')
+            ->get()
+            ->unique('date')
+            ->values();
+
         $longestStreak = 0;
         $tempStreak = 0;
         $prevDate = null;
 
-        foreach ($logs as $log) {
+        foreach ($logsAscending as $log) {
             $logDate = Carbon::parse($log->date);
+            if ($prevDate !== null && $logDate->isSameDay($prevDate)) {
+                continue;
+            }
             if ($prevDate === null) {
                 $tempStreak = 1;
             } elseif ($logDate->diffInDays($prevDate) === 1) {
+                // Consecutive day, continue streak
                 $tempStreak++;
             } else {
+                // Gap found, save current streak and start new one
                 $longestStreak = max($longestStreak, $tempStreak);
                 $tempStreak = 1;
             }
             $prevDate = $logDate;
         }
+        // Don't forget the last streak
         $longestStreak = max($longestStreak, $tempStreak);
+
+        // Longest streak should be at least equal to current streak
+        // (since current streak is part of the longest streak history)
+        $longestStreak = max($longestStreak, $currentStreak);
+        
+        // CRITICAL: Preserve the all-time longest streak if it's higher than calculated
+        // This ensures if user had 5 days streak before and broke it, it stays as 5
+        // Only update if the newly calculated streak is longer than the stored one
+        $finalLongestStreak = max($habit->longest_streak, $longestStreak);
 
         $habit->update([
             'current_streak' => $currentStreak,
-            'longest_streak' => max($habit->longest_streak, $longestStreak)
+            'longest_streak' => $finalLongestStreak
         ]);
     }
 }

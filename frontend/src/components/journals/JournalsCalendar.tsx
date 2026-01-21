@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { journalsService, Journal } from "../../services/journalsService";
+import { notesService, Note } from "../../services/notesService";
 import { Skeleton } from "../common/Skeleton";
 import { CalenderIcon, FileIcon, PlusIcon } from "../../icons";
 import Button from "../ui/button/Button";
 import JournalFormModal from "./JournalFormModal";
 import { stripHtml } from "../../utils/text";
+import { formatIndonesianDate } from "../../utils/date";
 
 function formatYMD(d: Date) {
   const y = d.getFullYear();
@@ -31,7 +33,8 @@ function getMonthGrid(year: number, monthIndex: number) {
 export default function JournalsCalendar() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<Journal[]>([]);
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
 
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
@@ -44,11 +47,16 @@ export default function JournalsCalendar() {
   const load = async () => {
     try {
       setLoading(true);
-      const data = await journalsService.getAll({ month: monthIndex + 1, year });
-      setItems(data);
+      const [j, n] = await Promise.all([
+        journalsService.getAll({ month: monthIndex + 1, year }),
+        notesService.getAll()
+      ]);
+      setJournals(j);
+      setNotes(n);
     } catch (e) {
-      console.error("Error loading calendar journals:", e);
-      setItems([]);
+      console.error("Error loading calendar data:", e);
+      setJournals([]);
+      setNotes([]);
     } finally {
       setLoading(false);
     }
@@ -60,18 +68,36 @@ export default function JournalsCalendar() {
   }, [year, monthIndex]);
 
   const byDate = useMemo(() => {
-    const map = new Map<string, Journal[]>();
-    items.forEach((j) => {
+    const map = new Map<string, (Journal | Note)[]>();
+    // Add journals
+    journals.forEach((j) => {
       const key = (j.date || "").slice(0, 10);
       map.set(key, [...(map.get(key) || []), j]);
     });
+    // Add notes (using created_at as date)
+    notes.forEach((n) => {
+      const key = (n.created_at || "").slice(0, 10);
+      map.set(key, [...(map.get(key) || []), n]);
+    });
     return map;
-  }, [items]);
+  }, [journals, notes]);
 
   const grid = useMemo(() => getMonthGrid(year, monthIndex), [year, monthIndex]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const selectedEntries = useMemo(() => (selectedDate ? byDate.get(selectedDate) || [] : []), [byDate, selectedDate]);
+  const selectedEntries = useMemo(() => {
+    if (!selectedDate) return [];
+    const entries = byDate.get(selectedDate) || [];
+    // Filter to only show entries for the selected month
+    return entries.filter((entry) => {
+      const entryDate = 'date' in entry ? entry.date : entry.created_at;
+      if (!entryDate) return false;
+      const dateStr = entryDate.slice(0, 10);
+      const entryYear = parseInt(dateStr.split('-')[0]);
+      const entryMonth = parseInt(dateStr.split('-')[1]) - 1;
+      return entryYear === year && entryMonth === monthIndex;
+    });
+  }, [byDate, selectedDate, year, monthIndex]);
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Journal | null>(null);
@@ -212,7 +238,7 @@ export default function JournalsCalendar() {
           <div className="flex items-center gap-2 min-w-0">
             <FileIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 sm:h-5 sm:w-5" />
             <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate sm:text-lg">
-              {selectedDate ? `Entries on ${selectedDate}` : "Pick a date"}
+              {selectedDate ? `Entries on ${formatIndonesianDate(selectedDate)}` : "Pick a date"}
             </h3>
           </div>
           {selectedDate ? (
@@ -233,32 +259,50 @@ export default function JournalsCalendar() {
           <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">No entries on this date.</p>
         ) : (
           <div className="space-y-2 sm:space-y-3">
-            {selectedEntries.map((j) => (
-              <div key={j.id} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:rounded-xl sm:p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate sm:text-base">{j.title}</p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {j.mood ? `${j.mood} • ` : ""}
-                      {j.weather ? `${j.weather} • ` : ""}
-                      {j.location ? j.location : ""}
-                    </p>
+            {selectedEntries.map((entry) => {
+              const isNote = 'content' in entry && !('date' in entry);
+              return (
+                <div key={entry.id} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:rounded-xl sm:p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate sm:text-base">{entry.title}</p>
+                      {!isNote && (
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          {(entry as Journal).mood ? `${(entry as Journal).mood} • ` : ""}
+                          {(entry as Journal).weather ? `${(entry as Journal).weather} • ` : ""}
+                          {(entry as Journal).location ? (entry as Journal).location : ""}
+                        </p>
+                      )}
+                    </div>
+                    {!isNote ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditing(entry as Journal);
+                          setShowForm(true);
+                        }}
+                        className="text-xs sm:text-sm"
+                      >
+                        View / Edit
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/journals/notes`)}
+                        className="text-xs sm:text-sm"
+                      >
+                        View Note
+                      </Button>
+                    )}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditing(j);
-                      setShowForm(true);
-                    }}
-                    className="text-xs sm:text-sm"
-                  >
-                    View / Edit
-                  </Button>
+                  <p className="mt-2 text-xs text-gray-700 dark:text-gray-300 line-clamp-3 sm:text-sm">
+                    {isNote ? (entry as Note).content : stripHtml((entry as Journal).content)}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-gray-700 dark:text-gray-300 line-clamp-3 sm:text-sm">{stripHtml(j.content)}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { formatLocalDate } from "../productivity/utils";
 import RichTextEditor from "../common/RichTextEditor";
 import { stripHtml } from "../../utils/text";
 import { getMoodEmoji, getWeatherEmoji, JOURNAL_COLORS } from "../../utils/journal";
+import journalNoteCategoriesService, { JournalNoteCategory } from "../../services/journalNoteCategoriesService";
 
 type FormData = {
   title: string;
@@ -18,6 +19,8 @@ type FormData = {
   is_private: boolean;
   color: string;
   cover_image: string;
+  category_id: number | null;
+  newCategoryName: string;
 };
 
 const MOODS = ["Happy", "Calm", "Grateful", "Excited", "Neutral", "Stressed", "Sad", "Angry"];
@@ -40,6 +43,10 @@ export default function JournalFormModal({
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [categories, setCategories] = useState<JournalNoteCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -55,6 +62,8 @@ export default function JournalFormModal({
         is_private: !!editing.is_private,
         color: editing.color || JOURNAL_COLORS[0].value,
         cover_image: editing.cover_image || "",
+        category_id: editing.category_id ?? null,
+        newCategoryName: "",
       };
     }
     return {
@@ -67,6 +76,8 @@ export default function JournalFormModal({
       is_private: false,
       color: JOURNAL_COLORS[0].value,
       cover_image: "",
+      category_id: null,
+      newCategoryName: "",
     };
   }, [editing]);
 
@@ -88,12 +99,49 @@ export default function JournalFormModal({
           is_private: !!editing.is_private,
           color: editing.color || JOURNAL_COLORS[0].value,
           cover_image: editing.cover_image || "",
+          category_id: editing.category_id ?? null,
+          newCategoryName: "",
         });
       } else {
         setForm(initial);
       }
+      loadCategories();
     }
   }, [isOpen, editing]);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await journalNoteCategoriesService.getAll();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!form.newCategoryName.trim()) return;
+    try {
+      setCreatingCategory(true);
+      const newCategory = await journalNoteCategoriesService.create({
+        name: form.newCategoryName.trim(),
+        color: form.color,
+      });
+      setCategories([...categories, newCategory]);
+      setForm((f) => ({
+        ...f,
+        category_id: newCategory.id,
+        newCategoryName: "",
+      }));
+      setShowNewCategory(false);
+    } catch (error) {
+      console.error("Error creating category:", error);
+    } finally {
+      setCreatingCategory(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -146,6 +194,7 @@ export default function JournalFormModal({
       is_private: form.is_private,
       color: form.color || null,
       cover_image: form.cover_image || null,
+      category_id: form.category_id || null,
     });
   };
 
@@ -191,7 +240,12 @@ export default function JournalFormModal({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-            <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} disabled={readOnly} />
+            <Input 
+              value={form.title} 
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
+              disabled={readOnly}
+              placeholder="Enter journal title"
+            />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -235,9 +289,76 @@ export default function JournalFormModal({
             </div>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (optional)</label>
-            <Input value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} disabled={readOnly} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (optional)</label>
+              <Input 
+                value={form.location} 
+                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} 
+                disabled={readOnly}
+                placeholder="e.g., Home, Office, Park"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+              {loadingCategories ? (
+                <div className="h-11 rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 animate-pulse" />
+              ) : (
+                <div className="space-y-2">
+                  <select
+                    value={form.category_id || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value ? parseInt(e.target.value) : null }))}
+                    disabled={readOnly}
+                    className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                  >
+                    <option value="">— No Category —</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon ? `${cat.icon} ` : ""}{cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!readOnly && !showNewCategory ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewCategory(true)}
+                      className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                    >
+                      + Create new category
+                    </button>
+                  ) : !readOnly && showNewCategory ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.newCategoryName}
+                        onChange={(e) => setForm((f) => ({ ...f, newCategoryName: e.target.value }))}
+                        placeholder="Category name"
+                        className="flex-1"
+                        disabled={readOnly}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleCreateCategory}
+                        disabled={creatingCategory || !form.newCategoryName.trim()}
+                        size="sm"
+                      >
+                        {creatingCategory ? "..." : "Create"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowNewCategory(false);
+                          setForm((f) => ({ ...f, newCategoryName: "" }));
+                        }}
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Color and Cover */}

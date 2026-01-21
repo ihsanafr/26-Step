@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import Button from "../ui/button/Button";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
+import Pagination from "../common/Pagination";
 import { journalsService, Journal } from "../../services/journalsService";
 import JournalFormModal from "./JournalFormModal";
 import { FileIcon, MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, LockIcon } from "../../icons";
@@ -19,6 +20,10 @@ export default function JournalList() {
   const [search, setSearch] = useState("");
   const [privacy, setPrivacy] = useState<"all" | "private" | "public">("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title-asc" | "title-desc" | "date-asc" | "date-desc">("newest");
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<"edit" | "view">("edit");
@@ -47,6 +52,11 @@ export default function JournalList() {
   useEffect(() => {
     void load();
   }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, privacy, sortBy]);
 
   // create flow is handled by /journals/new page (not modal)
 
@@ -99,6 +109,15 @@ export default function JournalList() {
 
     return result;
   }, [items, search, privacy, sortBy]);
+
+  // Paginated items
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   const handleSave = async (data: any) => {
     try {
@@ -210,8 +229,9 @@ export default function JournalList() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((j) => {
+        <>
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedItems.map((j) => {
             const cardColor = j.color || "#6366F1";
             const hasCover = !!j.cover_image;
             
@@ -304,9 +324,7 @@ export default function JournalList() {
                           type="button"
                           onClick={() => {
                             setMenuOpenId(null);
-                            setEditing(j);
-                            setFormMode("view");
-                            setShowForm(true);
+                            navigate(`/journals/view/${j.id}`);
                           }}
                           className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                         >
@@ -347,13 +365,29 @@ export default function JournalList() {
                     backgroundColor: hexToRgba(cardColor, 0.05),
                   }}
                 >
-                  {/* Metadata and Content */}
-                  <div className="space-y-2 sm:space-y-3">
-                    <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 sm:text-xs">
-                      {formatIndonesianDate(j.date || "")}
-                      {j.weather ? ` • ${getWeatherEmoji(j.weather)} ${j.weather}` : ""}
-                      {j.location ? ` • ${j.location}` : ""}
-                    </p>
+                    {/* Metadata and Content */}
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 sm:text-xs">
+                          {formatIndonesianDate(j.date || "")}
+                        </p>
+                        {j.category && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-200/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700/60 dark:text-gray-200 sm:text-xs">
+                            {j.category.icon && <span>{j.category.icon}</span>}
+                            <span>{j.category.name}</span>
+                          </span>
+                        )}
+                        {j.weather && (
+                          <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 sm:text-xs">
+                            {getWeatherEmoji(j.weather)} {j.weather}
+                          </p>
+                        )}
+                        {j.location && (
+                          <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400 sm:text-xs">
+                            📍 {j.location}
+                          </p>
+                        )}
+                      </div>
 
                     {/* Content preview */}
                     <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300 line-clamp-3 sm:text-sm">
@@ -388,7 +422,24 @@ export default function JournalList() {
               </div>
             );
           })}
-        </div>
+          </div>
+          {filtered.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={filtered.length}
+                onItemsPerPageChange={(newItemsPerPage) => {
+                  setItemsPerPage(newItemsPerPage);
+                  setCurrentPage(1);
+                }}
+                itemsPerPageOptions={[12, 24, 48, 96]}
+              />
+            </div>
+          )}
+        </>
       )}
 
       <JournalFormModal

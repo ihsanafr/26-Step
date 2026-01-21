@@ -70,22 +70,22 @@ export default function ProductivityOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 p-8 text-white shadow-2xl">
         <div className="relative z-10">
           <h1 className="mb-2 text-4xl font-bold md:text-5xl">Productivity & Time</h1>
-          <p className="mb-6 text-lg text-indigo-100 md:text-xl">
+          <p className="mb-6 text-lg text-purple-100 md:text-xl">
             Track your time, run focus sessions, and plan your day.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               to="/productivity/pomodoro"
-              className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+              className="rounded-lg border border-white/20 bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition hover:bg-white/25"
             >
               Start Pomodoro
             </Link>
             <Link
               to="/productivity/schedule"
-              className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm hover:bg-white/25"
+              className="rounded-lg border border-white/20 bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition hover:bg-white/25"
             >
               Manage Schedule
             </Link>
@@ -93,49 +93,65 @@ export default function ProductivityOverview() {
         </div>
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-3xl" />
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5">
+        <Link
+          to="/productivity/pomodoro"
+          className="group relative rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-theme-xs transition-all hover:-translate-y-0.5 hover:shadow-theme-sm hover:border-purple-300 dark:border-gray-700 dark:from-purple-500/10 dark:to-purple-500/5 dark:hover:border-purple-600"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-100" />
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-500/20">
+            <div className="rounded-lg bg-purple-100 p-2 ring-1 ring-inset ring-purple-200 transition-all group-hover:ring-2 group-hover:ring-purple-300 dark:bg-purple-500/20 dark:ring-purple-500/30">
               <TimeIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Today</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? "—" : minutesToHM(todayMinutes)}</p>
+              <p className="mt-1 text-xs font-medium text-purple-600 dark:text-purple-400 opacity-0 transition-opacity group-hover:opacity-100">Start Pomodoro →</p>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
+        <Link
+          to="/productivity/reports"
+          className="group relative rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs transition-all hover:-translate-y-0.5 hover:shadow-theme-sm hover:border-blue-300 dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5 dark:hover:border-blue-600"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 opacity-0 transition-opacity group-hover:opacity-100" />
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+            <div className="rounded-lg bg-blue-100 p-2 ring-1 ring-inset ring-blue-200 transition-all group-hover:ring-2 group-hover:ring-blue-300 dark:bg-blue-500/20 dark:ring-blue-500/30">
               <FileIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? "—" : minutesToHM(weekMinutes)}</p>
+              <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400 opacity-0 transition-opacity group-hover:opacity-100">View Reports →</p>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5">
+        <Link
+          to="/productivity/schedule"
+          className="group relative rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs transition-all hover:-translate-y-0.5 hover:shadow-theme-sm hover:border-orange-300 dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5 dark:hover:border-orange-600"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-500/20">
+            <div className="rounded-lg bg-orange-100 p-2 ring-1 ring-inset ring-orange-200 transition-all group-hover:ring-2 group-hover:ring-orange-300 dark:bg-orange-500/20 dark:ring-orange-500/30">
               <CalenderIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Upcoming Today</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? "—" : upcoming.length}</p>
+              <p className="mt-1 text-xs font-medium text-orange-600 dark:text-orange-400 opacity-0 transition-opacity group-hover:opacity-100">Manage Schedule →</p>
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-green-100 p-2 dark:bg-green-500/20">
+            <div className="rounded-lg bg-green-100 p-2 ring-1 ring-inset ring-green-200 dark:bg-green-500/20 dark:ring-green-500/30">
               <PlusIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
@@ -146,37 +162,9 @@ export default function ProductivityOverview() {
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Link
-          to="/productivity/pomodoro"
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm transition-all hover:shadow-theme-md dark:border-gray-800 dark:bg-gray-800"
-        >
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Focus</p>
-          <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Start Pomodoro</p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Run a focus session and save it to your logs.</p>
-        </Link>
-        <Link
-          to="/productivity/reports"
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm transition-all hover:shadow-theme-md dark:border-gray-800 dark:bg-gray-800"
-        >
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Time Logs</p>
-          <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">View Reports</p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Add, edit, and analyze your time entries.</p>
-        </Link>
-        <Link
-          to="/productivity/schedule"
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm transition-all hover:shadow-theme-md dark:border-gray-800 dark:bg-gray-800"
-        >
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Planning</p>
-          <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">Manage Schedule</p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Create simple time blocks and reminders.</p>
-        </Link>
-      </div>
-
       {/* Upcoming today */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-theme-sm backdrop-blur-sm dark:border-gray-800 dark:bg-gray-800/70">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Today</h2>
             <Link to="/productivity/schedule" className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">
@@ -194,7 +182,7 @@ export default function ProductivityOverview() {
           ) : (
             <div className="space-y-3">
               {upcoming.map((s) => (
-                <div key={s.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <div key={s.id} className="rounded-xl border border-gray-200 bg-white/60 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 dark:text-white truncate">{s.title}</p>
@@ -213,7 +201,7 @@ export default function ProductivityOverview() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-theme-sm backdrop-blur-sm dark:border-gray-800 dark:bg-gray-800/70">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Time Entries</h2>
             <Link to="/productivity/reports" className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">
@@ -232,7 +220,7 @@ export default function ProductivityOverview() {
           ) : (
             <div className="space-y-3">
               {recentEntries.map((t) => (
-                <div key={t.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <div key={t.id} className="rounded-xl border border-gray-200 bg-white/60 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 dark:text-white truncate">{t.activity}</p>

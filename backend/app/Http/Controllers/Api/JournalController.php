@@ -189,7 +189,8 @@ class JournalController extends Controller
             $query->whereYear('date', $request->year);
         }
 
-        $journals = $query->orderBy('date', 'desc')
+        $journals = $query->with('category')
+            ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -210,6 +211,7 @@ class JournalController extends Controller
             'location' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:7',
             'cover_image' => 'nullable|string|max:500', // Allow full URL
+            'category_id' => 'nullable|exists:journal_note_categories,id',
         ]);
 
         $validated['user_id'] = $request->user()->id;
@@ -222,6 +224,7 @@ class JournalController extends Controller
         ]);
 
         $journal = Journal::create($validated);
+        $journal->load('category');
 
         \Log::info('🟢 [JournalController] Journal created', [
             'id' => $journal->id,
@@ -234,6 +237,7 @@ class JournalController extends Controller
     public function show(Request $request, string $id)
     {
         $journal = Journal::where('user_id', $request->user()->id)
+            ->with('category')
             ->findOrFail($id);
 
         return response()->json($journal);
@@ -256,6 +260,7 @@ class JournalController extends Controller
             'location' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:7',
             'cover_image' => 'nullable|string|max:500', // Allow full URL
+            'category_id' => 'nullable|exists:journal_note_categories,id',
         ]);
 
         \Log::info('🔵 [JournalController] Updating journal', [
@@ -265,6 +270,7 @@ class JournalController extends Controller
         ]);
 
         $journal->update($validated);
+        $journal->load('category');
 
         \Log::info('🟢 [JournalController] Journal updated', [
             'id' => $journal->id,

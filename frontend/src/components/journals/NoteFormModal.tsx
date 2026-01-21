@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import { Note } from "../../services/notesService";
+import journalNoteCategoriesService, { JournalNoteCategory } from "../../services/journalNoteCategoriesService";
+import { JOURNAL_COLORS } from "../../utils/journal";
 
 type FormData = {
   title: string;
   content: string;
-  category: string;
+  category_id: number | null;
+  color: string;
   is_pinned: boolean;
 };
 
@@ -25,17 +28,26 @@ export default function NoteFormModal({
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [categories, setCategories] = useState<JournalNoteCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const initial = useMemo<FormData>(() => {
     if (editing) {
       return {
         title: editing.title ?? "",
         content: editing.content ?? "",
-        category: editing.category ?? "",
+        category_id: editing.category_id ?? null,
+        color: editing.color || JOURNAL_COLORS[0].value,
         is_pinned: !!editing.is_pinned,
       };
     }
-    return { title: "", content: "", category: "", is_pinned: false };
+    return {
+      title: "",
+      content: "",
+      category_id: null,
+      color: JOURNAL_COLORS[0].value,
+      is_pinned: false,
+    };
   }, [editing]);
 
   const [form, setForm] = useState<FormData>(initial);
@@ -45,8 +57,21 @@ export default function NoteFormModal({
       setIsMounted(true);
       setIsClosing(false);
       setForm(initial);
+      loadCategories();
     }
   }, [isOpen, initial]);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await journalNoteCategoriesService.getAll();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -69,7 +94,8 @@ export default function NoteFormModal({
     await onSave({
       title: form.title,
       content: form.content,
-      category: form.category || null,
+      category_id: form.category_id || null,
+      color: form.color || null,
       is_pinned: form.is_pinned,
     });
   };
@@ -112,12 +138,62 @@ export default function NoteFormModal({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-            <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+            <Input 
+              value={form.title} 
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
+              placeholder="Enter note title"
+            />
           </div>
+
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Category (optional)</label>
-            <Input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="e.g., Work, Ideas, Personal" />
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+            {loadingCategories ? (
+              <div className="h-11 rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 animate-pulse" />
+            ) : (
+              <select
+                value={form.category_id || ""}
+                onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value ? parseInt(e.target.value) : null }))}
+                className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+              >
+                <option value="">— No Category —</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon ? `${cat.icon} ` : ""}{cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Note Color *</label>
+            <div className="flex flex-wrap gap-3">
+              {JOURNAL_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, color: c.value }))}
+                  className={`relative h-12 w-12 rounded-xl border-2 transition-all ${
+                    form.color === c.value
+                      ? "border-gray-900 dark:border-white scale-110 ring-2 ring-offset-2 ring-brand-500"
+                      : "border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400"
+                  } cursor-pointer`}
+                  style={{ backgroundColor: c.value }}
+                  title={c.name}
+                >
+                  {form.color === c.value && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg className="h-6 w-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Choose a color for your note.</p>
+          </div>
+
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
             <textarea
@@ -151,5 +227,3 @@ export default function NoteFormModal({
     </div>
   );
 }
-
-

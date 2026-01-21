@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Habit, habitsService, HabitLog } from "../../services/habitsService";
 import { PlusIcon, SearchIcon } from "../../icons";
 import Button from "../ui/button/Button";
 import HabitCard from "./HabitCard";
 import HabitForm from "./HabitForm";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import CelebrationModal from "./CelebrationModal";
+import { useHabits } from "../../context/HabitsContext";
 
 const HabitList: React.FC = () => {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [todayLogs, setTodayLogs] = useState<{ [key: number]: HabitLog }>({});
-  const [loading, setLoading] = useState(true);
+  const { habits, todayLogs, loading, refreshHabits, updateHabit, updateTodayLog } = useHabits();
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>(undefined);
@@ -19,43 +19,20 @@ const HabitList: React.FC = () => {
     habit: null,
   });
   const [deleting, setDeleting] = useState(false);
+  const [celebrationModal, setCelebrationModal] = useState<{ isOpen: boolean; habit: Habit | null }>({
+    isOpen: false,
+    habit: null,
+  });
 
-  useEffect(() => {
-    loadHabits();
-  }, []);
-
-  const loadHabits = async () => {
-    try {
-      setLoading(true);
-      const data = await habitsService.getAll();
-      setHabits(data);
-      
-      // Load today's logs for each habit
-      const formatLocalDate = (date: Date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}`;
-      };
-      const today = formatLocalDate(new Date());
-      const logsMap: { [key: number]: HabitLog } = {};
-      
-      await Promise.all(
-        data.map(async (habit) => {
-          const logs = await habitsService.getLogs(habit.id, today, today);
-          if (logs.length > 0 && logs[0].completed) {
-            logsMap[habit.id] = logs[0];
-          }
-        })
-      );
-      
-      setTodayLogs(logsMap);
-    } catch (error) {
-      console.error("Error loading habits:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredHabits = useMemo(() => {
+    if (!search.trim()) return habits;
+    const searchLower = search.toLowerCase();
+    return habits.filter(
+      (habit) =>
+        habit.name.toLowerCase().includes(searchLower) ||
+        (habit.description && habit.description.toLowerCase().includes(searchLower))
+    );
+  }, [habits, search]);
 
   const handleCreate = () => {
     setEditingHabit(undefined);
@@ -77,7 +54,7 @@ const HabitList: React.FC = () => {
       }
       setShowForm(false);
       setEditingHabit(undefined);
-      await loadHabits();
+      await refreshHabits();
     } catch (error) {
       console.error("Error saving habit:", error);
       throw error;
@@ -97,7 +74,7 @@ const HabitList: React.FC = () => {
       setDeleting(true);
       await habitsService.delete(deleteModal.habit.id);
       setDeleteModal({ isOpen: false, habit: null });
-      await loadHabits();
+      await refreshHabits();
     } catch (error) {
       console.error("Error deleting habit:", error);
     } finally {
@@ -113,38 +90,41 @@ const HabitList: React.FC = () => {
 
     try {
       const log = await habitsService.toggleToday(habit.id);
-      
-      // Update todayLogs state locally
-      setTodayLogs((prev) => ({
-        ...prev,
-        [habit.id]: log,
-      }));
+      updateTodayLog(habit.id, log);
 
       // Fetch updated habit to get new streak values
       const updatedHabit = await habitsService.getById(habit.id);
-      
-      // Update habit in state locally
-      setHabits((prev) =>
-        prev.map((h) => (h.id === habit.id ? updatedHabit : h))
-      );
+      updateHabit(updatedHabit);
+
+      // Show celebration modal
+      setCelebrationModal({ isOpen: true, habit: updatedHabit });
     } catch (error) {
       console.error("Error toggling habit:", error);
     }
   };
 
-  const activeHabits = habits.filter((h) => h.is_active);
-  const archivedHabits = habits.filter((h) => !h.is_active);
+  const activeHabits = useMemo(() => habits.filter((h) => h.is_active), [habits]);
+  const archivedHabits = useMemo(() => habits.filter((h) => !h.is_active), [habits]);
 
-  const q = search.trim().toLowerCase();
-  const matchesQuery = (h: Habit) => {
-    if (!q) return true;
-    const name = (h.name || "").toLowerCase();
-    const desc = (h.description || "").toLowerCase();
-    return name.includes(q) || desc.includes(q);
-  };
+  const filteredActiveHabits = useMemo(() => {
+    if (!search.trim()) return activeHabits;
+    const searchLower = search.toLowerCase();
+    return activeHabits.filter(
+      (h) =>
+        h.name.toLowerCase().includes(searchLower) ||
+        (h.description && h.description.toLowerCase().includes(searchLower))
+    );
+  }, [activeHabits, search]);
 
-  const filteredActiveHabits = activeHabits.filter(matchesQuery);
-  const filteredArchivedHabits = archivedHabits.filter(matchesQuery);
+  const filteredArchivedHabits = useMemo(() => {
+    if (!search.trim()) return archivedHabits;
+    const searchLower = search.toLowerCase();
+    return archivedHabits.filter(
+      (h) =>
+        h.name.toLowerCase().includes(searchLower) ||
+        (h.description && h.description.toLowerCase().includes(searchLower))
+    );
+  }, [archivedHabits, search]);
 
   if (loading) {
     return (
@@ -257,7 +237,7 @@ const HabitList: React.FC = () => {
               </div>
             )}
 
-            {q && filteredActiveHabits.length === 0 && filteredArchivedHabits.length === 0 ? (
+            {search.trim() && filteredActiveHabits.length === 0 && filteredArchivedHabits.length === 0 ? (
               <div className="rounded-xl border border-gray-200 bg-white p-10 text-center dark:border-gray-800 dark:bg-gray-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   No habits match <span className="font-semibold text-gray-900 dark:text-white">{search}</span>.
@@ -285,6 +265,12 @@ const HabitList: React.FC = () => {
         message="Are you sure you want to delete this habit? All progress and streak data will be lost."
         itemName={deleteModal.habit?.name}
         isLoading={deleting}
+      />
+
+      <CelebrationModal
+        open={celebrationModal.isOpen}
+        habit={celebrationModal.habit}
+        onClose={() => setCelebrationModal({ isOpen: false, habit: null })}
       />
     </>
   );

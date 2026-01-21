@@ -953,6 +953,17 @@ span.flatpickr-weekday,
   }
 }
 
+@keyframes slide-in-from-top {
+  from {
+    transform: translateY(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes zoom-in {
   from {
     transform: scale(0.95);
@@ -978,7 +989,16 @@ span.flatpickr-weekday,
   animation-name: slide-in-from-bottom;
 }
 
+.slide-in-from-top-4 {
+  animation-name: slide-in-from-top;
+}
+
 .zoom-in-95 {
   animation-name: zoom-in;
 }
 
+/* Modal blur effect */
+.modal-blur-active {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}

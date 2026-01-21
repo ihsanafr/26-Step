@@ -193,10 +193,10 @@ export default function StorageOverview() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-600 via-indigo-600 to-purple-600 p-8 text-white shadow-xl">
         <div className="relative z-10">
           <h1 className="mb-2 text-4xl font-bold md:text-5xl">Storage</h1>
-          <p className="mb-6 text-lg text-indigo-100 md:text-xl">
+          <p className="mb-6 text-lg text-slate-100 md:text-xl">
             Manage your files, notes, and important links in one place
           </p>
           <div className="flex flex-wrap gap-3">
@@ -209,14 +209,14 @@ export default function StorageOverview() {
             </button>
             <Button
               onClick={() => navigate("/storage/notes")}
-              className="bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+              className="bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 border border-white/20"
             >
               <FileIcon className="mr-2 h-5 w-5" />
               View Notes
             </Button>
             <Button
               onClick={() => navigate("/storage/links")}
-              className="bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+              className="bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 border border-white/20"
             >
               <LinkIcon className="mr-2 h-5 w-5" />
               Manage Links

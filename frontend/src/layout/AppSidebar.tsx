@@ -55,6 +55,11 @@ const navItems: NavItem[] = [
     name: "Journal & Notes",
     path: "/journals",
   },
+  {
+    icon: <FileIcon />,
+    name: "Journal Categories",
+    path: "/journals/categories",
+  },
 ];
 
 const AppSidebar: React.FC = () => {

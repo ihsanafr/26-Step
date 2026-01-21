@@ -136,6 +136,7 @@ export default function FilesList() {
   const [draggedFile, setDraggedFile] = useState<File | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [folderMenuOpenId, setFolderMenuOpenId] = useState<string | null>(null);
+  const [folderMenuPosition, setFolderMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadFileInputRef = useRef<HTMLInputElement>(null);
@@ -284,11 +285,15 @@ export default function FilesList() {
   }, [menuOpenId]);
 
   useEffect(() => {
-    if (folderMenuOpenId === null) return;
+    if (folderMenuOpenId === null) {
+      setFolderMenuPosition(null);
+      return;
+    }
     const onMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('[data-folder-menu]')) {
         setFolderMenuOpenId(null);
+        setFolderMenuPosition(null);
       }
     };
     window.addEventListener("mousedown", onMouseDown);
@@ -775,13 +780,22 @@ export default function FilesList() {
         }
       }
       
-      await filesService.update(file.id, {
+      // Update file on backend
+      const updatedFile = await filesService.update(file.id, {
         category: category,
       });
-      await load();
+      
+      // Update local state without reloading
+      setItems((prevItems) =>
+        prevItems.map((item) => (item.id === file.id ? updatedFile : item))
+      );
+      
+      // If file was moved to a different folder and we're viewing the old folder, 
+      // the file will automatically disappear from the filtered list
+      // If moved to current folder, it will appear automatically
     } catch (error: any) {
       console.error("Error moving file:", error);
-      setUploadError(error.response?.data?.message || "Gagal memindahkan file");
+      setUploadError(error.response?.data?.message || "Failed to move file");
     }
   };
 
@@ -842,44 +856,22 @@ export default function FilesList() {
                 data-folder-menu
                 onClick={(e) => {
                   e.stopPropagation();
-                  setFolderMenuOpenId(folderMenuOpenId === folder.id ? null : folder.id);
+                  if (folderMenuOpenId === folder.id) {
+                    setFolderMenuOpenId(null);
+                    setFolderMenuPosition(null);
+                  } else {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setFolderMenuOpenId(folder.id);
+                    setFolderMenuPosition({
+                      top: rect.bottom + 4,
+                      left: rect.right - 160, // 160 is menu width (w-40)
+                    });
+                  }
                 }}
                 className="rounded-lg p-1.5 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100 dark:hover:bg-gray-700"
               >
                 <MoreDotIcon className="h-4 w-4" />
               </button>
-              {folderMenuOpenId === folder.id && (
-                <div
-                  data-folder-menu
-                  className="absolute right-0 z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    data-folder-menu
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditFolder(folder);
-                      setFolderMenuOpenId(null);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                    Edit
-                  </button>
-                  <button
-                    data-folder-menu
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteFolderModal({ open: true, folder });
-                      setFolderMenuOpenId(null);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                  >
-                    <TrashBinIcon className="h-4 w-4" />
-                    Hapus
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -1051,6 +1043,54 @@ export default function FilesList() {
             {folders && folders.length > 0 ? folders.map((folder) => renderFolderTree(folder)) : <div className="text-sm text-gray-500 dark:text-gray-400">No folders</div>}
           </div>
         </div>
+
+        {/* Folder Menu Dropdown - Fixed Position (outside container) */}
+        {folderMenuOpenId && folderMenuPosition && (
+          <div
+            data-folder-menu
+            className="fixed z-[100000] w-40 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+            style={{
+              top: `${folderMenuPosition.top}px`,
+              left: `${folderMenuPosition.left}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const folder = allFolders.find((f) => f.id === folderMenuOpenId);
+              if (!folder) return null;
+              return (
+                <>
+                  <button
+                    data-folder-menu
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditFolder(folder);
+                      setFolderMenuOpenId(null);
+                      setFolderMenuPosition(null);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    data-folder-menu
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteFolderModal({ open: true, folder });
+                      setFolderMenuOpenId(null);
+                      setFolderMenuPosition(null);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  >
+                    <TrashBinIcon className="h-4 w-4" />
+                    Delete
+                  </button>
+                </>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Main Content Area */}
         <div className="flex-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">

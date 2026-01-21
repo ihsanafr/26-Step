@@ -20,7 +20,8 @@ class NoteController extends Controller
             $query->where('is_pinned', $request->boolean('is_pinned'));
         }
 
-        $notes = $query->orderBy('is_pinned', 'desc')
+        $notes = $query->with('category')
+            ->orderBy('is_pinned', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -33,6 +34,8 @@ class NoteController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:journal_note_categories,id',
+            'color' => 'nullable|string|max:7',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:255',
             'is_pinned' => 'nullable|boolean',
@@ -42,6 +45,7 @@ class NoteController extends Controller
         $validated['is_pinned'] = $validated['is_pinned'] ?? false;
 
         $note = Note::create($validated);
+        $note->load('category');
 
         return response()->json($note, 201);
     }
@@ -49,6 +53,7 @@ class NoteController extends Controller
     public function show(Request $request, string $id)
     {
         $note = Note::where('user_id', $request->user()->id)
+            ->with('category')
             ->findOrFail($id);
 
         return response()->json($note);
@@ -63,12 +68,15 @@ class NoteController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'content' => 'sometimes|required|string',
             'category' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:journal_note_categories,id',
+            'color' => 'nullable|string|max:7',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:255',
             'is_pinned' => 'nullable|boolean',
         ]);
 
         $note->update($validated);
+        $note->load('category');
 
         return response()->json($note);
     }

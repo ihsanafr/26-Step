@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Habit, HabitLog, habitsService } from "../../services/habitsService";
 import { CalenderIcon } from "../../icons";
 import Button from "../ui/button/Button";
 import { Skeleton } from "../common/Skeleton";
+import { formatLocalDate as formatLocalDateUtil } from "../../utils/date";
 
 type DayDetail = {
   date: string; // YYYY-MM-DD
@@ -15,12 +16,8 @@ interface HabitsStreakCalendarProps {
   subtitle?: string;
 }
 
-function formatLocalDate(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
+// Use utility function to ensure consistent local timezone handling
+const formatLocalDate = formatLocalDateUtil;
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -191,11 +188,28 @@ export default function HabitsStreakCalendar({
   });
 
   const activeHabits = useMemo(() => habits.filter((h) => h.is_active), [habits]);
+  
+  // Memoize month key to avoid unnecessary reloads
+  const monthKey = useMemo(
+    () => `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`,
+    [currentMonth]
+  );
 
   useEffect(() => {
+    // If no active habits, skip loading
+    if (activeHabits.length === 0) {
+      setLoading(false);
+      setLogsByHabit({});
+      return;
+    }
+
     const load = async () => {
       try {
-        setLoading(true);
+        // Only show loading skeleton if we don't have any logs yet (first load)
+        const hasExistingLogs = Object.keys(logsByHabit).length > 0;
+        if (!hasExistingLogs) {
+          setLoading(true);
+        }
 
         const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
         const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -227,7 +241,8 @@ export default function HabitsStreakCalendar({
     };
 
     load();
-  }, [activeHabits, currentMonth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthKey, activeHabits.length]); // Only reload when month or habits count changes
 
   const completedDateSets = useMemo(() => {
     const sets: Record<number, Set<string>> = {};
@@ -238,13 +253,16 @@ export default function HabitsStreakCalendar({
     return sets;
   }, [activeHabits, logsByHabit]);
 
-  const countCompletedOnDate = (date: string) => {
-    let count = 0;
-    for (const h of activeHabits) {
-      if (completedDateSets[h.id]?.has(date)) count++;
-    }
-    return count;
-  };
+  const countCompletedOnDate = useCallback(
+    (date: string) => {
+      let count = 0;
+      for (const h of activeHabits) {
+        if (completedDateSets[h.id]?.has(date)) count++;
+      }
+      return count;
+    },
+    [activeHabits, completedDateSets]
+  );
 
   const streakOnDateForHabit = (habitId: number, date: string) => {
     const set = completedDateSets[habitId];
@@ -355,7 +373,7 @@ export default function HabitsStreakCalendar({
                       </span>
                       {hasData ? (
                         <span className="rounded-full bg-orange-100 px-1 py-0.5 text-[9px] font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300 sm:px-2 sm:text-xs">
-                          {count}
+                          🔥 {count}
                         </span>
                       ) : null}
                     </div>

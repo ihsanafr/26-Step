@@ -11,6 +11,7 @@ import { ChevronLeftIcon } from "../../icons";
 import { getMoodEmoji, getWeatherEmoji, JOURNAL_COLORS } from "../../utils/journal";
 import { Skeleton } from "../common/Skeleton";
 import AlertModal from "../common/AlertModal";
+import journalNoteCategoriesService, { JournalNoteCategory } from "../../services/journalNoteCategoriesService";
 
 type FormData = {
   title: string;
@@ -22,6 +23,7 @@ type FormData = {
   is_private: boolean;
   color: string;
   cover_image: string; // URL (persisted)
+  category_id: number | null;
 };
 
 const MOODS = ["Happy", "Calm", "Grateful", "Excited", "Neutral", "Stressed", "Sad", "Angry"];
@@ -38,6 +40,8 @@ export default function JournalEditPage() {
   const [saving, setSaving] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string>("");
+  const [categories, setCategories] = useState<JournalNoteCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [alertModal, setAlertModal] = useState<{ open: boolean; title: string; message: string; type?: "error" | "warning" | "info" | "success" }>({
     open: false,
     title: "",
@@ -57,6 +61,7 @@ export default function JournalEditPage() {
         is_private: !!journal.is_private,
         color: journal.color || JOURNAL_COLORS[0].value,
         cover_image: journal.cover_image || "",
+        category_id: journal.category_id ?? null,
       };
     }
     return {
@@ -69,6 +74,7 @@ export default function JournalEditPage() {
       is_private: false,
       color: JOURNAL_COLORS[0].value,
       cover_image: "",
+      category_id: null,
     };
   }, [journal]);
 
@@ -84,6 +90,22 @@ export default function JournalEditPage() {
       });
     }
   }, [journal, initial]);
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const data = await journalNoteCategoriesService.getAll();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    void loadCategories();
+  }, []);
 
   // Ensure color always has a value
   useEffect(() => {
@@ -249,6 +271,7 @@ export default function JournalEditPage() {
         is_private: form.is_private,
         color: colorToSave,
         cover_image: coverImageToSave,
+        category_id: form.category_id || null,
       };
       console.log("🔵 [JournalEdit] Updating journal with data:", journalData);
       const updated = await journalsService.update(Number(id), journalData);
@@ -337,7 +360,11 @@ export default function JournalEditPage() {
         <form ref={formRef} id="journal-edit-form" onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-            <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+            <Input 
+              value={form.title} 
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
+              placeholder="Enter journal title"
+            />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -379,9 +406,34 @@ export default function JournalEditPage() {
             </div>
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (optional)</label>
-            <Input value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (optional)</label>
+              <Input 
+                value={form.location} 
+                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} 
+                placeholder="e.g., Home, Office, Park"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+              {loadingCategories ? (
+                <div className="h-11 rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 animate-pulse" />
+              ) : (
+                <select
+                  value={form.category_id || ""}
+                  onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value ? parseInt(e.target.value) : null }))}
+                  className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                >
+                  <option value="">— No Category —</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon ? `${cat.icon} ` : ""}{cat.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
 
           {/* Color and Cover */}
