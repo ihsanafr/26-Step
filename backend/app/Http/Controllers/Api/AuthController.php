@@ -62,14 +62,16 @@ class AuthController extends Controller
         $userAgent = $request->userAgent();
         
         // Get location (simplified - can use IP geolocation service)
-        $location = $this->getLocationFromIp($ipAddress);
+        $locationData = $this->getLocationFromIp($ipAddress);
 
         UserSession::updateOrCreate(
             ['token_id' => (string)$tokenId, 'user_id' => $user->id],
             [
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
-                'location' => $location,
+                'location' => $locationData['location'],
+                'latitude' => $locationData['latitude'],
+                'longitude' => $locationData['longitude'],
                 'last_activity' => now(),
             ]
         );
@@ -101,7 +103,11 @@ class AuthController extends Controller
     {
         // For local/private IPs
         if ($ipAddress === '127.0.0.1' || $ipAddress === '::1' || str_starts_with($ipAddress, '192.168.') || str_starts_with($ipAddress, '10.')) {
-            return 'Local';
+            return [
+                'location' => 'Local',
+                'latitude' => null,
+                'longitude' => null,
+            ];
         }
 
         try {
@@ -112,14 +118,23 @@ class AuthController extends Controller
                 if ($data && $data['status'] === 'success') {
                     $city = $data['city'] ?? '';
                     $country = $data['country'] ?? '';
-                    return $city ? "{$city}, {$country}" : $country;
+                    $location = $city ? "{$city}, {$country}" : $country;
+                    return [
+                        'location' => $location,
+                        'latitude' => $data['lat'] ?? null,
+                        'longitude' => $data['lon'] ?? null,
+                    ];
                 }
             }
         } catch (\Exception $e) {
             // Fallback
         }
 
-        return 'Unknown';
+        return [
+            'location' => 'Unknown',
+            'latitude' => null,
+            'longitude' => null,
+        ];
     }
 
     public function user(Request $request)

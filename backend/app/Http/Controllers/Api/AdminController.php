@@ -78,8 +78,8 @@ class AdminController extends Controller
         $perPage = $request->get('per_page', 15);
         $search = $request->get('search', '');
 
-        $query = User::where('is_admin', false)
-            ->withCount([
+        // Show all users (including admins) for admin dashboard
+        $query = User::withCount([
                 'tasks as tasks_count',
                 'tasks as completed_tasks_count' => function ($q) {
                     $q->whereIn('status', ['completed', 'finish']);
@@ -190,7 +190,13 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
-        $user = User::where('is_admin', false)->findOrFail($id);
+        // Allow updating all users (including admins) but prevent updating yourself
+        $user = User::findOrFail($id);
+        
+        // Prevent updating yourself
+        if ($user->id === $request->user()->id) {
+            return response()->json(['message' => 'You cannot update your own account'], 403);
+        }
         
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -211,9 +217,12 @@ class AdminController extends Controller
             $user->password = Hash::make($validated['password']);
         }
 
-        // Prevent non-admin from making themselves admin (extra safety)
-        if (isset($validated['is_admin']) && $validated['is_admin'] && !$request->user()->is_admin) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Only allow admins to change is_admin status
+        if (isset($validated['is_admin'])) {
+            if (!$request->user()->is_admin) {
+                return response()->json(['message' => 'Unauthorized to change admin status'], 403);
+            }
+            $user->is_admin = $validated['is_admin'];
         }
 
         $user->save();
@@ -242,6 +251,8 @@ class AdminController extends Controller
                         return [
                             'ip_address' => $s->ip_address,
                             'location' => $s->location,
+                            'latitude' => $s->latitude,
+                            'longitude' => $s->longitude,
                             'user_agent' => $s->user_agent,
                             'last_activity' => $s->last_activity,
                         ];

@@ -39,6 +39,7 @@ export interface User {
   name: string;
   email: string;
   created_at: string;
+  is_admin?: boolean;
   tasks_count: number;
   completed_tasks_count: number;
   habits_count: number;
@@ -95,7 +96,7 @@ export const adminService = {
     return response.data;
   },
 
-  updateUser: async (id: number, data: { name?: string; email?: string; password?: string }): Promise<User> => {
+  updateUser: async (id: number, data: { name?: string; email?: string; password?: string; is_admin?: boolean }): Promise<User> => {
     const response = await api.put(`/admin/users/${id}`, data);
     return response.data.user;
   },
@@ -110,6 +111,8 @@ export const adminService = {
       sessions: Array<{
         ip_address: string;
         location: string;
+        latitude: number | null;
+        longitude: number | null;
         user_agent: string;
         last_activity: string;
       }>;

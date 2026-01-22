@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { adminService, AdminStats, User, Analytics } from '../../services/adminService';
 import { Skeleton } from '../../components/common/Skeleton';
 import Button from '../../components/ui/button/Button';
 import { TrashBinIcon, EyeIcon, UserIcon, TaskIcon, TargetIcon, CheckCircleIcon, DollarLineIcon, PencilIcon, CloseIcon, AngleLeftIcon, AngleRightIcon, SearchIcon } from '../../icons';
 import { formatIndonesianDate } from '../../utils/date';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
+import UserLocationMap from '../../components/admin/UserLocationMap';
 
 interface ActiveUser {
   user: User;
   sessions: Array<{
     ip_address: string;
     location: string;
+    latitude: number | null;
+    longitude: number | null;
     user_agent: string;
     last_activity: string;
   }>;
@@ -31,6 +34,7 @@ export default function AdminDashboard() {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
+  const [editIsAdmin, setEditIsAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
@@ -169,18 +173,44 @@ export default function AdminDashboard() {
     return 0;
   });
 
+  // Prepare user locations for map
+  const userLocations = useMemo(() => {
+    const allLocations: Array<{
+      latitude: number | null;
+      longitude: number | null;
+      location: string;
+      user_name: string;
+      user_email: string;
+    }> = [];
+    activeUsers.forEach((activeUser) => {
+      activeUser.sessions.forEach((session) => {
+        if (session.latitude && session.longitude) {
+          allLocations.push({
+            latitude: session.latitude,
+            longitude: session.longitude,
+            location: session.location,
+            user_name: activeUser.user.name,
+            user_email: activeUser.user.email,
+          });
+        }
+      });
+    });
+    return allLocations;
+  }, [activeUsers]);
+
   const handleEdit = (user: User) => {
     setEditModal({ open: true, user });
     setEditName(user.name);
     setEditEmail(user.email);
     setEditPassword('');
+    setEditIsAdmin(user.is_admin || false);
   };
 
   const handleSaveEdit = async () => {
     if (!editModal.user) return;
     try {
       setSaving(true);
-      const data: any = { name: editName, email: editEmail };
+      const data: any = { name: editName, email: editEmail, is_admin: editIsAdmin };
       if (editPassword) {
         data.password = editPassword;
       }
@@ -284,6 +314,9 @@ export default function AdminDashboard() {
           </p>
         </div>
       </div>
+
+      {/* User Locations Map */}
+      <UserLocationMap users={userLocations} />
 
       {/* Active Users Section */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
@@ -475,6 +508,9 @@ export default function AdminDashboard() {
                     )}
                   </button>
                 </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                  Role
+                </th>
                 <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Actions
                 </th>
@@ -483,7 +519,7 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
               {sortedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No users found
                   </td>
                 </tr>
@@ -506,6 +542,17 @@ export default function AdminDashboard() {
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {formatIndonesianDate(user.created_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      {user.is_admin ? (
+                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-500/20 dark:text-purple-300">
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-500/20 dark:text-gray-300">
+                          User
+                        </span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -636,6 +683,18 @@ export default function AdminDashboard() {
                   onChange={(e) => setEditPassword(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                 />
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_admin"
+                  checked={editIsAdmin}
+                  onChange={(e) => setEditIsAdmin(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label htmlFor="is_admin" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Make this user an admin
+                </label>
               </div>
             </div>
             <div className="mt-6 flex gap-3">

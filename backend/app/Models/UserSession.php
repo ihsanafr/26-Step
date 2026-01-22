@@ -16,6 +16,8 @@ class UserSession extends Model
         'ip_address',
         'user_agent',
         'location',
+        'latitude',
+        'longitude',
         'last_activity',
     ];
 

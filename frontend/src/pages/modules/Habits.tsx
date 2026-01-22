@@ -120,7 +120,7 @@ function HabitsStreaksView() {
           <>
             {/* Streak Statistics */}
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl border border-orange-200 bg-linear-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5">
+              <div className="rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-orange-500/10 dark:to-orange-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">🔥</span>
                   <div>
@@ -132,7 +132,7 @@ function HabitsStreaksView() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-yellow-200 bg-linear-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
+              <div className="rounded-xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-yellow-500/10 dark:to-yellow-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">⚡</span>
                   <div>
@@ -148,7 +148,7 @@ function HabitsStreaksView() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-green-200 bg-linear-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
+              <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-green-500/10 dark:to-green-500/5">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-4xl">🏆</span>
                   <div>
@@ -240,7 +240,7 @@ function HabitsDashboard() {
       
       <div className="space-y-6">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-orange-500 via-rose-500 to-pink-500 p-8 text-white shadow-xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-rose-500 to-pink-500 p-8 text-white shadow-xl">
           <div className="relative z-10">
             <h1 className="mb-2 text-4xl font-bold md:text-5xl">Habits & Streaks</h1>
             <p className="mb-6 text-lg text-orange-100 md:text-xl">
