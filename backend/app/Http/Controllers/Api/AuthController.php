@@ -110,21 +110,18 @@ class AuthController extends Controller
         $tokenId = $token->accessToken->id;
         $plainTextToken = $token->plainTextToken;
 
-        // Store session with location
+        // Store session without location data
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
-        
-        // Get location (simplified - can use IP geolocation service)
-        $locationData = $this->getLocationFromIp($ipAddress);
 
         UserSession::updateOrCreate(
             ['token_id' => (string)$tokenId, 'user_id' => $user->id],
             [
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
-                'location' => $locationData['location'],
-                'latitude' => $locationData['latitude'],
-                'longitude' => $locationData['longitude'],
+                'location' => null,
+                'latitude' => null,
+                'longitude' => null,
                 'last_activity' => now(),
             ]
         );
@@ -149,46 +146,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully']);
     }
 
-    /**
-     * Get location from IP address (simplified)
-     */
-    private function getLocationFromIp($ipAddress)
-    {
-        // For local/private IPs
-        if ($ipAddress === '127.0.0.1' || $ipAddress === '::1' || str_starts_with($ipAddress, '192.168.') || str_starts_with($ipAddress, '10.')) {
-            return [
-                'location' => 'Local',
-                'latitude' => null,
-                'longitude' => null,
-            ];
-        }
-
-        try {
-            // Using ip-api.com free service (no API key needed)
-            $response = @file_get_contents("http://ip-api.com/json/{$ipAddress}?fields=status,country,city,lat,lon");
-            if ($response) {
-                $data = json_decode($response, true);
-                if ($data && $data['status'] === 'success') {
-                    $city = $data['city'] ?? '';
-                    $country = $data['country'] ?? '';
-                    $location = $city ? "{$city}, {$country}" : $country;
-                    return [
-                        'location' => $location,
-                        'latitude' => $data['lat'] ?? null,
-                        'longitude' => $data['lon'] ?? null,
-                    ];
-                }
-            }
-        } catch (\Exception $e) {
-            // Fallback
-        }
-
-        return [
-            'location' => 'Unknown',
-            'latitude' => null,
-            'longitude' => null,
-        ];
-    }
 
     public function user(Request $request)
     {

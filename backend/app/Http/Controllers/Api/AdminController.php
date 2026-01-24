@@ -255,9 +255,9 @@ class AdminController extends Controller
                     'sessions' => $sessions->map(function ($s) {
                         return [
                             'ip_address' => $s->ip_address,
-                            'location' => $s->location,
-                            'latitude' => $s->latitude,
-                            'longitude' => $s->longitude,
+                            'location' => null,
+                            'latitude' => null,
+                            'longitude' => null,
                             'user_agent' => $s->user_agent,
                             'last_activity' => $s->last_activity,
                         ];

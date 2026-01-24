@@ -6,14 +6,13 @@ import { TrashBinIcon, UserIcon, TaskIcon, CheckCircleIcon, DollarLineIcon, Penc
 import { formatIndonesianDate } from '../../utils/date';
 import { formatCurrency } from '../../utils/currency';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
-import UserLocationMap from '../../components/admin/UserLocationMap';
 import PageMeta from '../../components/common/PageMeta';
 
 interface ActiveUser {
   user: User;
   sessions: Array<{
     ip_address: string;
-    location: string;
+    location: string | null;
     latitude: number | null;
     longitude: number | null;
     user_agent: string;
@@ -171,23 +170,6 @@ export default function AdminDashboard() {
     return 0;
   });
 
-  const userLocations = useMemo(() => {
-    const allLocations: any[] = [];
-    activeUsers.forEach((activeUser) => {
-      activeUser.sessions.forEach((session) => {
-        if (session.latitude && session.longitude) {
-          allLocations.push({
-            latitude: session.latitude,
-            longitude: session.longitude,
-            location: session.location,
-            user_name: activeUser.user.name,
-            user_email: activeUser.user.email,
-          });
-        }
-      });
-    });
-    return allLocations;
-  }, [activeUsers]);
 
   const handleEdit = (user: User) => {
     setEditModal({ open: true, user });
@@ -302,12 +284,10 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <UserLocationMap users={userLocations} />
-
       {/* Active Users Section */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <div><h2 className="text-xl font-bold text-gray-900 dark:text-white">Active Users ({activeUsers.length})</h2><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Recent user activity and locations</p></div>
+          <div><h2 className="text-xl font-bold text-gray-900 dark:text-white">Active Users ({activeUsers.length})</h2><p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Recent user activity</p></div>
           <Button onClick={() => setShowActiveUsers(!showActiveUsers)} size="sm" variant="outline">{showActiveUsers ? 'Hide' : 'Show'}</Button>
         </div>
         {showActiveUsers && (
@@ -324,7 +304,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   {activeUser.sessions.map((session, idx) => (
                     <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                      <span className="font-medium">{session.location || 'Unknown'}</span> | <span>IP: {session.ip_address}</span> | <span>Active: {formatIndonesianDate(session.last_activity)}</span>
+                      <span>IP: {session.ip_address}</span> | <span>Active: {formatIndonesianDate(session.last_activity)}</span>
                     </div>
                   ))}
                 </div>

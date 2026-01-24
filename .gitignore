@@ -46,4 +46,9 @@ Thumbs.db
 ## Cursor / local tooling
 .cursor/
 
+## Archive files (too large for GitHub)
+*.zip
+*.tar.gz
+*.rar
+backend.zip
 
