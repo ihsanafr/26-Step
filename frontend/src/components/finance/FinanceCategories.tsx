@@ -25,6 +25,10 @@ const financeDefaults: FinanceDefault[] = [
   { name: "Education", icon: "📚", color: "#06b6d4", type: "Expense" },
   { name: "Bills", icon: "💳", color: "#6366f1", type: "Expense" },
   { name: "Transportation", icon: "🚗", color: "#3b82f6", type: "Expense" },
+  { name: "Work", icon: "💼", color: "#3b82f6", type: "Expense" },
+  { name: "Personal", icon: "🏠", color: "#10b981", type: "Expense" },
+  { name: "Family", icon: "👨‍👩‍👧‍👦", color: "#ec4899", type: "Expense" },
+  { name: "Learning", icon: "📚", color: "#8b5cf6", type: "Expense" },
 ];
 
 export default function FinanceCategories() {
@@ -56,14 +60,24 @@ export default function FinanceCategories() {
     []
   );
 
+  const processedCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categories.filter((c) => {
+      const lowerName = c.name.toLowerCase();
+      if (seen.has(lowerName)) return false;
+      seen.add(lowerName);
+      return true;
+    });
+  }, [categories]);
+
   const defaultCategories = useMemo(
-    () => categories.filter((c) => defaultNames.includes(c.name.toLowerCase())),
-    [categories, defaultNames]
+    () => processedCategories.filter((c) => defaultNames.includes(c.name.toLowerCase())),
+    [processedCategories, defaultNames]
   );
 
   const customCategories = useMemo(
-    () => categories.filter((c) => !defaultNames.includes(c.name.toLowerCase())),
-    [categories, defaultNames]
+    () => processedCategories.filter((c) => !defaultNames.includes(c.name.toLowerCase())),
+    [processedCategories, defaultNames]
   );
 
   const getDefaultMeta = (name: string) =>
@@ -121,8 +135,9 @@ export default function FinanceCategories() {
   const handleCreateDefaults = async () => {
     try {
       setIsSubmitting(true);
+      const data = await categoriesService.getAll();
       for (const def of financeDefaults) {
-        const exists = categories.some((c) => c.name.toLowerCase() === def.name.toLowerCase());
+        const exists = data.some((c) => c.name.toLowerCase() === def.name.toLowerCase());
         if (!exists) {
           await categoriesService.create({
             name: def.name,
@@ -161,11 +176,10 @@ export default function FinanceCategories() {
             </div>
             {badge && (
               <span
-                className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                  badge === "Income"
+                className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${badge === "Income"
                     ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300"
                     : "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300"
-                }`}
+                  }`}
               >
                 {badge}
               </span>

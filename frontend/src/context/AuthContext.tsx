@@ -55,10 +55,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (data: { name: string; email: string; password: string; password_confirmation: string }) => {
     try {
       const response = await api.post('/register', data);
-      setToken(response.data.token);
-      setUser(response.data.user);
-      localStorage.setItem('token', response.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      // Don't set token if email is not verified
+      if (response.data.email_verified) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+        localStorage.setItem('token', response.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      }
       return response.data;
     } catch (error: any) {
       throw error.response?.data || error;

@@ -8,6 +8,7 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { JOURNAL_COLORS } from "../../utils/journal";
 import { PlusIcon, TagIcon, PencilIcon, TrashBinIcon, LockIcon } from "../../icons";
+import PageMeta from "../../components/common/PageMeta";
 
 type FormState = {
   id?: number | null;
@@ -207,6 +208,10 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-8">
+      <PageMeta
+        title="Journal Categories - 26-step"
+        description="Manage your journal categories"
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Journal & Notes Categories</h1>
@@ -241,7 +246,7 @@ export default function CategoriesPage() {
                   key={cat.id}
                   category={cat}
                   onEdit={() => handleEdit(cat)}
-                    onDelete={() => openDeleteModal(cat)}
+                  onDelete={() => openDeleteModal(cat)}
                   deleting={deletingId === cat.id}
                 />
               ))}
@@ -279,17 +284,15 @@ export default function CategoriesPage() {
 
       {showForm && (
         <div
-          className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 ${
-            isFormVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 ${isFormVisible ? "opacity-100" : "opacity-0"
+            }`}
           onClick={(e) => {
             if (e.target === e.currentTarget) handleCloseForm();
           }}
         >
           <div
-            className={`w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-              isFormVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-            }`}
+            className={`w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${isFormVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+              }`}
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -331,11 +334,10 @@ export default function CategoriesPage() {
                       key={c.value}
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, color: c.value }))}
-                      className={`relative h-12 w-12 rounded-xl border-2 transition-all ${
-                        form.color === c.value
+                      className={`relative h-12 w-12 rounded-xl border-2 transition-all ${form.color === c.value
                           ? "border-gray-900 dark:border-white scale-110 ring-2 ring-offset-2 ring-brand-500"
                           : "border-gray-300 dark:border-gray-600 hover:scale-105 hover:border-gray-400"
-                      } cursor-pointer`}
+                        } cursor-pointer`}
                       style={{ backgroundColor: c.value }}
                       title={c.name}
                     >
@@ -365,17 +367,15 @@ export default function CategoriesPage() {
 
       {showDeleteModal && (
         <div
-          className={`fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 ${
-            isDeleteVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`fixed inset-0 z-[100001] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-200 ${isDeleteVisible ? "opacity-100" : "opacity-0"
+            }`}
           onClick={(e) => {
             if (e.target === e.currentTarget) closeDeleteModal();
           }}
         >
           <div
-            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-              isDeleteVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-            }`}
+            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${isDeleteVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+              }`}
           >
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Category</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">

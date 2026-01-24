@@ -35,6 +35,12 @@ const HabitCard: React.FC<HabitCardProps> = ({
   }, [menuOpen]);
 
   const getColorClasses = (color: string) => {
+    // Check if color is a hex value (custom color)
+    if (color && color.startsWith("#")) {
+      // For custom colors, use inline styles
+      return "";
+    }
+    
     const colorMap: Record<string, string> = {
       blue: "from-blue-50 to-blue-100 border-blue-200 hover:border-blue-300 dark:from-blue-500/10 dark:to-blue-500/5 dark:border-gray-700 dark:hover:border-blue-500/50",
       purple: "from-purple-50 to-purple-100 border-purple-200 hover:border-purple-300 dark:from-purple-500/10 dark:to-purple-500/5 dark:border-gray-700 dark:hover:border-purple-500/50",
@@ -47,11 +53,30 @@ const HabitCard: React.FC<HabitCardProps> = ({
     return colorMap[color] || colorMap.blue;
   };
 
+  const getCustomColorStyle = (color: string) => {
+    if (color && color.startsWith("#")) {
+      // Convert hex to rgba for gradient
+      const hex = color.replace("#", "");
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      
+      return {
+        background: `linear-gradient(to bottom right, rgba(${r}, ${g}, ${b}, 0.1), rgba(${r}, ${g}, ${b}, 0.05))`,
+        borderColor: `rgba(${r}, ${g}, ${b}, 0.3)`,
+      };
+    }
+    return {};
+  };
+
+  const isCustomColor = habit.color && habit.color.startsWith("#");
+  
   return (
     <div
-      className={`group relative rounded-xl border bg-gradient-to-br p-6 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.01] ${getColorClasses(
-        habit.color
-      )}`}
+      className={`group relative rounded-xl border p-6 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.01] ${
+        isCustomColor ? "" : `bg-gradient-to-br ${getColorClasses(habit.color)}`
+      }`}
+      style={isCustomColor ? getCustomColorStyle(habit.color) : {}}
     >
       {/* Header with Icon and Actions */}
       <div className="flex items-start justify-between mb-4">

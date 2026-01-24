@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/button/Button";
 import { Task, tasksService } from "../../services/tasksService";
-import { PlusIcon, PencilIcon, TrashBinIcon, CheckCircleIcon, TimeIcon, ListIcon, GridIcon, TableIcon, BoltIcon, AlertIcon } from "../../icons";
+import { PlusIcon, PencilIcon, TrashBinIcon, CheckCircleIcon, TimeIcon, ListIcon, GridIcon, TableIcon, BoltIcon, AlertIcon, AngleLeftIcon, AngleRightIcon } from "../../icons";
 import TaskForm from "./TaskForm";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { TaskCardSkeleton, KanbanCardSkeleton } from "../common/Skeleton";
@@ -24,6 +24,8 @@ const TaskList: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid" | "kanban">("list");
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadTasks();
@@ -31,6 +33,7 @@ const TaskList: React.FC = () => {
 
   useEffect(() => {
     filterTasks();
+    setCurrentPage(1);
   }, [tasks, searchQuery, statusFilter, categoryFilter]);
 
   const loadTasks = async () => {
@@ -97,7 +100,7 @@ const TaskList: React.FC = () => {
     try {
       setSaving(true);
       console.log("💾 TaskList: handleSave called with data:", data);
-      
+
       if (editingTask) {
         console.log("📝 TaskList: Updating existing task ID:", editingTask.id);
         const updated = await tasksService.update(editingTask.id, data);
@@ -109,7 +112,7 @@ const TaskList: React.FC = () => {
         console.log("✅ TaskList: Task created successfully:", result);
         upsertTask(result);
       }
-      
+
       setShowForm(false);
       setEditingTask(undefined);
     } catch (error: any) {
@@ -205,16 +208,16 @@ const TaskList: React.FC = () => {
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetStatus: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     console.log("🎁 Drop Event Triggered! Target Status:", targetStatus);
-    
+
     if (!draggedTask) {
       console.error("❌ No dragged task!");
       return;
     }
-    
+
     console.log("📦 Dropping task:", draggedTask.title, "from", draggedTask.status, "to", targetStatus);
-    
+
     // Normalize current status for comparison
     const normalizeStatus = (status: string) => {
       const statusMap: Record<string, string> = {
@@ -224,9 +227,9 @@ const TaskList: React.FC = () => {
       };
       return statusMap[status] || status;
     };
-    
+
     const currentStatus = normalizeStatus(draggedTask.status);
-    
+
     // Only update if status is different
     if (currentStatus !== targetStatus) {
       console.log("✅ Updating status from", currentStatus, "to", targetStatus);
@@ -239,7 +242,7 @@ const TaskList: React.FC = () => {
     } else {
       console.log("ℹ️ Status is the same, no update needed");
     }
-    
+
     setDraggedTask(null);
     setDragOverColumn(null);
   };
@@ -306,7 +309,7 @@ const TaskList: React.FC = () => {
     due.setHours(0, 0, 0, 0);
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return "overdue";
     if (diffDays === 0) return "due-today";
     if (diffDays <= 3) return "due-soon";
@@ -321,11 +324,14 @@ const TaskList: React.FC = () => {
     inProgress: tasks.filter((t) => t.status === "in_progress" || t.status === "on_progress").length,
     pending: tasks.filter((t) => t.status === "pending" || t.status === "todo").length,
     onHold: tasks.filter((t) => t.status === "on_hold").length,
-    completionRate: tasks.length > 0 
-      ? (tasks.filter((t) => t.status === "completed" || t.status === "finish").length / tasks.length) * 100 
+    completionRate: tasks.length > 0
+      ? (tasks.filter((t) => t.status === "completed" || t.status === "finish").length / tasks.length) * 100
       : 0,
     highPriority: tasks.filter((t) => t.priority === "high" && t.status !== "completed" && t.status !== "finish").length,
   };
+
+  const totalPages = Math.ceil(filteredTasks.length / pageSize);
+  const pagedItems = filteredTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
 
   // Get overdue tasks
@@ -346,14 +352,14 @@ const TaskList: React.FC = () => {
   const getDueDateBadge = (dueDate: string | undefined) => {
     const status = getDueDateStatus(dueDate);
     if (!status) return null;
-    
+
     const configs = {
       overdue: { label: "Overdue", className: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400 border-red-200 dark:border-red-500/30" },
       "due-today": { label: "Due Today", className: "bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-400 border-orange-200 dark:border-orange-500/30" },
       "due-soon": { label: "Due Soon", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30" },
       upcoming: { label: "This Week", className: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400 border-blue-200 dark:border-blue-500/30" },
     };
-    
+
     const config = configs[status];
     return (
       <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${config.className}`}>
@@ -370,7 +376,8 @@ const TaskList: React.FC = () => {
   ];
 
   const getTasksByStatus = (status: string) => {
-    return filteredTasks.filter((task) => {
+    const dataSource = viewMode === "kanban" ? filteredTasks : pagedItems;
+    return dataSource.filter((task) => {
       // Support both new and legacy status
       if (status === "todo") return task.status === "todo" || task.status === "pending";
       if (status === "on_progress") return task.status === "on_progress" || task.status === "in_progress";
@@ -449,33 +456,30 @@ const TaskList: React.FC = () => {
             <div className="flex rounded-lg border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "list"
-                    ? "bg-brand-500 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                } rounded-l-lg`}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${viewMode === "list"
+                  ? "bg-brand-500 text-white"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  } rounded-l-lg`}
                 title="List view"
               >
                 <ListIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-brand-500 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${viewMode === "grid"
+                  ? "bg-brand-500 text-white"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  }`}
                 title="Grid view"
               >
                 <GridIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("kanban")}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "kanban"
-                    ? "bg-brand-500 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                } rounded-r-lg`}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${viewMode === "kanban"
+                  ? "bg-brand-500 text-white"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  } rounded-r-lg`}
                 title="Kanban view"
               >
                 <TableIcon className="w-4 h-4" />
@@ -609,31 +613,29 @@ const TaskList: React.FC = () => {
           </div>
         ) : viewMode === "kanban" ? (
           // Kanban View
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-nowrap items-stretch overflow-x-auto gap-4 pb-6 -mx-4 px-4 lg:grid lg:grid-cols-4 lg:overflow-x-visible lg:mx-0 lg:px-0 scrollbar-hide">
             {kanbanColumns.map((column) => {
               const columnTasks = getTasksByStatus(column.id);
               const isOver = dragOverColumn === column.id;
               return (
-                <div key={column.id} className="flex flex-col gap-3">
+                <div key={column.id} className="flex flex-col gap-3 min-w-[280px] sm:min-w-[320px] lg:min-w-0">
                   <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/50">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{column.title}</h3>
-                    <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
-                      column.color === "green" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" :
+                    <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${column.color === "green" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" :
                       column.color === "blue" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" :
-                      column.color === "yellow" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400" :
-                      "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400"
-                    }`}>
+                        column.color === "yellow" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400" :
+                          "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400"
+                      }`}>
                       {columnTasks.length}
                     </span>
                   </div>
-                  <div 
-                    className={`flex flex-col gap-3 min-h-[200px] rounded-lg p-3 transition-all ${
-                      isOver 
-                        ? "bg-brand-50 border-2 border-dashed border-brand-400 dark:bg-brand-500/10 dark:border-brand-500" 
-                        : columnTasks.length === 0
+                  <div
+                    className={`flex flex-col gap-3 flex-1 min-h-[200px] rounded-lg p-3 transition-all ${isOver
+                      ? "bg-brand-50 border-2 border-dashed border-brand-400 dark:bg-brand-500/10 dark:border-brand-500"
+                      : columnTasks.length === 0
                         ? "bg-gray-50 border-2 border-dashed border-gray-300 dark:bg-gray-800/30 dark:border-gray-700"
-                        : "bg-transparent border-2 border-transparent"
-                    }`}
+                        : "bg-transparent border-2 border-dashed border-transparent"
+                      }`}
                     onDragOver={(e) => handleDragOver(e)}
                     onDragEnter={(e) => handleDragEnter(e, column.id)}
                     onDragLeave={(e) => handleDragLeave(e)}
@@ -659,18 +661,17 @@ const TaskList: React.FC = () => {
                         draggable={true}
                         onDragStart={(e) => handleDragStart(e, task)}
                         onDragEnd={handleDragEnd}
-                        className={`group rounded-lg border bg-white p-4 shadow-sm transition-all hover:shadow-md ${
-                          draggedTask?.id === task.id 
-                            ? "opacity-50 border-brand-400 ring-2 ring-brand-400/50 dark:border-brand-500 dark:ring-brand-500/50" 
-                            : "border-gray-200 dark:border-gray-700"
-                        } dark:bg-gray-800`}
+                        className={`group rounded-lg border bg-white p-4 shadow-sm transition-all hover:shadow-md ${draggedTask?.id === task.id
+                          ? "opacity-50 border-brand-400 ring-2 ring-brand-400/50 dark:border-brand-500 dark:ring-brand-500/50"
+                          : "border-gray-200 dark:border-gray-700"
+                          } dark:bg-gray-800`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex items-start gap-2 flex-1 min-w-0">
                             {/* Drag Handle */}
                             <div className="cursor-grab active:cursor-grabbing pt-0.5 text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400">
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M5 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM5 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+                                <path d="M5 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM5 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
                               </svg>
                             </div>
                             <h4 className="flex-1 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
@@ -748,15 +749,14 @@ const TaskList: React.FC = () => {
                           </div>
                           <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                             <div
-                              className={`h-full transition-all ${
-                                task.progress >= 100
-                                  ? "bg-green-600 dark:bg-green-500"
-                                  : task.progress >= 75
+                              className={`h-full transition-all ${task.progress >= 100
+                                ? "bg-green-600 dark:bg-green-500"
+                                : task.progress >= 75
                                   ? "bg-blue-600 dark:bg-blue-500"
                                   : task.progress >= 50
-                                  ? "bg-yellow-600 dark:bg-yellow-500"
-                                  : "bg-red-600 dark:bg-red-500"
-                              }`}
+                                    ? "bg-yellow-600 dark:bg-yellow-500"
+                                    : "bg-red-600 dark:bg-red-500"
+                                }`}
                               style={{ width: `${Math.max(task.progress, 0)}%` }}
                             />
                           </div>
@@ -770,7 +770,7 @@ const TaskList: React.FC = () => {
           </div>
         ) : (
           <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
-            {filteredTasks.map((task) => (
+            {pagedItems.map((task) => (
               <div
                 key={task.id}
                 className="group rounded-xl border border-gray-200 bg-white p-5 shadow-theme-sm transition-all duration-300 hover:shadow-theme-md hover:scale-[1.02] hover:border-brand-300 dark:border-gray-800 dark:bg-gray-800 dark:hover:border-brand-500"
@@ -781,11 +781,10 @@ const TaskList: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <button
                         onClick={() => handleToggleStatus(task)}
-                        className={`shrink-0 rounded-full p-1.5 transition-all hover:scale-110 ${
-                          task.status === "completed" || task.status === "finish"
-                            ? "text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-500/10"
-                            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                        }`}
+                        className={`shrink-0 rounded-full p-1.5 transition-all hover:scale-110 ${task.status === "completed" || task.status === "finish"
+                          ? "text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-500/10"
+                          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                          }`}
                         title={task.status === "completed" ? "Mark as pending" : "Mark as complete"}
                       >
                         <CheckCircleIcon className="w-5 h-5" />
@@ -810,11 +809,10 @@ const TaskList: React.FC = () => {
 
                     <div>
                       <h3
-                        className={`text-lg font-semibold leading-tight ${
-                          task.status === "completed" || task.status === "finish"
-                            ? "line-through text-gray-500 dark:text-gray-400"
-                            : "text-gray-900 dark:text-white"
-                        }`}
+                        className={`text-lg font-semibold leading-tight ${task.status === "completed" || task.status === "finish"
+                          ? "line-through text-gray-500 dark:text-gray-400"
+                          : "text-gray-900 dark:text-white"
+                          }`}
                       >
                         {task.title}
                       </h3>
@@ -875,15 +873,14 @@ const TaskList: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                         <div
-                          className={`h-2 transition-all ${
-                            task.progress >= 100
-                              ? "bg-green-600 dark:bg-green-500"
-                              : task.progress >= 75
+                          className={`h-2 transition-all ${task.progress >= 100
+                            ? "bg-green-600 dark:bg-green-500"
+                            : task.progress >= 75
                               ? "bg-blue-600 dark:bg-blue-500"
                               : task.progress >= 50
-                              ? "bg-yellow-600 dark:bg-yellow-500"
-                              : "bg-red-600 dark:bg-red-500"
-                          }`}
+                                ? "bg-yellow-600 dark:bg-yellow-500"
+                                : "bg-red-600 dark:bg-red-500"
+                            }`}
                           style={{ width: `${Math.max(task.progress, 0)}%` }}
                         />
                       </div>
@@ -897,22 +894,20 @@ const TaskList: React.FC = () => {
                       <div className="flex items-start gap-3">
                         <button
                           onClick={() => handleToggleStatus(task)}
-                          className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-all hover:scale-110 ${
-                            task.status === "completed" || task.status === "finish"
-                              ? "text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-500/10"
-                              : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                          }`}
+                          className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-all hover:scale-110 ${task.status === "completed" || task.status === "finish"
+                            ? "text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-500/10"
+                            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                            }`}
                           title={task.status === "completed" ? "Mark as pending" : "Mark as complete"}
                         >
                           <CheckCircleIcon className="w-5 h-5" />
                         </button>
                         <div className="flex-1 min-w-0">
                           <h3
-                            className={`text-lg font-semibold leading-tight ${
-                              task.status === "completed" || task.status === "finish"
-                                ? "line-through text-gray-500 dark:text-gray-400"
-                                : "text-gray-900 dark:text-white"
-                            }`}
+                            className={`text-lg font-semibold leading-tight ${task.status === "completed" || task.status === "finish"
+                              ? "line-through text-gray-500 dark:text-gray-400"
+                              : "text-gray-900 dark:text-white"
+                              }`}
                           >
                             {task.title}
                           </h3>
@@ -965,15 +960,14 @@ const TaskList: React.FC = () => {
                       <div className="mt-4 flex items-center gap-3">
                         <div className="flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                           <div
-                            className={`h-2 transition-all ${
-                              task.progress >= 100
-                                ? "bg-green-600 dark:bg-green-500"
-                                : task.progress >= 75
+                            className={`h-2 transition-all ${task.progress >= 100
+                              ? "bg-green-600 dark:bg-green-500"
+                              : task.progress >= 75
                                 ? "bg-blue-600 dark:bg-blue-500"
                                 : task.progress >= 50
-                                ? "bg-yellow-600 dark:bg-yellow-500"
-                                : "bg-red-600 dark:bg-red-500"
-                            }`}
+                                  ? "bg-yellow-600 dark:bg-yellow-500"
+                                  : "bg-red-600 dark:bg-red-500"
+                              }`}
                             style={{ width: `${Math.max(task.progress, 0)}%` }}
                           />
                         </div>
@@ -1001,6 +995,45 @@ const TaskList: React.FC = () => {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination - Hidden in Kanban Mode */}
+        {viewMode !== "kanban" && filteredTasks.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <span>Rows per page</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              >
+                {[5, 10, 20, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-50 dark:border-gray-700 flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+              >
+                <AngleLeftIcon className="h-4 w-4" /> Prev
+              </button>
+              <div className="hidden sm:block">
+                Page <span className="font-semibold text-gray-900 dark:text-white">{currentPage}</span> of <span className="font-semibold text-gray-900 dark:text-white">{totalPages || 1}</span>
+              </div>
+              <button
+                className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-50 dark:border-gray-700 flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next <AngleRightIcon className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

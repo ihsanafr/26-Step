@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { Habit, HabitLog, habitsService } from "../../services/habitsService";
+import { Habit, habitsService } from "../../services/habitsService";
 import { ChevronLeftIcon, PencilIcon, TrashBinIcon } from "../../icons";
 import HabitCalendar from "./HabitCalendar";
 import HabitForm from "./HabitForm";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
 import { useHabits } from "../../context/HabitsContext";
+import PageMeta from "../common/PageMeta";
 
 const HabitDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -123,6 +124,11 @@ const HabitDetail: React.FC = () => {
   }
 
   const getColorClasses = (color: string) => {
+    // Check if color is a hex value (custom color)
+    if (color && color.startsWith("#")) {
+      return "";
+    }
+
     const colorMap: Record<string, string> = {
       blue: "from-blue-50 to-blue-100 border-blue-200 dark:from-blue-500/10 dark:to-blue-500/5 dark:border-gray-700",
       purple: "from-purple-50 to-purple-100 border-purple-200 dark:from-purple-500/10 dark:to-purple-500/5 dark:border-gray-700",
@@ -135,8 +141,27 @@ const HabitDetail: React.FC = () => {
     return colorMap[color] || colorMap.blue;
   };
 
+  const getCustomColorStyle = (color: string) => {
+    if (color && color.startsWith("#")) {
+      const hex = color.replace("#", "");
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+
+      return {
+        background: `linear-gradient(to bottom right, rgba(${r}, ${g}, ${b}, 0.1), rgba(${r}, ${g}, ${b}, 0.05))`,
+        borderColor: `rgba(${r}, ${g}, ${b}, 0.3)`,
+      };
+    }
+    return {};
+  };
+
   return (
     <>
+      <PageMeta
+        title={`${habit.name} - Habit Detail - 26-step`}
+        description={habit.description || `View progress and streaks for ${habit.name}`}
+      />
       <div className="space-y-6">
         {/* Back Button */}
         <Link
@@ -148,7 +173,11 @@ const HabitDetail: React.FC = () => {
         </Link>
 
         {/* Habit Header Card */}
-        <div className={`rounded-2xl border bg-gradient-to-br p-6 shadow-theme-sm ${getColorClasses(habit.color)}`}>
+        <div
+          className={`rounded-2xl border p-6 shadow-theme-sm ${habit.color && habit.color.startsWith("#") ? "" : `bg-gradient-to-br ${getColorClasses(habit.color)}`
+            }`}
+          style={habit.color && habit.color.startsWith("#") ? getCustomColorStyle(habit.color) : {}}
+        >
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-start gap-4 flex-1">
               <div className="text-5xl">{habit.icon}</div>
@@ -245,11 +274,10 @@ const HabitDetail: React.FC = () => {
 
           {/* Status Badge */}
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${
-              habit.is_active
-                ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
-                : "bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400"
-            }`}>
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${habit.is_active
+              ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
+              : "bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400"
+              }`}>
               {habit.is_active ? "Active" : "Archived"}
             </span>
             {habit.target_days && (

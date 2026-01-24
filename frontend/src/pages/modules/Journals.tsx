@@ -18,7 +18,7 @@ export default function Journals() {
   if (path === "/journals" || path === "/journals/") {
     return (
       <>
-        <PageMeta title="Journals & Notes - Lifesync" description="Reflect and capture quick notes" />
+        <PageMeta title="Journals & Notes - 26-step" description="Reflect and capture quick notes" />
         <JournalsOverview />
       </>
     );
@@ -27,7 +27,7 @@ export default function Journals() {
   if (path === "/journals/list") {
     return (
       <>
-        <PageMeta title="Journal Entries - Lifesync" description="Write and browse journal entries" />
+        <PageMeta title="Journal Entries - 26-step" description="Write and browse journal entries" />
         <JournalList />
       </>
     );
@@ -36,7 +36,7 @@ export default function Journals() {
   if (path === "/journals/new") {
     return (
       <>
-        <PageMeta title="New Journal Entry - Lifesync" description="Create a new journal entry" />
+        <PageMeta title="New Journal Entry - 26-step" description="Create a new journal entry" />
         <JournalCreatePage />
       </>
     );
@@ -45,7 +45,7 @@ export default function Journals() {
   if (path === `/journals/edit/${id}`) {
     return (
       <>
-        <PageMeta title="Edit Journal Entry - Lifesync" description="Edit your journal entry" />
+        <PageMeta title="Edit Journal Entry - 26-step" description="Edit your journal entry" />
         <JournalEditPage />
       </>
     );
@@ -54,7 +54,7 @@ export default function Journals() {
   if (path === `/journals/view/${id}`) {
     return (
       <>
-        <PageMeta title="View Journal Entry - Lifesync" description="Read your journal entry" />
+        <PageMeta title="View Journal Entry - 26-step" description="Read your journal entry" />
         <JournalViewPage />
       </>
     );
@@ -63,7 +63,7 @@ export default function Journals() {
   if (path === "/journals/calendar") {
     return (
       <>
-        <PageMeta title="Journal Calendar - Lifesync" description="Browse entries by date" />
+        <PageMeta title="Journal Calendar - 26-step" description="Browse entries by date" />
         <JournalsCalendar />
       </>
     );
@@ -72,7 +72,7 @@ export default function Journals() {
   if (path === "/journals/notes") {
     return (
       <>
-        <PageMeta title="Notes - Lifesync" description="Quick notes and pinboard" />
+        <PageMeta title="Notes - 26-step" description="Quick notes and pinboard" />
         <NotesList />
       </>
     );
@@ -81,7 +81,7 @@ export default function Journals() {
   if (path === "/journals/guide") {
     return (
       <>
-        <PageMeta title="Journals Guide - Lifesync" description="How to use Journals & Notes module" />
+        <PageMeta title="Journals Guide - 26-step" description="How to use Journals & Notes module" />
         <JournalsGuide />
       </>
     );
@@ -89,7 +89,7 @@ export default function Journals() {
 
   return (
     <>
-      <PageMeta title="Journals & Notes - Lifesync" description="Reflect and capture quick notes" />
+      <PageMeta title="Journals & Notes - 26-step" description="Reflect and capture quick notes" />
       <JournalsOverview />
     </>
   );

@@ -62,7 +62,7 @@ export default function UserDropdown() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} data-onboarding="profile">
       {/* Profile Photo Button */}
       <button
         onClick={toggleDropdown}

@@ -13,7 +13,7 @@ export default function Finance() {
   if (path === "/finance" || path === "/finance/") {
     return (
       <>
-        <PageMeta title="Personal Finance - Lifesync" description="Manage transactions, budgets, and categories" />
+        <PageMeta title="Personal Finance - 26-step" description="Manage transactions, budgets, and categories" />
         <FinanceOverview />
       </>
     );
@@ -22,7 +22,7 @@ export default function Finance() {
   if (path === "/finance/transactions") {
     return (
       <>
-        <PageMeta title="Transactions - Lifesync" description="Record income and expenses" />
+        <PageMeta title="Transactions - 26-step" description="Record income and expenses" />
         <TransactionsList />
       </>
     );
@@ -31,7 +31,7 @@ export default function Finance() {
   if (path === "/finance/budget") {
     return (
       <>
-        <PageMeta title="Budget - Lifesync" description="Set expense budget" />
+        <PageMeta title="Budget - 26-step" description="Set expense budget" />
         <BudgetsList />
       </>
     );
@@ -40,7 +40,7 @@ export default function Finance() {
   if (path === "/finance/categories") {
     return (
       <>
-        <PageMeta title="Categories - Lifesync" description="Manage transaction categories" />
+        <PageMeta title="Categories - 26-step" description="Manage transaction categories" />
         <FinanceCategories />
       </>
     );
@@ -49,6 +49,7 @@ export default function Finance() {
   if (path === "/finance/guide") {
     return (
       <>
+        <PageMeta title="Finance Guide - 26-step" description="Learn how to manage your finances" />
         <FinanceGuide />
       </>
     );
@@ -57,7 +58,7 @@ export default function Finance() {
 
   return (
     <>
-      <PageMeta title="Personal Finance - Lifesync" description="Kelola transaksi, budget, dan kategori" />
+      <PageMeta title="Personal Finance - 26-step" description="Kelola transaksi, budget, dan kategori" />
       <FinanceOverview />
     </>
   );

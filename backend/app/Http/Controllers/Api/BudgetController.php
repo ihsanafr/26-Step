@@ -45,6 +45,7 @@ class BudgetController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'is_active' => 'nullable|boolean',
+            'color' => 'nullable|string|max:7',
         ]);
 
         $validated['user_id'] = $request->user()->id;
@@ -85,6 +86,7 @@ class BudgetController extends Controller
             'start_date' => 'sometimes|required|date',
             'end_date' => 'sometimes|required|date|after_or_equal:start_date',
             'is_active' => 'nullable|boolean',
+            'color' => 'nullable|string|max:7',
         ]);
 
         $budget->update($validated);

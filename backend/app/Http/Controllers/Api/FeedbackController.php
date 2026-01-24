@@ -37,4 +37,21 @@ class FeedbackController extends Controller
             'feedback' => $feedback,
         ], 201);
     }
+
+    public function index(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $feedbacks = Feedback::orderBy('created_at', 'desc')->paginate($perPage);
+        return response()->json($feedbacks);
+    }
+
+    public function destroy($id)
+    {
+        $feedback = Feedback::findOrFail($id);
+        $feedback->delete();
+
+        return response()->json([
+            'message' => 'Feedback berhasil dihapus',
+        ]);
+    }
 }

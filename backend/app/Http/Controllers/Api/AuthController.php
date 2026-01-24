@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Mail\VerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -16,33 +19,74 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name' => 'required|string|min:2|max:255|regex:/^[a-zA-Z\s\'-]+$/',
+            'email' => [
+                'required',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                'unique:users',
+                'regex:/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', // At least one lowercase, one uppercase, one number
+            ],
+        ], [
+            'name.regex' => 'Name can only contain letters, spaces, hyphens, and apostrophes.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.regex' => 'Please enter a valid email address format.',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
         ]);
+
+        // Generate verification code (6 digits)
+        $verificationCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $verificationToken = Str::random(64);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'verification_code' => $verificationCode,
+            'verification_token' => $verificationToken,
+            'verification_code_expires_at' => now()->addHours(24),
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Generate verification link
+        $verificationLink = url('/api/verify-email?token=' . $verificationToken . '&email=' . urlencode($user->email));
+
+        // Send verification email
+        try {
+            Mail::to($user->email)->send(new VerifyEmail($user, $verificationCode, $verificationLink));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+            // Continue even if email fails - user can request resend
+        }
 
         $user->avatar_url = $user->avatar ? url($user->avatar) : null;
 
         return response()->json([
+            'message' => 'Registration successful. Please check your email to verify your account.',
             'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
+            'email_verified' => false,
         ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'regex:/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/',
+            ],
             'password' => 'required',
+        ], [
+            'email.email' => 'Please enter a valid email address.',
+            'email.regex' => 'Please enter a valid email address format.',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -51,6 +95,15 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
+        }
+
+        // Check if email is verified
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Please verify your email address before logging in.',
+                'email_verified' => false,
+                'user_id' => $user->id,
+            ], 403);
         }
 
         $token = $user->createToken('auth_token');
@@ -305,6 +358,135 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Failed to upload avatar: ' . $e->getMessage(),
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify email using token or code
+     */
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'nullable|string',
+            'code' => 'nullable|string|size:6',
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email already verified.',
+                'email_verified' => true,
+            ], 200);
+        }
+
+        // Verify using token
+        if ($request->token) {
+            if ($user->verification_token !== $request->token) {
+                return response()->json([
+                    'message' => 'Invalid verification token.',
+                ], 400);
+            }
+
+            $user->email_verified_at = now();
+            $user->verification_token = null;
+            $user->verification_code = null;
+            $user->verification_code_expires_at = null;
+            $user->save();
+
+            return response()->json([
+                'message' => 'Email verified successfully.',
+                'email_verified' => true,
+            ], 200);
+        }
+
+        // Verify using code
+        if ($request->code) {
+            if ($user->verification_code !== $request->code) {
+                return response()->json([
+                    'message' => 'Invalid verification code.',
+                ], 400);
+            }
+
+            if ($user->verification_code_expires_at && $user->verification_code_expires_at->isPast()) {
+                return response()->json([
+                    'message' => 'Verification code has expired. Please request a new one.',
+                ], 400);
+            }
+
+            $user->email_verified_at = now();
+            $user->verification_token = null;
+            $user->verification_code = null;
+            $user->verification_code_expires_at = null;
+            $user->save();
+
+            return response()->json([
+                'message' => 'Email verified successfully.',
+                'email_verified' => true,
+            ], 200);
+        }
+
+        return response()->json([
+            'message' => 'Please provide either a verification token or code.',
+        ], 400);
+    }
+
+    /**
+     * Resend verification email
+     */
+    public function resendVerificationEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email already verified.',
+                'email_verified' => true,
+            ], 200);
+        }
+
+        // Generate new verification code and token
+        $verificationCode = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $verificationToken = Str::random(64);
+
+        $user->verification_code = $verificationCode;
+        $user->verification_token = $verificationToken;
+        $user->verification_code_expires_at = now()->addHours(24);
+        $user->save();
+
+        // Generate verification link
+        $verificationLink = url('/api/verify-email?token=' . $verificationToken . '&email=' . urlencode($user->email));
+
+        // Send verification email
+        try {
+            Mail::to($user->email)->send(new VerifyEmail($user, $verificationCode, $verificationLink));
+            
+            return response()->json([
+                'message' => 'Verification email sent successfully. Please check your inbox.',
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Failed to send verification email. Please try again later.',
             ], 500);
         }
     }

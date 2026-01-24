@@ -13,7 +13,7 @@ export default function Productivity() {
   if (path === "/productivity" || path === "/productivity/") {
     return (
       <>
-        <PageMeta title="Productivity & Time - Lifesync" description="Time tracking, focus, and planning" />
+        <PageMeta title="Productivity & Time - 26-step" description="Time tracking, focus, and planning" />
         <ProductivityOverview />
       </>
     );
@@ -23,7 +23,7 @@ export default function Productivity() {
   if (path === "/productivity/pomodoro") {
     return (
       <>
-        <PageMeta title="Pomodoro - Lifesync" description="Run focus sessions" />
+        <PageMeta title="Pomodoro - 26-step" description="Run focus sessions" />
         <PomodoroPage />
       </>
     );
@@ -32,7 +32,7 @@ export default function Productivity() {
   if (path === "/productivity/schedule") {
     return (
       <>
-        <PageMeta title="Schedule - Lifesync" description="Plan your day" />
+        <PageMeta title="Schedule - 26-step" description="Plan your day" />
         <SchedulePage />
       </>
     );
@@ -41,7 +41,7 @@ export default function Productivity() {
   if (path === "/productivity/reports") {
     return (
       <>
-        <PageMeta title="Reports - Lifesync" description="Review your time logs" />
+        <PageMeta title="Reports - 26-step" description="Review your time logs" />
         <ReportsPage />
       </>
     );
@@ -50,7 +50,7 @@ export default function Productivity() {
   if (path === "/productivity/guide") {
     return (
       <>
-        <PageMeta title="Productivity Guide - Lifesync" description="How to use Productivity & Time module" />
+        <PageMeta title="Productivity Guide - 26-step" description="How to use Productivity & Time module" />
         <ProductivityGuide />
       </>
     );
@@ -58,7 +58,7 @@ export default function Productivity() {
 
   return (
     <>
-      <PageMeta title="Productivity & Time - Lifesync" description="Time tracking, focus, and planning" />
+      <PageMeta title="Productivity & Time - 26-step" description="Time tracking, focus, and planning" />
       <ProductivityOverview />
     </>
   );

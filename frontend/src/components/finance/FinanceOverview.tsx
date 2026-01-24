@@ -3,23 +3,27 @@ import { useNavigate } from "react-router";
 import { Skeleton } from "../common/Skeleton";
 import Button from "../ui/button/Button";
 import { DollarLineIcon, FileIcon, GridIcon } from "../../icons";
+import { FinanceStats } from "./FinanceStats";
+import DatePicker from "../form/input/DatePicker";
 import { financialTransactionsService, FinancialTransaction } from "../../services/financialTransactionsService";
 import { budgetsService, Budget } from "../../services/budgetsService";
 import { formatIndonesianDate } from "../../utils/date";
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import Chart from "react-apexcharts";
+import { formatCurrency } from "../../utils/currency";
 
 export default function FinanceOverview() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+
+  // Default range: last 7 days
+  const [chartFrom, setChartFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d.toISOString().slice(0, 10);
+  });
+  const [chartTo, setChartTo] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     const load = async () => {
@@ -41,72 +45,43 @@ export default function FinanceOverview() {
   }, []);
 
   const totals = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
     const income = transactions
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const expense = transactions
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const thisMonthTransactions = transactions.filter((t) => {
+      const d = new Date(t.date);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+
+    const thisMonthIncome = thisMonthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const thisMonthExpense = thisMonthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
     return {
-      income,
-      expense,
-      balance: income - expense,
+      grandIncome: income,
+      grandExpense: expense,
+      grandBalance: income - expense,
+      thisMonthIncome,
+      thisMonthExpense,
+      thisMonthNet: thisMonthIncome - thisMonthExpense,
     };
   }, [transactions]);
 
   const recentTransactions = useMemo(() => transactions.slice(0, 6), [transactions]);
   const activeBudgets = useMemo(() => budgets.filter((b) => b.is_active).slice(0, 4), [budgets]);
 
-  const stats = [
-    {
-      label: "Total Income",
-      value: formatCurrency(totals.income),
-      icon: DollarLineIcon,
-      gradientFrom: "from-emerald-50",
-      gradientTo: "to-emerald-100",
-      borderColor: "border-emerald-200 dark:border-gray-700",
-      iconBg: "bg-emerald-100 dark:bg-emerald-500/20",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      darkGradientFrom: "dark:from-emerald-500/10",
-      darkGradientTo: "dark:to-emerald-500/5",
-    },
-    {
-      label: "Total Expense",
-      value: formatCurrency(totals.expense),
-      icon: DollarLineIcon,
-      gradientFrom: "from-rose-50",
-      gradientTo: "to-rose-100",
-      borderColor: "border-rose-200 dark:border-gray-700",
-      iconBg: "bg-rose-100 dark:bg-rose-500/20",
-      iconColor: "text-rose-600 dark:text-rose-400",
-      darkGradientFrom: "dark:from-rose-500/10",
-      darkGradientTo: "dark:to-rose-500/5",
-    },
-    {
-      label: "Balance",
-      value: formatCurrency(totals.balance),
-      icon: GridIcon,
-      gradientFrom: "from-indigo-50",
-      gradientTo: "to-indigo-100",
-      borderColor: "border-indigo-200 dark:border-gray-700",
-      iconBg: "bg-indigo-100 dark:bg-indigo-500/20",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      darkGradientFrom: "dark:from-indigo-500/10",
-      darkGradientTo: "dark:to-indigo-500/5",
-    },
-    {
-      label: "Active Budgets",
-      value: activeBudgets.length,
-      icon: FileIcon,
-      gradientFrom: "from-amber-50",
-      gradientTo: "to-amber-100",
-      borderColor: "border-amber-200 dark:border-gray-700",
-      iconBg: "bg-amber-100 dark:bg-amber-500/20",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      darkGradientFrom: "dark:from-amber-500/10",
-      darkGradientTo: "dark:to-amber-500/5",
-    },
-  ];
+
 
   if (loading) {
     return (
@@ -187,27 +162,199 @@ export default function FinanceOverview() {
         <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={idx}
-              className={`rounded-xl border ${stat.borderColor} bg-gradient-to-br ${stat.gradientFrom} ${stat.gradientTo} ${stat.darkGradientFrom} ${stat.darkGradientTo} p-6 shadow-theme-xs`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`rounded-lg ${stat.iconBg} p-2`}>
-                  <Icon className={`h-6 w-6 ${stat.iconColor}`} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                </div>
-              </div>
+      <FinanceStats
+        grandBalance={totals.grandBalance}
+        thisMonthIncome={totals.thisMonthIncome}
+        thisMonthExpense={totals.thisMonthExpense}
+      />
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Income vs Expense Area Chart */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Income vs Expense</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Transaction trend</p>
             </div>
-          );
-        })}
+            <div className="flex items-center gap-2">
+              <DatePicker
+                value={chartFrom}
+                onChange={(e) => setChartFrom(e.target.value)}
+                className="!py-1 !text-xs"
+              />
+              <span className="text-gray-400">to</span>
+              <DatePicker
+                value={chartTo}
+                onChange={(e) => setChartTo(e.target.value)}
+                className="!py-1 !text-xs"
+              />
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <Chart
+              options={{
+                chart: {
+                  id: "finance-trend",
+                  toolbar: { show: false },
+                  background: "transparent",
+                },
+                xaxis: {
+                  categories: (() => {
+                    const days = [];
+                    const start = new Date(chartFrom);
+                    const end = new Date(chartTo);
+                    const curr = new Date(start);
+                    while (curr <= end) {
+                      days.push(curr.getDate() + " " + curr.toLocaleString("default", { month: "short" }));
+                      curr.setDate(curr.getDate() + 1);
+                    }
+                    return days;
+                  })(),
+                  axisBorder: { show: false },
+                  axisTicks: { show: false },
+                  labels: { style: { colors: "#64748b", fontSize: "11px" } },
+                },
+                yaxis: {
+                  labels: {
+                    style: { colors: "#64748b" },
+                    formatter: (val) => formatCurrency(val, true),
+                  },
+                },
+                dataLabels: {
+                  enabled: false,
+                },
+                colors: ["#10b981", "#ef4444"],
+                stroke: { curve: "smooth", width: 3, lineCap: "round" },
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    shadeIntensity: 1,
+                    type: "vertical",
+                    opacityFrom: 0.4,
+                    opacityTo: 0,
+                    stops: [0, 100],
+                  },
+                },
+                legend: { position: "bottom", labels: { colors: "#64748b" } },
+                grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
+                markers: {
+                  size: 0,
+                  hover: { size: 6 },
+                },
+                tooltip: {
+                  theme: "light",
+                  y: { formatter: (val) => formatCurrency(Number(val)) },
+                },
+              }}
+              series={[
+                {
+                  name: "Income",
+                  data: (() => {
+                    const data = [];
+                    const start = new Date(chartFrom);
+                    const end = new Date(chartTo);
+                    const curr = new Date(start);
+                    while (curr <= end) {
+                      const ymd = curr.toISOString().slice(0, 10);
+                      const daily = transactions
+                        .filter((t) => t.date.slice(0, 10) === ymd && t.type === "income")
+                        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+                      data.push(daily);
+                      curr.setDate(curr.getDate() + 1);
+                    }
+                    return data;
+                  })(),
+                },
+                {
+                  name: "Expense",
+                  data: (() => {
+                    const data = [];
+                    const start = new Date(chartFrom);
+                    const end = new Date(chartTo);
+                    const curr = new Date(start);
+                    while (curr <= end) {
+                      const ymd = curr.toISOString().slice(0, 10);
+                      const daily = transactions
+                        .filter((t) => t.date.slice(0, 10) === ymd && t.type === "expense")
+                        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+                      data.push(daily);
+                      curr.setDate(curr.getDate() + 1);
+                    }
+                    return data;
+                  })(),
+                },
+              ]}
+              type="area"
+              height="100%"
+            />
+          </div>
+        </div>
+
+        {/* Expense by Category Pie Chart */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Expense by Category</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Top categories</p>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            {(() => {
+              const categoryMap = new Map<string, number>();
+              const now = new Date();
+              const currentMonth = now.getMonth();
+              const currentYear = now.getFullYear();
+
+              const thisMonthExpenses = transactions.filter((t) => {
+                const d = new Date(t.date);
+                return t.type === "expense" && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+              });
+
+              thisMonthExpenses.forEach((t) => {
+                const cat = t.category || "Uncategorized";
+                categoryMap.set(cat, (categoryMap.get(cat) || 0) + Number(t.amount || 0));
+              });
+
+              const sortedCats = Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+              const labels = sortedCats.map(c => c[0]);
+              const values = sortedCats.map(c => c[1]);
+
+              if (values.length === 0) {
+                return (
+                  <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                    No expense data this month
+                  </div>
+                );
+              }
+
+              return (
+                <Chart
+                  options={{
+                    labels,
+                    colors: ["#3b82f6", "#ef4444", "#a855f7", "#f59e0b", "#10b981"],
+                    legend: { position: "bottom", labels: { colors: "#64748b" } },
+                    stroke: { show: false },
+                    dataLabels: {
+                      enabled: true,
+                      formatter: function (val: number) {
+                        return val.toFixed(0) + "%";
+                      },
+                    },
+                    tooltip: {
+                      y: {
+                        formatter: (val) => formatCurrency(val),
+                      },
+                    },
+                  }}
+                  series={values}
+                  type="pie"
+                  height="100%"
+                />
+              );
+            })()}
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -247,7 +394,7 @@ export default function FinanceOverview() {
                       className={`text-sm font-bold ${t.type === "income" ? "text-emerald-600" : "text-rose-600"}`}
                     >
                       {t.type === "income" ? "+" : "-"}
-                      {formatCurrency(Number(t.amount))}
+                      {formatCurrency(Number(t.amount || 0), Number(t.amount || 0) >= 10000000)}
                     </div>
                   </div>
                 ))}

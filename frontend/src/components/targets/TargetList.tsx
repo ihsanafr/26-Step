@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import Button from "../ui/button/Button";
 import { Target, targetsService } from "../../services/targetsService";
-import { PlusIcon, PencilIcon, TrashBinIcon, TargetIcon, CheckCircleIcon, TimeIcon, ListIcon } from "../../icons";
+import { PlusIcon, PencilIcon, TrashBinIcon, TargetIcon, CheckCircleIcon, TimeIcon, ListIcon, AngleLeftIcon, AngleRightIcon } from "../../icons";
 import TargetForm from "./TargetForm";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { TargetCardSkeleton } from "../common/Skeleton";
@@ -24,11 +24,17 @@ const TargetList: React.FC = () => {
   });
   const [deleting, setDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     loadTargets();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -183,13 +189,16 @@ const TargetList: React.FC = () => {
     paused: targets.filter((t) => t.status === "paused").length,
     averageProgress: targets.length > 0
       ? targets.reduce((sum, t) => {
-          const progress = getProgressPercentage(t);
-          return sum + progress;
-        }, 0) / targets.length
+        const progress = getProgressPercentage(t);
+        return sum + progress;
+      }, 0) / targets.length
       : 0,
     totalTasks: tasks.filter((t) => t.target_id !== null && t.target_id !== undefined).length,
     completedTasks: tasks.filter((t) => (t.target_id !== null && t.target_id !== undefined) && (t.status === "finish" || t.status === "completed")).length,
   };
+
+  const totalPages = Math.ceil(filteredTargets.length / pageSize);
+  const pagedItems = filteredTargets.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   if (loading) {
     return (
@@ -350,143 +359,183 @@ const TargetList: React.FC = () => {
           </div>
         ) : (
           // Card View
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTargets.map((target, index) => {
-              const progress = getProgressPercentage(target);
-              // Gradient colors based on status
-              const gradientClasses = target.status === "completed"
-                ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-500/10 dark:to-green-500/5 border-green-200 hover:border-green-300 dark:border-gray-700 dark:hover:border-green-500/50"
-                : target.status === "paused"
-                ? "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-500/10 dark:to-yellow-500/5 border-yellow-200 hover:border-yellow-300 dark:border-gray-700 dark:hover:border-yellow-500/50"
-                : "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-500/5 border-blue-200 hover:border-blue-300 dark:border-gray-700 dark:hover:border-blue-500/50";
-              
-              return (
-                <div
-                  key={target.id}
-                  className={`group relative rounded-xl border p-6 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.01] ${gradientClasses}`}
-                >
-                  {/* Menu Button - Top Right Corner */}
-                  <div className="absolute top-4 right-4">
-                    <button
-                      onClick={() => setOpenMenuId(openMenuId === target.id ? null : target.id)}
-                      className="rounded-lg p-2 text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                      title="More options"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {pagedItems.map((target, index) => {
+                const progress = getProgressPercentage(target);
+                // Gradient colors based on status
+                const gradientClasses = target.status === "completed"
+                  ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-500/10 dark:to-green-500/5 border-green-200 hover:border-green-300 dark:border-gray-700 dark:hover:border-green-500/50"
+                  : target.status === "paused"
+                    ? "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-500/10 dark:to-yellow-500/5 border-yellow-200 hover:border-yellow-300 dark:border-gray-700 dark:hover:border-yellow-500/50"
+                    : "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-500/5 border-blue-200 hover:border-blue-300 dark:border-gray-700 dark:hover:border-blue-500/50";
 
-                    {/* Dropdown Menu */}
-                    {openMenuId === target.id && (
-                      <div
-                        ref={(el) => {
-                          if (target.id) menuRefs.current[target.id] = el;
-                        }}
-                        className="absolute right-0 top-10 z-50 w-48 rounded-lg border border-gray-200 bg-white shadow-theme-md dark:border-gray-700 dark:bg-gray-800 overflow-hidden"
+                return (
+                  <div
+                    key={target.id}
+                    className={`group relative rounded-xl border p-6 shadow-theme-xs transition-all duration-300 hover:shadow-theme-md hover:scale-[1.01] ${gradientClasses}`}
+                  >
+                    {/* Menu Button - Top Right Corner */}
+                    <div className="absolute top-4 right-4">
+                      <button
+                        onClick={() => setOpenMenuId(openMenuId === target.id ? null : target.id)}
+                        className="rounded-lg p-2 text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                        title="More options"
                       >
-                        <Link
-                          to={`/tasks/targets/${target.id}`}
-                          onClick={() => setOpenMenuId(null)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                          <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              fillRule="evenodd"
-                              clipRule="evenodd"
-                              d="M10.0002 13.8619C7.23361 13.8619 4.86803 12.1372 3.92328 9.70241C4.86804 7.26761 7.23361 5.54297 10.0002 5.54297C12.7667 5.54297 15.1323 7.26762 16.0771 9.70243C15.1323 12.1372 12.7667 13.8619 10.0002 13.8619ZM10.0002 4.04297C6.48191 4.04297 3.49489 6.30917 2.4155 9.4593C2.3615 9.61687 2.3615 9.78794 2.41549 9.94552C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C13.5184 15.3619 16.5055 13.0957 17.5849 9.94555C17.6389 9.78797 17.6389 9.6169 17.5849 9.45932C16.5055 6.30919 13.5184 4.04297 10.0002 4.04297ZM9.99151 7.84413C8.96527 7.84413 8.13333 8.67606 8.13333 9.70231C8.13333 10.7286 8.96527 11.5605 9.99151 11.5605H10.0064C11.0326 11.5605 11.8646 10.7286 11.8646 9.70231C11.8646 8.67606 11.0326 7.84413 10.0064 7.84413H9.99151Z"
-                              fill="currentColor"
-                            />
-                          </svg>
-                          <span>View Details</span>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setOpenMenuId(null);
-                            handleEdit(target);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                          <PencilIcon className="w-4 h-4 shrink-0" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setOpenMenuId(null);
-                            handleDeleteClick(target);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/20"
-                        >
-                          <TrashBinIcon className="w-4 h-4 shrink-0" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
 
-                  {/* Header Section */}
-                  <div className="mb-4 pr-20">
-                    <div className="flex items-start gap-4">
-                      {/* Order Number */}
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 dark:from-brand-500 dark:to-brand-600 flex items-center justify-center text-white font-bold text-sm shadow-theme-xs">
-                        {index + 1}
-                      </div>
-                      
-                      {/* Title and Description */}
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          to={`/tasks/targets/${target.id}`}
-                          className="block group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
+                      {/* Dropdown Menu */}
+                      {openMenuId === target.id && (
+                        <div
+                          ref={(el) => {
+                            if (target.id) menuRefs.current[target.id] = el;
+                          }}
+                          className="absolute right-0 top-10 z-50 w-48 rounded-lg border border-gray-200 bg-white shadow-theme-md dark:border-gray-700 dark:bg-gray-800 overflow-hidden"
                         >
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight mb-2">
-                            {target.title}
-                          </h3>
-                        </Link>
-                        {target.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                            {target.description}
-                          </p>
-                        )}
+                          <Link
+                            to={`/tasks/targets/${target.id}`}
+                            onClick={() => setOpenMenuId(null)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M10.0002 13.8619C7.23361 13.8619 4.86803 12.1372 3.92328 9.70241C4.86804 7.26761 7.23361 5.54297 10.0002 5.54297C12.7667 5.54297 15.1323 7.26762 16.0771 9.70243C15.1323 12.1372 12.7667 13.8619 10.0002 13.8619ZM10.0002 4.04297C6.48191 4.04297 3.49489 6.30917 2.4155 9.4593C2.3615 9.61687 2.3615 9.78794 2.41549 9.94552C3.49488 13.0957 6.48191 15.3619 10.0002 15.3619C13.5184 15.3619 16.5055 13.0957 17.5849 9.94555C17.6389 9.78797 17.6389 9.6169 17.5849 9.45932C16.5055 6.30919 13.5184 4.04297 10.0002 4.04297ZM9.99151 7.84413C8.96527 7.84413 8.13333 8.67606 8.13333 9.70231C8.13333 10.7286 8.96527 11.5605 9.99151 11.5605H10.0064C11.0326 11.5605 11.8646 10.7286 11.8646 9.70231C11.8646 8.67606 11.0326 7.84413 10.0064 7.84413H9.99151Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                            <span>View Details</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              handleEdit(target);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            <PencilIcon className="w-4 h-4 shrink-0" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              handleDeleteClick(target);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/20"
+                          >
+                            <TrashBinIcon className="w-4 h-4 shrink-0" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Header Section */}
+                    <div className="mb-4 pr-20">
+                      <div className="flex items-start gap-4">
+                        {/* Order Number */}
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 dark:from-brand-500 dark:to-brand-600 flex items-center justify-center text-white font-bold text-sm shadow-theme-xs">
+                          {(currentPage - 1) * pageSize + index + 1}
+                        </div>
+
+                        {/* Title and Description */}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            to={`/tasks/targets/${target.id}`}
+                            className="block group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors"
+                          >
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight mb-2">
+                              {target.title}
+                            </h3>
+                          </Link>
+                          {target.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                              {target.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Tags Section */}
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-500/20 dark:text-blue-400 capitalize">
-                      {target.period}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                        target.status === "active"
+                    {/* Tags Section */}
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-500/20 dark:text-blue-400 capitalize">
+                        {target.period}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${target.status === "active"
                           ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400"
                           : target.status === "completed"
-                          ? "bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400"
-                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400"
-                      }`}
-                    >
-                      {target.status}
-                    </span>
-                  </div>
-
-                  {/* Progress Section */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Progress</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {target.current_value} / {target.target_value} ({Math.round(progress)}%)
+                            ? "bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400"
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400"
+                          }`}
+                      >
+                        {target.status}
                       </span>
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner">
-                      <div 
-                        className={`h-full transition-all duration-500 ${getProgressColor(progress)} shadow-theme-xs`} 
-                        style={{ width: `${progress}%` }} 
-                      />
+
+                    {/* Progress Section */}
+                    <div>
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Progress</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          {target.current_value} / {target.target_value} ({Math.round(progress)}%)
+                        </span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner">
+                        <div
+                          className={`h-full transition-all duration-500 ${getProgressColor(progress)} shadow-theme-xs`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination Component */}
+            {filteredTargets.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <span>Rows per page</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  >
+                    {[3, 6, 9, 12, 24, 48].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              );
-            })}
+                <div className="flex items-center gap-3">
+                  <button
+                    className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-50 dark:border-gray-700 flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                  >
+                    <AngleLeftIcon className="h-4 w-4" /> Prev
+                  </button>
+                  <div className="hidden sm:block">
+                    Page <span className="font-semibold text-gray-900 dark:text-white">{currentPage}</span> of <span className="font-semibold text-gray-900 dark:text-white">{totalPages || 1}</span>
+                  </div>
+                  <button
+                    className="rounded-md border border-gray-300 px-3 py-1.5 disabled:opacity-50 dark:border-gray-700 flex items-center gap-1 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next <AngleRightIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

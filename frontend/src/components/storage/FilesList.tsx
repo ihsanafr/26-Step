@@ -3,11 +3,14 @@ import Button from "../ui/button/Button";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
 import { Skeleton } from "../common/Skeleton";
 import { filesService } from "../../services/filesService";
-import type { File } from "../../services/filesService";
+import type { FileModel } from "../../services/filesService";
+import { folderService } from "../../services/folderService";
+import type { Folder as DbFolder } from "../../services/folderService";
 import { MoreDotIcon, PencilIcon, PlusIcon, SearchIcon, TrashBinIcon, DownloadIcon, EyeIcon, ListIcon, GridIcon, CloseIcon, FolderIcon } from "../../icons";
 import { formatIndonesianDate } from "../../utils/date";
 import { resolveAssetUrl } from "../../utils/url";
 import AlertModal from "../common/AlertModal";
+import { useAuth } from "../../context/AuthContext";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
@@ -17,17 +20,17 @@ function formatFileSize(bytes: number): string {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 }
 
-function getFileIcon(mimeType: string): string {
-  if (mimeType.startsWith("image/")) return "🖼️";
-  if (mimeType.startsWith("video/")) return "🎥";
-  if (mimeType.startsWith("audio/")) return "🎵";
-  if (mimeType.includes("pdf")) return "📄";
-  if (mimeType.includes("word") || mimeType.includes("document")) return "📝";
-  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "📊";
-  if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) return "📽️";
-  if (mimeType.includes("zip") || mimeType.includes("archive")) return "📦";
-  return "📎";
-}
+// function getFileIcon(mimeType: string): string {
+//   if (mimeType.startsWith("image/")) return "🖼️";
+//   if (mimeType.startsWith("video/")) return "🎥";
+//   if (mimeType.startsWith("audio/")) return "🎵";
+//   if (mimeType.includes("pdf")) return "📄";
+//   if (mimeType.includes("word") || mimeType.includes("document")) return "📝";
+//   if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "📊";
+//   if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) return "📽️";
+//   if (mimeType.includes("zip") || mimeType.includes("archive")) return "📦";
+//   return "📎";
+// }
 
 function getFileIconComponent(mimeType: string) {
   if (mimeType.includes("pdf")) {
@@ -74,32 +77,28 @@ type Folder = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "lifesync_folders";
+// Helper to convert DB folder to Frontend folder
+const mapDbFolderToFolder = (dbFolder: DbFolder): Folder => ({
+  id: `folder-${dbFolder.id}`,
+  name: dbFolder.name,
+  path: dbFolder.path || "",
+  parentId: dbFolder.parent_id ? `folder-${dbFolder.parent_id}` : "root",
+  createdAt: dbFolder.created_at,
+});
 
-// Helper functions for folder storage
-const loadFoldersFromStorage = (): Folder[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error("Error loading folders from storage:", error);
+// Helper to extract ID from string ID
+const getDbId = (id: string): number | null => {
+  if (id.startsWith("folder-")) {
+    const num = parseInt(id.replace("folder-", ""), 10);
+    return isNaN(num) ? null : num;
   }
-  return [];
-};
-
-const saveFoldersToStorage = (folders: Folder[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(folders));
-  } catch (error) {
-    console.error("Error saving folders to storage:", error);
-  }
+  return null;
 };
 
 export default function FilesList() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<File[]>([]);
+  const [items, setItems] = useState<FileModel[]>([]);
   const [customFolders, setCustomFolders] = useState<Folder[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFolder, setSelectedFolder] = useState<string>("root");
@@ -108,18 +107,18 @@ export default function FilesList() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [folderDeleteWarning, setFolderDeleteWarning] = useState<string | null>(null);
-  const [editing, setEditing] = useState<File | null>(null);
+  const [editing, setEditing] = useState<FileModel | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [saving, setSaving] = useState(false);
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; item: File | null }>({ open: false, item: null });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; item: FileModel | null }>({ open: false, item: null });
   const [deleting, setDeleting] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [parentFolderId, setParentFolderId] = useState<string>("root");
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewFile, setPreviewFile] = useState<FileModel | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFileName, setUploadFileName] = useState("");
   const [uploadFileLocation, setUploadFileLocation] = useState<string>("root");
@@ -127,19 +126,19 @@ export default function FilesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [closingModal, setClosingModal] = useState<string | null>(null);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
-  const [downloadConfirm, setDownloadConfirm] = useState<File | null>(null);
+  const [downloadConfirm, setDownloadConfirm] = useState<FileModel | null>(null);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [editFolderName, setEditFolderName] = useState("");
   const [editFolderParent, setEditFolderParent] = useState<string>("root");
   const [deleteFolderModal, setDeleteFolderModal] = useState<{ open: boolean; folder: Folder | null }>({ open: false, folder: null });
   const [deletingFolder, setDeletingFolder] = useState(false);
-  const [draggedFile, setDraggedFile] = useState<File | null>(null);
+  const [draggedFile, setDraggedFile] = useState<FileModel | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [folderMenuOpenId, setFolderMenuOpenId] = useState<string | null>(null);
   const [folderMenuPosition, setFolderMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadFileInputRef = useRef<HTMLInputElement>(null);
+  const [warningModal, setWarningModal] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
 
   // Build folder tree from custom folders and file categories
   const folders: Folder[] = useMemo(() => {
@@ -193,7 +192,7 @@ export default function FilesList() {
         parts.forEach((part) => {
           // Limit to 3 levels (0 = root, 1, 2, 3)
           if (level >= 3) return;
-          
+
           currentPath = currentPath ? `${currentPath}/${part}` : part;
           const folderId = `category-${currentPath}`;
 
@@ -258,10 +257,10 @@ export default function FilesList() {
     }
   };
 
-  const loadFolders = () => {
+  const loadFolders = async () => {
     try {
-      const stored = loadFoldersFromStorage();
-      setCustomFolders(stored || []);
+      const data = await folderService.getAll();
+      setCustomFolders(data.map(mapDbFolderToFolder));
     } catch (e) {
       console.error("Error loading folders:", e);
       setCustomFolders([]);
@@ -365,19 +364,20 @@ export default function FilesList() {
   }, [items, selectedFolder, searchQuery, typeFilter, categoryFilter, allFolders]);
 
   // Get subfolders in the current folder
-  const currentSubfolders = useMemo(() => {
-    if (selectedFolder === "root") {
-      // Get all direct children of root (both custom folders and category folders)
-      return folders[0]?.children || [];
-    }
-    
-    const folder = allFolders.find((f) => f.id === selectedFolder);
-    
-    if (!folder) return [];
-    
-    // Get direct children of the selected folder
-    return folder.children || [];
-  }, [selectedFolder, folders, allFolders]);
+  // Get subfolders in the current folder
+  // const currentSubfolders = useMemo(() => {
+  //   if (selectedFolder === "root") {
+  //     // Get all direct children of root (both custom folders and category folders)
+  //     return folders[0]?.children || [];
+  //   }
+
+  //   const folder = allFolders.find((f) => f.id === selectedFolder);
+
+  //   if (!folder) return [];
+
+  //   // Get direct children of the selected folder
+  //   return folder.children || [];
+  // }, [selectedFolder, folders, allFolders]);
 
   const currentFolder = useMemo(() => {
     if (selectedFolder === "root") {
@@ -392,28 +392,51 @@ export default function FilesList() {
     try {
       setUploading(true);
       setUploadError(null);
-      
-      // Check for duplicate files
+
+      // Check storage limit BEFORE upload
       const fileArray = Array.from(uploadFiles);
+      const totalUploadSize = fileArray.reduce((acc, file) => acc + file.size, 0);
+      const currentUsage = items.reduce((acc, item) => acc + (item.size || 0), 0);
+      const limit = user?.storage_limit || 52428800; // default 50MB
+
+      if (currentUsage + totalUploadSize > limit) {
+        setUploading(false);
+        setWarningModal({
+          open: true,
+          message: `Kapasitas penyimpanan tidak mencukupi. Anda mengunggah ${formatFileSize(totalUploadSize)}, tetapi sisa ruang hanya ${formatFileSize(Math.max(0, limit - currentUsage))}.`,
+        });
+        return;
+      }
+
+      // Check per-file limit (10MB default in Laravel validation, let's warn if > 100MB as a safety)
+      const LARGE_FILE_LIMIT = 100 * 1024 * 1024; // 100MB
+      const oversizedFiles = fileArray.filter(f => f.size > LARGE_FILE_LIMIT);
+      if (oversizedFiles.length > 0) {
+        setUploading(false);
+        setUploadError(`File terlalu besar: ${oversizedFiles.map(f => f.name).join(", ")}. Maksimal 100MB per file.`);
+        return;
+      }
+
+      // Check for duplicate files
       const duplicateFiles: string[] = [];
-      
+
       fileArray.forEach((file) => {
         const fileName = uploadFileName.trim() || file.name;
         const existingFile = items.find(
           (f) => (f.name === fileName || f.original_name === fileName) &&
-          f.category === (uploadFileLocation !== "root" ? allFolders.find((f) => f.id === uploadFileLocation)?.path : undefined)
+            f.category === (uploadFileLocation !== "root" ? allFolders.find((f) => f.id === uploadFileLocation)?.path : undefined)
         );
         if (existingFile) {
           duplicateFiles.push(fileName);
         }
       });
-      
+
       if (duplicateFiles.length > 0) {
         setUploadError(`File dengan nama berikut sudah ada: ${duplicateFiles.join(", ")}. Silakan gunakan nama yang berbeda.`);
         setUploading(false);
         return;
       }
-      
+
       // Get folder path for category
       let category: string | undefined = undefined;
       if (uploadFileLocation !== "root") {
@@ -422,22 +445,22 @@ export default function FilesList() {
           category = folder.path;
         }
       }
-      
+
       // If uploadFileName is provided and only one file, rename it
       let filesToUpload = uploadFiles;
       if (uploadFileName.trim() && fileArray.length === 1) {
         const originalFile = fileArray[0];
         const extension = originalFile.name.substring(originalFile.name.lastIndexOf('.'));
         const newName = uploadFileName.trim() + extension;
-        
+
         // Create a new File object with the new name
         const renamedFile = new File([originalFile], newName, { type: originalFile.type });
         filesToUpload = [renamedFile] as any;
       }
-      
+
       await filesService.upload(filesToUpload, category);
       await load();
-      
+
       // Reset upload modal with animation
       setClosingModal("upload");
       setTimeout(() => {
@@ -450,7 +473,18 @@ export default function FilesList() {
       }, 200);
     } catch (error: any) {
       console.error("Error uploading files:", error);
-      setUploadError(error.response?.data?.message || "Gagal mengunggah file");
+      const errorMessage = error.response?.data?.message || "Gagal mengunggah file";
+
+      if (errorMessage.includes("limit exceeded") || errorMessage.includes("capacity")) {
+        setUploadError(null); // Clear inline error
+        setShowUploadModal(false); // Close upload modal
+        setWarningModal({
+          open: true,
+          message: `${errorMessage}. Silakan upgrade penyimpanan Anda atau hapus beberapa file.`,
+        });
+      } else {
+        setUploadError(errorMessage);
+      }
     } finally {
       setUploading(false);
     }
@@ -474,7 +508,7 @@ export default function FilesList() {
     setShowUploadModal(true);
   };
 
-  const handleEdit = (file: File) => {
+  const handleEdit = (file: FileModel) => {
     setEditing(file);
     setEditName(file.name);
     // Find folder ID from category path
@@ -487,13 +521,13 @@ export default function FilesList() {
     setEditDescription(file.description || "");
   };
 
-  const handleDownloadClick = (file: File) => {
+  const handleDownloadClick = (file: FileModel) => {
     setDownloadConfirm(file);
   };
 
   const handleDownloadConfirm = async () => {
     if (!downloadConfirm) return;
-    
+
     try {
       setUploadError(null);
       const blob = await filesService.download(downloadConfirm.id);
@@ -514,7 +548,7 @@ export default function FilesList() {
     }
   };
 
-  const handleCardClick = (e: React.MouseEvent, file: File) => {
+  const handleCardClick = (e: React.MouseEvent, file: FileModel) => {
     const target = e.target as HTMLElement | null;
     if (target && target.closest("[data-file-menu]")) return;
     setPreviewFile(file);
@@ -525,7 +559,7 @@ export default function FilesList() {
     try {
       setSaving(true);
       setUploadError(null);
-      
+
       // Get folder path for category if editCategory is a folder ID
       let category: string | null = null;
       if (editCategory) {
@@ -536,7 +570,7 @@ export default function FilesList() {
           category = editCategory;
         }
       }
-      
+
       await filesService.update(editing.id, {
         name: editName.trim(),
         category: category,
@@ -586,7 +620,7 @@ export default function FilesList() {
     if (folderId === "root") return 0;
     const folder = allFolders.find((f) => f.id === folderId);
     if (!folder) return 0;
-    
+
     let depth = 0;
     let current = folder;
     while (current.parentId && current.parentId !== "root") {
@@ -598,11 +632,13 @@ export default function FilesList() {
     return depth + 1; // +1 because we're adding a child
   };
 
-  const handleSaveFolder = () => {
+  const handleSaveFolder = async () => {
+    if (saving) return; // Prevent duplicate submissions
+
     if (editingFolder) {
       // Edit existing folder
       if (!editFolderName.trim()) return;
-      
+
       try {
         // Check if moving to new parent would exceed depth limit
         if (editFolderParent !== editingFolder.parentId) {
@@ -611,7 +647,7 @@ export default function FilesList() {
             setUploadError("Maximum folder depth is 3 levels. Cannot move folder to this level.");
             return;
           }
-          
+
           // Check if folder would be moved into itself or its children
           const isDescendant = (folderId: string, ancestorId: string): boolean => {
             if (folderId === ancestorId) return true;
@@ -619,31 +655,29 @@ export default function FilesList() {
             if (!folder || !folder.parentId) return false;
             return isDescendant(folder.parentId, ancestorId);
           };
-          
+
           if (isDescendant(editFolderParent, editingFolder.id)) {
             setUploadError("Cannot move folder into itself or its subfolders.");
             return;
           }
         }
-        
+
         // Check if folder name already exists in the same parent (if name changed or parent changed)
         if (editFolderName.trim() !== editingFolder.name || editFolderParent !== (editingFolder.parentId || "root")) {
           const parent = allFolders.find((f) => f.id === editFolderParent);
-          
+
           if (parent?.children?.some((f) => f.id !== editingFolder.id && f.name.toLowerCase() === editFolderName.trim().toLowerCase())) {
             setUploadError("A folder with this name already exists in this folder");
             return;
           }
         }
 
-        // Update folder
-        const updatedFolders = customFolders.map((f) =>
-          f.id === editingFolder.id
-            ? { ...f, name: editFolderName.trim(), parentId: editFolderParent === "root" ? undefined : editFolderParent }
-            : f
+        setSaving(true);
+        await folderService.update(
+          getDbId(editingFolder.id)!,
+          editFolderName.trim(),
+          editFolderParent === "root" ? null : getDbId(editFolderParent)
         );
-        setCustomFolders(updatedFolders);
-        saveFoldersToStorage(updatedFolders);
 
         // Close modal and reset with animation
         setClosingModal("folder");
@@ -655,43 +689,38 @@ export default function FilesList() {
           setNewFolderName("");
           setParentFolderId("root");
           setClosingModal(null);
+          void loadFolders(); // Reload to get latest state including paths
         }, 200);
       } catch (error) {
         console.error("Error updating folder:", error);
         setUploadError("Failed to update folder");
+      } finally {
+        setSaving(false);
       }
     } else {
       // Create new folder
       if (!newFolderName.trim()) return;
-      
+
       try {
         const currentDepth = getFolderDepth(parentFolderId);
         if (currentDepth >= 3) {
           setUploadError("Maximum folder depth is 3 levels. Cannot create folder at this level.");
           return;
         }
-        
+
         // Check if folder name already exists in the same parent
         const parent = allFolders.find((f) => f.id === parentFolderId);
-        
+
         if (parent?.children?.some((f) => f.name.toLowerCase() === newFolderName.trim().toLowerCase())) {
           setUploadError("Folder dengan nama tersebut sudah ada di folder ini");
           return;
         }
 
-        // Create new folder
-        const newFolder: Folder = {
-          id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: newFolderName.trim(),
-          path: "",
-          parentId: parentFolderId === "root" ? undefined : parentFolderId,
-          createdAt: new Date().toISOString(),
-        };
-
-        // Add to custom folders
-        const updatedFolders = [...customFolders, newFolder];
-        setCustomFolders(updatedFolders);
-        saveFoldersToStorage(updatedFolders);
+        setSaving(true);
+        await folderService.create(
+          newFolderName.trim(),
+          parentFolderId === "root" ? null : getDbId(parentFolderId)
+        );
 
         // Close modal and reset with animation
         setClosingModal("folder");
@@ -700,10 +729,13 @@ export default function FilesList() {
           setNewFolderName("");
           setParentFolderId("root");
           setClosingModal(null);
+          void loadFolders(); // Reload folders
         }, 200);
       } catch (error) {
         console.error("Error creating folder:", error);
         setUploadError("Failed to create folder");
+      } finally {
+        setSaving(false);
       }
     }
   };
@@ -721,13 +753,13 @@ export default function FilesList() {
 
   const handleDeleteFolder = async () => {
     if (!deleteFolderModal.folder) return;
-    
+
     try {
       setDeletingFolder(true);
-      
+
       // Check if folder has children
       const folder = allFolders.find((f) => f.id === deleteFolderModal.folder!.id);
-      
+
       if (folder?.children && folder.children.length > 0) {
         setFolderDeleteWarning(
           `Folder "${folder.name}" cannot be deleted because it still has subfolders. Delete or move subfolders first.`
@@ -736,11 +768,11 @@ export default function FilesList() {
         setDeletingFolder(false);
         return;
       }
-      
+
       // Check if folder has files
       const folderPath = folder?.path || "";
       const hasFiles = items.some((file) => file.category === folderPath || file.category?.startsWith(folderPath + "/"));
-      
+
       if (hasFiles) {
         setFolderDeleteWarning(
           `Folder "${folder?.name || "this"}" cannot be deleted because it still contains files. Move or delete files first.`
@@ -749,18 +781,17 @@ export default function FilesList() {
         setDeletingFolder(false);
         return;
       }
-      
+
       // Delete folder
-      const updatedFolders = customFolders.filter((f) => f.id !== deleteFolderModal.folder!.id);
-      setCustomFolders(updatedFolders);
-      saveFoldersToStorage(updatedFolders);
-      
+      await folderService.delete(getDbId(deleteFolderModal.folder!.id)!);
+
       // If deleted folder was selected, go to root
       if (selectedFolder === deleteFolderModal.folder!.id) {
         setSelectedFolder("root");
       }
-      
+
       setDeleteFolderModal({ open: false, folder: null });
+      void loadFolders();
     } catch (error) {
       console.error("Error deleting folder:", error);
       setUploadError("Gagal menghapus folder");
@@ -770,7 +801,7 @@ export default function FilesList() {
     }
   };
 
-  const handleMoveFile = async (file: File, targetFolderId: string) => {
+  const handleMoveFile = async (file: FileModel, targetFolderId: string) => {
     try {
       let category: string | null = null;
       if (targetFolderId !== "root") {
@@ -779,17 +810,17 @@ export default function FilesList() {
           category = folder.path || folder.name;
         }
       }
-      
+
       // Update file on backend
       const updatedFile = await filesService.update(file.id, {
         category: category,
       });
-      
+
       // Update local state without reloading
       setItems((prevItems) =>
         prevItems.map((item) => (item.id === file.id ? updatedFile : item))
       );
-      
+
       // If file was moved to a different folder and we're viewing the old folder, 
       // the file will automatically disappear from the filtered list
       // If moved to current folder, it will appear automatically
@@ -802,13 +833,12 @@ export default function FilesList() {
   const renderFolderTree = (folder: Folder, level: number = 0) => {
     const isSelected = selectedFolder === folder.id;
     const isCustomFolder = folder.id.startsWith("folder-");
-    
+
     return (
       <div key={folder.id}>
         <div
-          className={`group relative mb-1 flex items-center gap-2 rounded-lg transition-all duration-200 ${
-            dragOverFolder === folder.id ? "bg-indigo-200 dark:bg-indigo-900/50" : ""
-          }`}
+          className={`group relative mb-1 flex items-center gap-2 rounded-lg transition-all duration-200 ${dragOverFolder === folder.id ? "bg-indigo-200 dark:bg-indigo-900/50" : ""
+            }`}
           onDragOver={(e) => {
             if (draggedFile) {
               e.preventDefault();
@@ -833,19 +863,17 @@ export default function FilesList() {
         >
           <button
             onClick={() => setSelectedFolder(folder.id)}
-            className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-200 ${
-              isSelected
-                ? "bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-400"
-                : "text-gray-700 hover:bg-gray-100 hover:shadow-sm hover:scale-[1.02] dark:text-gray-300 dark:hover:bg-gray-800"
-            }`}
+            className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all duration-200 ${isSelected
+              ? "bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-900/30 dark:text-indigo-400"
+              : "text-gray-700 hover:bg-gray-100 hover:shadow-sm hover:scale-[1.02] dark:text-gray-300 dark:hover:bg-gray-800"
+              }`}
             style={{ paddingLeft: `${12 + level * 20}px` }}
           >
-            <FolderIcon 
-              className={`h-5 w-5 shrink-0 transition-colors ${
-                isSelected 
-                  ? "text-indigo-600 dark:text-indigo-400" 
-                  : "text-yellow-500 dark:text-yellow-400"
-              }`}
+            <FolderIcon
+              className={`h-5 w-5 shrink-0 transition-colors ${isSelected
+                ? "text-indigo-600 dark:text-indigo-400"
+                : "text-yellow-500 dark:text-yellow-400"
+                }`}
               color={isSelected ? "#4f46e5" : "#eab308"}
             />
             <span className="truncate text-sm font-medium">{folder.name}</span>
@@ -935,16 +963,15 @@ export default function FilesList() {
           </nav>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <button
             type="button"
             onClick={openUploadModal}
             disabled={uploading}
-            className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3.5 text-sm font-medium text-white transition ${
-              uploading
-                ? "cursor-not-allowed bg-indigo-400 opacity-50"
-                : "cursor-pointer bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            }`}
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3.5 text-sm font-medium text-white transition lg:w-auto ${uploading
+              ? "cursor-not-allowed bg-indigo-400 opacity-50"
+              : "cursor-pointer bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              }`}
           >
             {uploading ? (
               <>
@@ -965,67 +992,67 @@ export default function FilesList() {
           <Button
             onClick={handleCreateFolder}
             variant="outline"
-            className="border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+            className="w-full border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 lg:w-auto"
           >
             <FolderIcon className="mr-2 h-5 w-5" color="#eab308" />
             Folder Baru
           </Button>
 
-          <div className="ml-auto flex items-center gap-3">
-            <div className="relative">
+          <div className="flex w-full flex-col gap-3 lg:ml-auto lg:w-auto lg:flex-row lg:items-center">
+            <div className="relative w-full lg:w-auto">
               <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Cari file..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 lg:w-64"
               />
             </div>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="all">Semua Tipe</option>
-              {fileTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-3">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white lg:w-auto"
+              >
+                <option value="all">Semua Tipe</option>
+                {fileTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="all">Semua Kategori</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white lg:w-auto"
+              >
+                <option value="all">Semua Kategori</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <div className="flex rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex justify-end rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
               <button
                 onClick={() => setViewMode("list")}
-                className={`rounded px-3 py-1.5 transition-colors ${
-                  viewMode === "list"
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
+                className={`rounded px-3 py-1.5 transition-colors ${viewMode === "list"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  }`}
               >
                 <ListIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`rounded px-3 py-1.5 transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
+                className={`rounded px-3 py-1.5 transition-colors ${viewMode === "grid"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  }`}
               >
                 <GridIcon className="h-4 w-4" />
               </button>
@@ -1035,11 +1062,11 @@ export default function FilesList() {
       </div>
 
       {/* Main Content */}
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left Sidebar - Folder Structure */}
-        <div className="w-64 shrink-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="w-full shrink-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800 lg:w-64">
           <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Struktur Folder</h2>
-          <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="max-h-60 overflow-y-auto lg:max-h-[calc(100vh-300px)]">
             {folders && folders.length > 0 ? folders.map((folder) => renderFolderTree(folder)) : <div className="text-sm text-gray-500 dark:text-gray-400">No folders</div>}
           </div>
         </div>
@@ -1115,7 +1142,7 @@ export default function FilesList() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {/* Display Files */}
               {filtered.map((file) => {
-                const fileUrl = resolveAssetUrl((file as any).url || `/storage/${file.path}`);
+                // const fileUrl = resolveAssetUrl((file as any).url || `/storage/${file.path}`);
                 return (
                   <div
                     key={file.id}
@@ -1147,6 +1174,133 @@ export default function FilesList() {
                         >
                           <MoreDotIcon className="h-4 w-4" />
                         </button>
+                        {menuOpenId === file.id && (
+                          <div
+                            ref={menuRef}
+                            data-file-menu
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                          >
+                            <button
+                              data-file-menu
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewFile(file);
+                                setMenuOpenId(null);
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                              Lihat
+                            </button>
+                            <button
+                              data-file-menu
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuOpenId(null);
+                                handleDownloadClick(file);
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                            >
+                              <DownloadIcon className="h-4 w-4" />
+                              Download
+                            </button>
+                            <button
+                              data-file-menu
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(file);
+                                setMenuOpenId(null);
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                              Edit
+                            </button>
+                            <button
+                              data-file-menu
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteModal({ open: true, item: file });
+                                setMenuOpenId(null);
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                            >
+                              <TrashBinIcon className="h-4 w-4" />
+                              Hapus
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="mb-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        {file.original_name || file.name}
+                      </h3>
+                      <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                        {formatFileSize(file.size)}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatIndonesianDate(file.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* Display Files in List View */}
+              {filtered.map((file) => {
+                // const fileUrl = resolveAssetUrl((file as any).url || `/storage/${file.path}`);
+                return (
+                  <div
+                    key={file.id}
+                    draggable
+                    onDragStart={(e) => {
+                      setDraggedFile(file);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDraggedFile(null);
+                      setDragOverFolder(null);
+                    }}
+                    onClick={(e) => handleCardClick(e, file)}
+                    className="group flex cursor-pointer items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50/50 hover:shadow-theme-sm hover:scale-[1.01] dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-indigo-950/20"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700">
+                      {getFileIconComponent(file.mime_type)}
+                    </div>
+                    <div className="grow">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                        {file.original_name || file.name}
+                      </h3>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>•</span>
+                        <span>{formatIndonesianDate(file.created_at)}</span>
+                        {file.category && (
+                          <>
+                            <span>•</span>
+                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                              {file.category}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative" data-file-menu>
+                      <button
+                        data-file-menu
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpenId(menuOpenId === file.id ? null : file.id);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+                      >
+                        <MoreDotIcon className="h-5 w-5" />
+                      </button>
                       {menuOpenId === file.id && (
                         <div
                           ref={menuRef}
@@ -1204,133 +1358,6 @@ export default function FilesList() {
                           </button>
                         </div>
                       )}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="mb-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
-                        {file.original_name || file.name}
-                      </h3>
-                      <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                        {formatFileSize(file.size)}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatIndonesianDate(file.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Display Files in List View */}
-              {filtered.map((file) => {
-                const fileUrl = resolveAssetUrl((file as any).url || `/storage/${file.path}`);
-                return (
-                  <div
-                    key={file.id}
-                    draggable
-                    onDragStart={(e) => {
-                      setDraggedFile(file);
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragEnd={() => {
-                      setDraggedFile(null);
-                      setDragOverFolder(null);
-                    }}
-                    onClick={(e) => handleCardClick(e, file)}
-                    className="group flex cursor-pointer items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50/50 hover:shadow-theme-sm hover:scale-[1.01] dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-indigo-950/20"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700">
-                      {getFileIconComponent(file.mime_type)}
-                    </div>
-                    <div className="grow">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {file.original_name || file.name}
-                      </h3>
-                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                        <span>{formatFileSize(file.size)}</span>
-                        <span>•</span>
-                        <span>{formatIndonesianDate(file.created_at)}</span>
-                        {file.category && (
-                          <>
-                            <span>•</span>
-                            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                              {file.category}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="relative" data-file-menu>
-                      <button
-                        data-file-menu
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpenId(menuOpenId === file.id ? null : file.id);
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
-                      >
-                        <MoreDotIcon className="h-5 w-5" />
-                      </button>
-                      {menuOpenId === file.id && (
-                        <div
-                          ref={menuRef}
-                          data-file-menu
-                          onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                        >
-                            <button
-                              data-file-menu
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewFile(file);
-                                setMenuOpenId(null);
-                              }}
-                              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                            >
-                              <EyeIcon className="h-4 w-4" />
-                              Lihat
-                            </button>
-                          <button
-                            data-file-menu
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMenuOpenId(null);
-                              handleDownloadClick(file);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                          >
-                            <DownloadIcon className="h-4 w-4" />
-                            Download
-                          </button>
-                          <button
-                            data-file-menu
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(file);
-                              setMenuOpenId(null);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                            Edit
-                          </button>
-                          <button
-                            data-file-menu
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteModal({ open: true, item: file });
-                              setMenuOpenId(null);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                          >
-                            <TrashBinIcon className="h-4 w-4" />
-                            Hapus
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
@@ -1343,9 +1370,8 @@ export default function FilesList() {
       {/* Upload Modal */}
       {showUploadModal && (
         <div
-          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${
-            closingModal === "upload" ? "opacity-0" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${closingModal === "upload" ? "opacity-0" : "opacity-100"
+            }`}
           onClick={() => {
             setClosingModal("upload");
             setTimeout(() => {
@@ -1358,11 +1384,10 @@ export default function FilesList() {
           }}
         >
           <div
-            className={`w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-              closingModal === "upload"
-                ? "animate-out fade-out slide-out-to-bottom-4"
-                : "animate-in fade-in slide-in-from-bottom-4"
-            }`}
+            className={`w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${closingModal === "upload"
+              ? "animate-out fade-out slide-out-to-bottom-4"
+              : "animate-in fade-in slide-in-from-bottom-4"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -1503,9 +1528,8 @@ export default function FilesList() {
       {/* Edit Modal */}
       {editing && (
         <div
-          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${
-            closingModal === "edit" ? "opacity-0" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${closingModal === "edit" ? "opacity-0" : "opacity-100"
+            }`}
           onClick={() => {
             setClosingModal("edit");
             setTimeout(() => {
@@ -1515,11 +1539,10 @@ export default function FilesList() {
           }}
         >
           <div
-            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-              closingModal === "edit"
-                ? "animate-out fade-out slide-out-to-bottom-4"
-                : "animate-in fade-in slide-in-from-bottom-4"
-            }`}
+            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${closingModal === "edit"
+              ? "animate-out fade-out slide-out-to-bottom-4"
+              : "animate-in fade-in slide-in-from-bottom-4"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">Edit File</h2>
@@ -1599,9 +1622,8 @@ export default function FilesList() {
       {/* Folder Modal */}
       {showFolderModal && (
         <div
-          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${
-            closingModal === "folder" ? "opacity-0" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${closingModal === "folder" ? "opacity-0" : "opacity-100"
+            }`}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setClosingModal("folder");
@@ -1615,11 +1637,10 @@ export default function FilesList() {
           }}
         >
           <div
-            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${
-              closingModal === "folder"
-                ? "animate-out fade-out slide-out-to-bottom-4"
-                : "animate-in fade-in slide-in-from-bottom-4"
-            }`}
+            className={`w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 ${closingModal === "folder"
+              ? "animate-out fade-out slide-out-to-bottom-4"
+              : "animate-in fade-in slide-in-from-bottom-4"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center gap-3">
@@ -1685,11 +1706,21 @@ export default function FilesList() {
             </div>
             <div className="mt-6 flex gap-3">
               <Button
-                onClick={handleSaveFolder}
-                disabled={editingFolder ? !editFolderName.trim() : !newFolderName.trim()}
+                onClick={() => void handleSaveFolder()}
+                disabled={saving || (editingFolder ? !editFolderName.trim() : !newFolderName.trim())}
                 className="grow bg-indigo-600 hover:bg-indigo-700"
               >
-                {editingFolder ? "Simpan Perubahan" : "Buat Folder"}
+                {saving ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {editingFolder ? "Menyimpan..." : "Membuat..."}
+                  </span>
+                ) : (
+                  editingFolder ? "Simpan Perubahan" : "Buat Folder"
+                )}
               </Button>
               <Button
                 onClick={() => {
@@ -1801,9 +1832,8 @@ export default function FilesList() {
       {/* File Preview Modal */}
       {previewFile && (
         <div
-          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm transition-opacity duration-200 ${
-            closingModal === "preview" ? "opacity-0" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm transition-opacity duration-200 ${closingModal === "preview" ? "opacity-0" : "opacity-100"
+            }`}
           onClick={() => {
             setClosingModal("preview");
             setTimeout(() => {
@@ -1813,11 +1843,10 @@ export default function FilesList() {
           }}
         >
           <div
-            className={`relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl transition-all duration-200 dark:bg-gray-800 ${
-              closingModal === "preview"
-                ? "animate-out fade-out zoom-out-95"
-                : "animate-in fade-in zoom-in-95"
-            }`}
+            className={`relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl transition-all duration-200 dark:bg-gray-800 ${closingModal === "preview"
+              ? "animate-out fade-out zoom-out-95"
+              : "animate-in fade-in zoom-in-95"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1955,6 +1984,13 @@ export default function FilesList() {
           </div>
         </div>
       )}
+      <AlertModal
+        isOpen={warningModal.open}
+        onClose={() => setWarningModal({ ...warningModal, open: false })}
+        title="Penyimpanan Penuh"
+        message={warningModal.message}
+        type="warning"
+      />
     </div>
   );
 }

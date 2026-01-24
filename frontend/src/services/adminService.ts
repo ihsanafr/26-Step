@@ -40,6 +40,7 @@ export interface User {
   email: string;
   created_at: string;
   is_admin?: boolean;
+  storage_limit?: number;
   tasks_count: number;
   completed_tasks_count: number;
   habits_count: number;
@@ -96,7 +97,7 @@ export const adminService = {
     return response.data;
   },
 
-  updateUser: async (id: number, data: { name?: string; email?: string; password?: string; is_admin?: boolean }): Promise<User> => {
+  updateUser: async (id: number, data: { name?: string; email?: string; password?: string; is_admin?: boolean; storage_limit?: number }): Promise<User> => {
     const response = await api.put(`/admin/users/${id}`, data);
     return response.data.user;
   },
@@ -128,5 +129,19 @@ export const adminService = {
   getAnalytics: async (): Promise<Analytics> => {
     const response = await api.get('/admin/analytics');
     return response.data;
+  },
+
+  getFeedbacks: async (page: number = 1, perPage: number = 15): Promise<{
+    data: any[];
+    current_page: number;
+    last_page: number;
+    total: number;
+  }> => {
+    const response = await api.get('/admin/feedbacks', { params: { page, per_page: perPage } });
+    return response.data;
+  },
+
+  deleteFeedback: async (id: number): Promise<void> => {
+    await api.delete(`/admin/feedbacks/${id}`);
   },
 };

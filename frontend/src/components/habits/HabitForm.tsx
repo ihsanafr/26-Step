@@ -26,6 +26,22 @@ const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel, isLoadin
     icon: habit?.icon || "🔥",
   });
 
+  // Initialize custom values if habit has custom color/icon
+  useEffect(() => {
+    if (habit) {
+      // Check if color is a hex value (custom)
+      if (habit.color && habit.color.startsWith("#")) {
+        setCustomColor(habit.color);
+        setShowCustomColorInput(true);
+      }
+      // Check if icon is not in predefined options (custom)
+      if (habit.icon && !iconOptions.includes(habit.icon)) {
+        setCustomIcon(habit.icon);
+        setShowCustomIconInput(true);
+      }
+    }
+  }, [habit]);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -68,16 +84,21 @@ const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel, isLoadin
   };
 
   const colorOptions = [
-    { value: "blue", label: "Blue", color: "bg-blue-500" },
-    { value: "purple", label: "Purple", color: "bg-purple-500" },
-    { value: "green", label: "Green", color: "bg-green-500" },
-    { value: "yellow", label: "Yellow", color: "bg-yellow-500" },
-    { value: "red", label: "Red", color: "bg-red-500" },
-    { value: "pink", label: "Pink", color: "bg-pink-500" },
-    { value: "orange", label: "Orange", color: "bg-orange-500" },
+    { value: "blue", label: "Blue", color: "bg-blue-500", hex: "#3b82f6" },
+    { value: "purple", label: "Purple", color: "bg-purple-500", hex: "#a855f7" },
+    { value: "green", label: "Green", color: "bg-green-500", hex: "#10b981" },
+    { value: "yellow", label: "Yellow", color: "bg-yellow-500", hex: "#eab308" },
+    { value: "red", label: "Red", color: "bg-red-500", hex: "#ef4444" },
+    { value: "pink", label: "Pink", color: "bg-pink-500", hex: "#ec4899" },
+    { value: "orange", label: "Orange", color: "bg-orange-500", hex: "#f97316" },
   ];
 
   const iconOptions = ["🔥", "💪", "📚", "🏃", "🧘", "💧", "🎯", "✍️", "🎨", "🎵", "🌱", "⚡"];
+  
+  const [customIcon, setCustomIcon] = useState("");
+  const [customColor, setCustomColor] = useState("");
+  const [showCustomIconInput, setShowCustomIconInput] = useState(false);
+  const [showCustomColorInput, setShowCustomColorInput] = useState(false);
 
   return (
     <div
@@ -141,39 +162,150 @@ const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel, isLoadin
           {/* Icon Selection */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Icon</label>
-            <div className="grid grid-cols-6 gap-2">
-              {iconOptions.map((icon) => (
+            <div className="space-y-3">
+              <div className="grid grid-cols-6 gap-2">
+                {iconOptions.map((icon) => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, icon }));
+                      setShowCustomIconInput(false);
+                      setCustomIcon("");
+                    }}
+                    className={`rounded-lg p-3 text-2xl transition-all hover:scale-110 ${
+                      formData.icon === icon && !showCustomIconInput
+                        ? "bg-brand-100 ring-2 ring-brand-500 dark:bg-brand-500/20"
+                        : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  key={icon}
                   type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, icon }))}
-                  className={`rounded-lg p-3 text-2xl transition-all hover:scale-110 ${
-                    formData.icon === icon
-                      ? "bg-brand-100 ring-2 ring-brand-500 dark:bg-brand-500/20"
-                      : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  onClick={() => {
+                    setShowCustomIconInput(!showCustomIconInput);
+                    if (!showCustomIconInput) {
+                      setFormData((prev) => ({ ...prev, icon: customIcon || "" }));
+                    } else {
+                      setCustomIcon("");
+                      setFormData((prev) => ({ ...prev, icon: iconOptions[0] }));
+                    }
+                  }}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-all ${
+                    showCustomIconInput
+                      ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
-                  {icon}
+                  {showCustomIconInput ? "✓ Custom Icon" : "+ Custom Icon"}
                 </button>
-              ))}
+                {showCustomIconInput && (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="text"
+                      value={customIcon}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomIcon(value);
+                        setFormData((prev) => ({ ...prev, icon: value || iconOptions[0] }));
+                      }}
+                      placeholder="Masukkan emoji atau teks"
+                      maxLength={2}
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-center text-2xl focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    />
+                    {customIcon && (
+                      <div className="rounded-lg bg-gray-100 p-2 text-2xl dark:bg-gray-700">
+                        {customIcon}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Color Selection */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Color</label>
-            <div className="grid grid-cols-7 gap-2">
-              {colorOptions.map((option) => (
+            <div className="space-y-3">
+              <div className="grid grid-cols-7 gap-2">
+                {colorOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, color: option.value }));
+                      setShowCustomColorInput(false);
+                      setCustomColor("");
+                    }}
+                    className={`rounded-lg p-4 transition-all hover:scale-110 ${option.color} ${
+                      formData.color === option.value && !showCustomColorInput
+                        ? "ring-4 ring-gray-400 dark:ring-gray-500"
+                        : ""
+                    }`}
+                    title={option.label}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  key={option.value}
                   type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, color: option.value }))}
-                  className={`rounded-lg p-4 transition-all hover:scale-110 ${option.color} ${
-                    formData.color === option.value ? "ring-4 ring-gray-400 dark:ring-gray-500" : ""
+                  onClick={() => {
+                    setShowCustomColorInput(!showCustomColorInput);
+                    if (!showCustomColorInput) {
+                      setFormData((prev) => ({ ...prev, color: customColor || colorOptions[0].value }));
+                    } else {
+                      setCustomColor("");
+                      setFormData((prev) => ({ ...prev, color: colorOptions[0].value }));
+                    }
+                  }}
+                  className={`flex-shrink-0 rounded-lg border px-3 py-2 text-sm transition-all ${
+                    showCustomColorInput
+                      ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   }`}
-                  title={option.label}
-                />
-              ))}
+                >
+                  {showCustomColorInput ? "✓ Custom" : "+ Custom"}
+                </button>
+                {showCustomColorInput && (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="color"
+                      value={customColor || "#3b82f6"}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomColor(value);
+                        setFormData((prev) => ({ ...prev, color: value }));
+                      }}
+                      className="h-10 w-20 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600"
+                    />
+                    <input
+                      type="text"
+                      value={customColor || "#3b82f6"}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^#[0-9A-Fa-f]{0,6}$/.test(value) || value === "") {
+                          setCustomColor(value);
+                          if (value.length === 7) {
+                            setFormData((prev) => ({ ...prev, color: value }));
+                          }
+                        }
+                      }}
+                      placeholder="#3b82f6"
+                      maxLength={7}
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    />
+                    <div
+                      className="h-10 w-10 rounded-lg border border-gray-300 dark:border-gray-600"
+                      style={{ backgroundColor: customColor || "#3b82f6" }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

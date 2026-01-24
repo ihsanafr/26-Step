@@ -1,10 +1,12 @@
 import { Link } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageMeta from "../components/common/PageMeta";
 import DashboardCalendar from "../components/dashboard/DashboardCalendar";
 import ActivityDetailModal from "../components/dashboard/ActivityDetailModal";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 import LocalTimeDisplay from "../components/dashboard/LocalTimeDisplay";
+import WelcomeModal from "../components/onboarding/WelcomeModal";
+import FeedbackModal from "../components/dashboard/FeedbackModal";
 import { useAuth } from "../context/AuthContext";
 
 const modules = [
@@ -74,6 +76,33 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Check if user has seen welcome modal
+  useEffect(() => {
+    if (user) {
+      const hasSeenWelcome = localStorage.getItem(`welcome_seen_${user.id}`);
+
+      // Only show welcome modal on first login/register (not completed yet)
+      if (!hasSeenWelcome) {
+        // Delay showing modal to ensure page is fully loaded
+        setTimeout(() => {
+          setShowWelcomeModal(true);
+          // Mark as seen immediately when triggered for the first time
+          localStorage.setItem(`welcome_seen_${user.id}`, "true");
+        }, 1000);
+      }
+    }
+  }, [user]);
+
+  const handleWelcomeClose = () => {
+    if (user) {
+      // Mark welcome modal as seen (only once, never show again)
+      localStorage.setItem(`welcome_seen_${user.id}`, "true");
+    }
+    setShowWelcomeModal(false);
+  };
 
   const handleDateClick = (date: string) => {
     setSelectedDate(date);
@@ -99,14 +128,14 @@ export default function Dashboard() {
         title="Dashboard - 26-step"
         description="Welcome to 26-step dashboard"
       />
-      <div className="relative mx-auto max-w-[1400px] space-y-12">
+      <div className="relative mx-auto max-w-[1400px] space-y-6 px-4 sm:space-y-8 sm:px-6 lg:space-y-12 lg:px-0">
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-24 -right-32 h-64 w-64 rounded-full bg-blue-400/15 blur-3xl dark:bg-blue-500/10"></div>
           <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-purple-400/15 blur-3xl dark:bg-purple-500/10"></div>
           <div className="absolute top-1/3 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-indigo-400/15 blur-3xl dark:bg-indigo-500/10"></div>
         </div>
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-6 text-white shadow-xl md:p-8">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-6 text-white shadow-xl md:p-8">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
           <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
           <div className="relative z-10">
@@ -115,28 +144,28 @@ export default function Dashboard() {
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                   Dashboard Overview
                 </div>
-                <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+                <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl md:text-4xl">
                   {getGreeting()}, {user?.name || "there"}! 👋
                 </h1>
-                <p className="max-w-2xl text-sm text-blue-100 md:text-base">
+                <p className="max-w-2xl text-xs text-blue-100 sm:text-sm md:text-base">
                   Manage your daily life more efficiently with focused modules built for productivity, finance, habits, and journaling.
                 </p>
               </div>
-              
+
               {/* Local Time Display inside welcome card */}
-              <div className="flex-shrink-0">
+              <div className="flex flex-col items-start flex-shrink-0 md:items-end">
                 <LocalTimeDisplay />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6 sm:mt-8" data-onboarding="modules">
           {modules.map((module) => (
             <Link
               key={module.path}
               to={module.path}
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-gray-300 dark:border-gray-800/80 dark:bg-gray-900/60"
+              className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-gray-300 dark:border-gray-800/80 dark:bg-gray-900/60"
             >
               <div className={`absolute inset-x-0 top-0 h-1.5 ${module.gradient}`}></div>
               <div
@@ -144,17 +173,17 @@ export default function Dashboard() {
               ></div>
 
               <div className="relative z-10">
-                <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="mb-3 sm:mb-4 flex items-start justify-between gap-3 sm:gap-4">
                   <div
-                    className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${module.iconBg}`}
+                    className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300 group-hover:scale-110 ${module.iconBg}`}
                   >
                     <svg
-                      width="28"
-                      height="28"
+                      width="24"
+                      height="24"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      className={module.iconColor}
+                      className={`${module.iconColor} sm:w-7 sm:h-7`}
                     >
                       <path
                         d={module.iconPath}
@@ -165,10 +194,10 @@ export default function Dashboard() {
                       />
                     </svg>
                   </div>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full border border-current px-3 py-1 text-xs font-semibold ${module.textColor}`}>
+                  <span className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-current px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold ${module.textColor}`}>
                     Start
                     <svg
-                      className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5"
+                      className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-300 group-hover:translate-x-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -178,11 +207,11 @@ export default function Dashboard() {
                   </span>
                 </div>
 
-                <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="mb-1.5 sm:mb-2 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                   {module.title}
                 </h2>
 
-                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-400">
+                <p className="text-xs sm:text-sm leading-relaxed text-gray-700 dark:text-gray-400">
                   {module.description}
                 </p>
               </div>
@@ -191,7 +220,9 @@ export default function Dashboard() {
         </div>
 
         {/* Activity Calendar */}
-        <DashboardCalendar onDateClick={handleDateClick} />
+        <div data-onboarding="calendar">
+          <DashboardCalendar onDateClick={handleDateClick} />
+        </div>
 
         {/* Activity Detail Modal */}
         <ActivityDetailModal
@@ -201,8 +232,19 @@ export default function Dashboard() {
         />
 
         {/* Footer */}
-        <DashboardFooter />
+        <DashboardFooter onFeedbackClick={() => setIsFeedbackModalOpen(true)} />
       </div>
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && (
+        <WelcomeModal onClose={handleWelcomeClose} />
+      )}
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
     </>
   );
 }

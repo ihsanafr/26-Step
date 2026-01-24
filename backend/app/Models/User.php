@@ -24,6 +24,10 @@ class User extends Authenticatable
         'password',
         'avatar',
         'is_admin',
+        'verification_token',
+        'verification_code',
+        'verification_code_expires_at',
+        'storage_limit',
     ];
 
     /**
@@ -45,9 +49,18 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'verification_code_expires_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if user's email is verified
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return !is_null($this->email_verified_at);
     }
 
     // Relationships

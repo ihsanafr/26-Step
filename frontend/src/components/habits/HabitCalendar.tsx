@@ -276,11 +276,11 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({ habit, onDateClick }) => 
                 <div className="mt-1 text-[8px] font-semibold text-gray-600 dark:text-gray-300 sm:mt-2 sm:text-[10px]">
                   completed
                 </div>
-              ) : (
+              ) : onDateClick ? (
                 <div className="mt-2 text-[8px] text-gray-400 opacity-0 transition group-hover:opacity-100 dark:text-gray-500 sm:mt-6 sm:text-[10px]">
-                  {onDateClick ? "click" : "view"}
+                  click
                 </div>
-              )}
+              ) : null}
             </button>
           );
         })}

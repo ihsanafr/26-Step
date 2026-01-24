@@ -52,20 +52,31 @@ class FileController extends Controller
     {
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'file|max:10240', // 10MB max per file
+            'files.*' => 'file|max:102400', // 100MB max per file
             'category' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
+
+        $user = $request->user();
+        $currentUsage = File::where('user_id', $user->id)->sum('size');
+        $uploadSize = 0;
+        foreach ($request->file('files') as $file) {
+            $uploadSize += $file->getSize();
+        }
+
+        if ($currentUsage + $uploadSize > $user->storage_limit) {
+            return response()->json(['message' => 'Storage limit exceeded. Maximum allowable storage is ' . formatBytes($user->storage_limit)], 400);
+        }
 
         $uploadedFiles = [];
         $appUrl = config('app.url');
 
         foreach ($request->file('files') as $uploadedFile) {
             $path = $uploadedFile->store('files/' . $request->user()->id, 'public');
-            
+
             // Generate absolute URL
             $absoluteUrl = rtrim($appUrl, '/') . '/storage/' . $path;
-            
+
             $file = File::create([
                 'user_id' => $request->user()->id,
                 'name' => pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME),
@@ -142,4 +153,16 @@ class FileController extends Controller
 
         return response()->download($absolutePath, $downloadName);
     }
+}
+
+function formatBytes($bytes, $precision = 2)
+{
+    if ($bytes > pow(1024, 3))
+        return round($bytes / pow(1024, 3), $precision) . "GB";
+    else if ($bytes > pow(1024, 2))
+        return round($bytes / pow(1024, 2), $precision) . "MB";
+    else if ($bytes > 1024)
+        return round($bytes / 1024, $precision) . "KB";
+    else
+        return ($bytes) . "B";
 }

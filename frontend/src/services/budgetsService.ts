@@ -9,6 +9,7 @@ export type Budget = {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  color?: string | null;
   created_at: string;
   updated_at: string;
   spent?: number;
@@ -23,6 +24,7 @@ export type CreateBudget = {
   start_date: string;
   end_date: string;
   is_active?: boolean;
+  color?: string | null;
 };
 
 export type UpdateBudget = Partial<CreateBudget>;

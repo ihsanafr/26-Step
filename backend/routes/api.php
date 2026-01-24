@@ -26,6 +26,11 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/feedback', [FeedbackController::class, 'store']);
 
+// Email verification routes (public)
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::get('/verify-email', [AuthController::class, 'verifyEmail']); // For link verification
+Route::post('/resend-verification-email', [AuthController::class, 'resendVerificationEmail']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -75,6 +80,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Journal & Note Categories
     Route::apiResource('journal-note-categories', JournalNoteCategoryController::class);
 
+    // Folders
+    Route::apiResource('folders', \App\Http\Controllers\Api\FolderController::class);
+
     // Files
     Route::apiResource('files', FileController::class);
     Route::get('files/{file}/download', [FileController::class, 'download']);
@@ -102,4 +110,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureUserIsAdmin::class
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
     Route::get('/active-users', [AdminController::class, 'activeUsers']);
     Route::get('/analytics', [AdminController::class, 'analytics']);
+
+    // Feedback Management
+    Route::get('/feedbacks', [FeedbackController::class, 'index']);
+    Route::delete('/feedbacks/{id}', [FeedbackController::class, 'destroy']);
 });

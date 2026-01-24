@@ -13,7 +13,7 @@ export default function Storage() {
   if (path === "/storage" || path === "/storage/") {
     return (
       <>
-        <PageMeta title="Storage - Lifesync" description="Manage your files, notes, and links" />
+        <PageMeta title="Storage - 26-step" description="Manage your files, notes, and links" />
         <StorageOverview />
       </>
     );
@@ -22,7 +22,7 @@ export default function Storage() {
   if (path === "/storage/files") {
     return (
       <>
-        <PageMeta title="Files - Lifesync" description="Manage and organize your files" />
+        <PageMeta title="Files - 26-step" description="Manage and organize your files" />
         <FilesList />
       </>
     );
@@ -31,7 +31,7 @@ export default function Storage() {
   if (path === "/storage/links") {
     return (
       <>
-        <PageMeta title="Links - Lifesync" description="Save and organize important links" />
+        <PageMeta title="Links - 26-step" description="Save and organize important links" />
         <LinksList />
       </>
     );
@@ -40,7 +40,7 @@ export default function Storage() {
   if (path === "/storage/notes") {
     return (
       <>
-        <PageMeta title="Notes - Lifesync" description="Quick notes and pinboard" />
+        <PageMeta title="Notes - 26-step" description="Quick notes and pinboard" />
         <NotesList />
       </>
     );
@@ -49,7 +49,7 @@ export default function Storage() {
   if (path === "/storage/guide") {
     return (
       <>
-        <PageMeta title="Storage Guide - Lifesync" description="User guide for the Storage module" />
+        <PageMeta title="Storage Guide - 26-step" description="User guide for the Storage module" />
         <StorageGuide />
       </>
     );
@@ -57,7 +57,7 @@ export default function Storage() {
 
   return (
     <>
-      <PageMeta title="Storage - Lifesync" description="Manage your files, notes, and links" />
+      <PageMeta title="Storage - 26-step" description="Manage your files, notes, and links" />
       <StorageOverview />
     </>
   );

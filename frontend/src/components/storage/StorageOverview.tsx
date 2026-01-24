@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { filesService } from "../../services/filesService";
-import type { File } from "../../services/filesService";
+import type { FileModel } from "../../services/filesService";
 import { notesService } from "../../services/notesService";
 import type { Note } from "../../services/notesService";
 import { linksService } from "../../services/linksService";
@@ -19,15 +19,15 @@ function LinkIcon({ className }: { className?: string }) {
 }
 
 // Simple Pin Icon Component
-function PinIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-    </svg>
-  );
-}
+// function PinIcon({ className }: { className?: string }) {
+//   return (
+//     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+//     </svg>
+//   );
+// }
 import Button from "../ui/button/Button";
-import { formatIndonesianDate } from "../../utils/date";
+// import { formatIndonesianDate } from "../../utils/date";
 import { resolveAssetUrl } from "../../utils/url";
 
 function formatFileSize(bytes: number): string {
@@ -53,7 +53,7 @@ function getFileIcon(mimeType: string): string {
 export default function StorageOverview() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileModel[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
 
@@ -89,13 +89,13 @@ export default function StorageOverview() {
   const categories = useMemo(() => {
     const cats = new Set<string>();
     files.forEach((f) => f.category && cats.add(f.category));
-    notes.forEach((n) => n.category && cats.add(n.category));
+    notes.forEach((n) => typeof n.category === 'string' && cats.add(n.category));
     links.forEach((l) => l.category && cats.add(l.category));
     return Array.from(cats);
   }, [files, notes, links]);
 
   const recentFiles = useMemo(() => files.slice(0, 4), [files]);
-  const pinnedNotes = useMemo(() => notes.filter((n) => n.is_pinned).slice(0, 3), [notes]);
+  // const pinnedNotes = useMemo(() => notes.filter((n) => n.is_pinned).slice(0, 3), [notes]);
   const favoriteLinks = useMemo(() => links.filter((l) => l.is_favorite).slice(0, 4), [links]);
 
   const stats = [

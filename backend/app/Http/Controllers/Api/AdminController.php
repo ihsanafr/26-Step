@@ -80,18 +80,18 @@ class AdminController extends Controller
 
         // Show all users (including admins) for admin dashboard
         $query = User::withCount([
-                'tasks as tasks_count',
-                'tasks as completed_tasks_count' => function ($q) {
-                    $q->whereIn('status', ['completed', 'finish']);
-                },
-                'habits as habits_count',
-                'journals as journals_count',
-            ]);
+            'tasks as tasks_count',
+            'tasks as completed_tasks_count' => function ($q) {
+                $q->whereIn('status', ['completed', 'finish']);
+            },
+            'habits as habits_count',
+            'journals as journals_count',
+        ]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -192,17 +192,18 @@ class AdminController extends Controller
     {
         // Allow updating all users (including admins) but prevent updating yourself
         $user = User::findOrFail($id);
-        
+
         // Prevent updating yourself
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'You cannot update your own account'], 403);
         }
-        
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
             'password' => 'sometimes|nullable|string|min:8',
             'is_admin' => 'sometimes|boolean',
+            'storage_limit' => 'sometimes|integer|min:0',
         ]);
 
         if (isset($validated['name'])) {
@@ -223,6 +224,10 @@ class AdminController extends Controller
                 return response()->json(['message' => 'Unauthorized to change admin status'], 403);
             }
             $user->is_admin = $validated['is_admin'];
+        }
+
+        if ($request->has('storage_limit')) {
+            $user->storage_limit = $request->input('storage_limit');
         }
 
         $user->save();
@@ -275,10 +280,10 @@ class AdminController extends Controller
     public function deleteUser($id)
     {
         $user = User::where('is_admin', false)->findOrFail($id);
-        
+
         // Delete sessions
         UserSession::where('user_id', $id)->delete();
-        
+
         // Delete related data (cascade should handle this, but being explicit)
         Task::where('user_id', $id)->delete();
         Target::where('user_id', $id)->delete();
@@ -289,7 +294,7 @@ class AdminController extends Controller
         Note::where('user_id', $id)->delete();
         File::where('user_id', $id)->delete();
         Link::where('user_id', $id)->delete();
-        
+
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully']);

@@ -22,7 +22,7 @@ export default function Habits() {
     return (
       <>
         <PageMeta
-          title="Habit List - Lifesync"
+          title="Habit List - 26-step"
           description="Manage your daily habits"
         />
         <HabitList />
@@ -40,7 +40,7 @@ export default function Habits() {
     return (
       <>
         <PageMeta
-          title="Habits & Streaks Guide - Lifesync"
+          title="Habits & Streaks Guide - 26-step"
           description="Learn how to use the Habits & Streaks module effectively"
         />
         <HabitsGuide />
@@ -65,10 +65,10 @@ function HabitsStreaksView() {
   return (
     <>
       <PageMeta
-        title="Habit Streaks - Lifesync"
+        title="Habit Streaks - 26-step"
         description="View your habit streaks and progress"
       />
-      
+
       <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
@@ -139,7 +139,7 @@ function HabitsStreaksView() {
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Streak</p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
                       {Math.round(
-                        habitsWithStreaks.reduce((sum, h) => sum + h.current_streak, 0) / 
+                        habitsWithStreaks.reduce((sum, h) => sum + h.current_streak, 0) /
                         habitsWithStreaks.length
                       )}
                       <span className="text-sm font-normal ml-1">days</span>
@@ -234,10 +234,10 @@ function HabitsDashboard() {
   return (
     <>
       <PageMeta
-        title="Habits & Streaks Dashboard - Lifesync"
+        title="Habits & Streaks Dashboard - 26-step"
         description="Build good habits and maintain streaks"
       />
-      
+
       <div className="space-y-6">
         {/* Hero Header */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-rose-500 to-pink-500 p-8 text-white shadow-xl">

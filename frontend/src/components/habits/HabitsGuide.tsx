@@ -76,8 +76,8 @@ export default function HabitsGuide() {
                   <ul className="ml-4 mt-1 list-disc space-y-1">
                     <li><strong>Habit Name:</strong> Nama habit (contoh: &quot;Olahraga Pagi&quot;, &quot;Baca 30 Menit&quot;)</li>
                     <li><strong>Description:</strong> Deskripsi tambahan (opsional)</li>
-                    <li><strong>Icon:</strong> Pilih emoji yang merepresentasikan habit (12 pilihan)</li>
-                    <li><strong>Color:</strong> Pilih warna untuk membedakan habit (7 pilihan)</li>
+                    <li><strong>Icon:</strong> Pilih emoji dari 12 pilihan preset, atau gunakan <strong>Custom Icon</strong> untuk memasukkan emoji/teks sendiri (maks 2 karakter)</li>
+                    <li><strong>Color:</strong> Pilih warna dari 7 pilihan preset, atau gunakan <strong>Custom Color</strong> dengan color picker untuk memilih warna bebas (format hex: #RRGGBB)</li>
                     <li><strong>Target Days:</strong> Target hari konsistensi (opsional)</li>
                     <li><strong>Start Date:</strong> Tanggal mulai (default: hari ini)</li>
                   </ul>
@@ -106,6 +106,15 @@ export default function HabitsGuide() {
                 <li><strong>Current Streak</strong> akan otomatis bertambah!</li>
               </ol>
             </div>
+            <div>
+              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Completion Calendar:</h3>
+              <ul className="ml-6 list-disc space-y-2 text-gray-600 dark:text-gray-400">
+                <li>Setiap habit memiliki <strong>Completion Calendar</strong> sendiri yang menampilkan tanggal-tanggal completion</li>
+                <li>Klik pada tanggal di calendar untuk toggle completion (jika habit aktif dan memiliki onDateClick)</li>
+                <li>Tanggal yang completed akan ditandai dengan background orange dan icon flame 🔥</li>
+                <li>Gunakan navigasi bulan (← Prev / Next →) untuk melihat bulan lain</li>
+              </ul>
+            </div>
             <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3 dark:bg-yellow-500/10 dark:border-yellow-500/30">
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 <strong className="text-yellow-700 dark:text-yellow-400">💡 Tips:</strong> Lakukan tracking setiap hari 
@@ -127,9 +136,10 @@ export default function HabitsGuide() {
             <div>
               <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Memahami Streaks:</h3>
               <ul className="ml-6 list-disc space-y-2 text-gray-600 dark:text-gray-400">
-                <li><strong className="text-gray-900 dark:text-white">Current Streak:</strong> Jumlah hari berturut-turut Anda menyelesaikan habit</li>
-                <li><strong className="text-gray-900 dark:text-white">Longest Streak:</strong> Rekor streak terpanjang yang pernah Anda capai</li>
-                <li><strong className="text-gray-900 dark:text-white">Kalender Streak:</strong> Satu kalender untuk melihat tanggal mana saja yang ada completion, lalu klik tanggal untuk detail</li>
+                <li><strong className="text-gray-900 dark:text-white">Current Streak:</strong> Jumlah hari berturut-turut Anda menyelesaikan habit. Akan reset ke 0 jika melewatkan 1 hari</li>
+                <li><strong className="text-gray-900 dark:text-white">Longest Streak:</strong> Rekor streak terpanjang yang pernah Anda capai. Tidak akan reset meskipun current streak kembali ke 0</li>
+                <li><strong className="text-gray-900 dark:text-white">Kalender Streak:</strong> Kalender gabungan yang menampilkan jumlah habits yang completed pada setiap tanggal. Klik tanggal untuk melihat detail habits yang completed</li>
+                <li><strong className="text-gray-900 dark:text-white">Habit Detail Calendar:</strong> Setiap habit memiliki calendar sendiri di halaman detail untuk melihat completion history</li>
               </ul>
             </div>
             <div className="rounded-lg bg-red-50 border border-red-200 p-3 dark:bg-red-500/10 dark:border-red-500/30">
@@ -149,11 +159,14 @@ export default function HabitsGuide() {
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">5. Mengelola Habits</h2>
           </div>
-          <div className="space-y-3 text-gray-600 dark:text-gray-400">
+            <div className="space-y-3 text-gray-600 dark:text-gray-400">
             <ul className="ml-6 list-disc space-y-1">
-              <li><strong className="text-gray-900 dark:text-white">Edit / View / Delete:</strong> Klik tombol <strong>Options</strong> (⋯) pada card untuk membuka menu aksi</li>
-              <li><strong className="text-gray-900 dark:text-white">Archive:</strong> Uncheck &quot;Active habit&quot; untuk archive tanpa menghapus data</li>
+              <li><strong className="text-gray-900 dark:text-white">View Detail:</strong> Klik tombol <strong>Options</strong> (⋯) → <strong>View</strong> atau klik langsung pada habit card untuk melihat detail lengkap</li>
+              <li><strong className="text-gray-900 dark:text-white">Edit:</strong> Klik tombol <strong>Options</strong> (⋯) → <strong>Edit</strong> untuk mengubah nama, deskripsi, icon, color, target days, atau start date</li>
+              <li><strong className="text-gray-900 dark:text-white">Delete:</strong> Klik tombol <strong>Options</strong> (⋯) → <strong>Delete</strong> dan konfirmasi untuk menghapus habit (perhatian: data streak akan hilang)</li>
+              <li><strong className="text-gray-900 dark:text-white">Archive:</strong> Edit habit dan uncheck &quot;Active habit&quot; untuk archive tanpa menghapus data. Habit yang di-archive tidak akan muncul di dashboard</li>
               <li><strong className="text-gray-900 dark:text-white">Search:</strong> Gunakan kolom search di bagian atas untuk mencari habit berdasarkan nama atau deskripsi</li>
+              <li><strong className="text-gray-900 dark:text-white">View Modes:</strong> Toggle antara <strong>Grid View</strong> (kartu) dan <strong>List View</strong> (daftar) untuk preferensi tampilan</li>
             </ul>
           </div>
         </section>

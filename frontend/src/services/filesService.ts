@@ -1,6 +1,6 @@
 import api from "./api";
 
-export type File = {
+export type FileModel = {
   id: number;
   user_id: number;
   name: string;
@@ -35,24 +35,24 @@ export type GetFilesParams = {
 };
 
 export const filesService = {
-  async getAll(params?: GetFilesParams): Promise<File[]> {
+  async getAll(params?: GetFilesParams): Promise<FileModel[]> {
     const response = await api.get("/files", { params });
     return response.data;
   },
 
-  async getById(id: number): Promise<File> {
+  async getById(id: number): Promise<FileModel> {
     const response = await api.get(`/files/${id}`);
     return response.data;
   },
 
-  async create(data: CreateFileData): Promise<File> {
+  async create(data: CreateFileData): Promise<FileModel> {
     const response = await api.post("/files", data);
     return response.data;
   },
 
-  async upload(files: FileList | File[], category?: string, description?: string): Promise<File[]> {
+  async upload(files: FileList | globalThis.File[], category?: string, description?: string): Promise<FileModel[]> {
     const form = new FormData();
-    
+
     if (files instanceof FileList) {
       Array.from(files).forEach((file) => {
         form.append("files[]", file);
@@ -62,11 +62,11 @@ export const filesService = {
         form.append("files[]", file);
       });
     }
-    
+
     if (category) {
       form.append("category", category);
     }
-    
+
     if (description) {
       form.append("description", description);
     }
@@ -80,7 +80,7 @@ export const filesService = {
     return response.data;
   },
 
-  async update(id: number, data: UpdateFileData): Promise<File> {
+  async update(id: number, data: UpdateFileData): Promise<FileModel> {
     const response = await api.put(`/files/${id}`, data);
     return response.data;
   },

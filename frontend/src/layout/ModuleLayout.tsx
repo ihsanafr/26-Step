@@ -20,7 +20,7 @@ const LayoutContent: React.FC = () => {
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div data-content-area className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+        <div data-content-area className="p-3 sm:p-4 md:p-6 mx-auto max-w-7xl">
           <Outlet />
         </div>
       </div>

@@ -1,89 +1,83 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import InfoModal from "./InfoModal";
 
-export default function DashboardFooter() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [timezone, setTimezone] = useState("");
+interface DashboardFooterProps {
+  onFeedbackClick?: () => void;
+}
 
-  useEffect(() => {
-    // Get timezone
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      setTimezone(tz);
-    } catch (error) {
-      setTimezone("Local Time");
-    }
+export default function DashboardFooter({ onFeedbackClick }: DashboardFooterProps) {
+  const [modalType, setModalType] = useState<"about" | "privacy" | "terms" | null>(null);
 
-    // Update time every second
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    }).format(date);
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
+  const openModal = (type: "about" | "privacy" | "terms") => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setModalType(type);
   };
 
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-white/50 py-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50">
-      <div className="mx-auto max-w-[1400px] px-4">
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          {/* Left: App Info */}
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500"></div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">26-step</span>
+    <>
+      <footer className="mt-16 border-t border-gray-200 bg-white/50 py-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50">
+        <div className="mx-auto max-w-[1400px] px-4">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            {/* Left: App Info */}
+            <div className="flex flex-col items-center gap-2 md:items-start">
+              <div className="flex items-center gap-2">
+                <img src="/logo.svg" alt="26-step" className="h-8 w-8" />
+                <span className="text-lg font-bold text-gray-900 dark:text-white">26-step</span>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                © {new Date().getFullYear()} 26-step. All rights reserved.
+              </p>
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              © {new Date().getFullYear()} 26-step. All rights reserved.
-            </p>
-          </div>
 
-          {/* Center: Links */}
-          <div className="flex items-center gap-4 text-sm">
-            <a
-              href="#"
-              className="text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              About
-            </a>
-            <a
-              href="#"
-              className="text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              Privacy
-            </a>
-            <a
-              href="#"
-              className="text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
-              Terms
-            </a>
-          </div>
+            {/* Center: Links */}
+            <div className="flex items-center gap-6 text-sm">
+              <a
+                href="#"
+                onClick={openModal("about")}
+                className="text-gray-600 font-medium transition-colors hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400"
+              >
+                About
+              </a>
+              <a
+                href="#"
+                onClick={openModal("privacy")}
+                className="text-gray-600 font-medium transition-colors hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400"
+              >
+                Privacy
+              </a>
+              <a
+                href="#"
+                onClick={openModal("terms")}
+                className="text-gray-600 font-medium transition-colors hover:text-indigo-500 dark:text-gray-400 dark:hover:text-indigo-400"
+              >
+                Terms
+              </a>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onFeedbackClick?.();
+                }}
+                className="text-gray-600 font-medium transition-colors hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400"
+              >
+                Feedback
+              </button>
+            </div>
 
-          {/* Right: Tagline */}
-          <div className="flex flex-col items-center gap-2 md:items-end">
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              Made with ❤️ for productivity
-            </p>
+            {/* Right: Tagline */}
+            <div className="flex flex-col items-center gap-2 md:items-end">
+              <p className="text-xs text-gray-500 dark:text-gray-500 font-medium">
+                Made with ❤️ for productivity
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+
+      <InfoModal
+        isOpen={modalType !== null}
+        onClose={() => setModalType(null)}
+        type={modalType || "about"}
+      />
+    </>
   );
 }

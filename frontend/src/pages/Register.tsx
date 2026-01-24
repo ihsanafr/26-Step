@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import Label from "../components/form/Label";
 import Input from "../components/form/input/InputField";
-import Button from "../components/ui/button/Button";
 import PageMeta from "../components/common/PageMeta";
 import ThemeTogglerTwo from "../components/common/ThemeTogglerTwo";
 import { useTheme } from "../context/ThemeContext";
+import { validateEmail, validatePassword, validateName } from "../utils/validation";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -20,6 +20,12 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+  const [touched, setTouched] = useState({ name: false, email: false, password: false, password_confirmation: false });
+  const [passwordStrength, setPasswordStrength] = useState<{ strength: 'weak' | 'medium' | 'strong'; requirements: any } | null>(null);
   const { register, isAuthenticated } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -60,18 +66,116 @@ export default function Register() {
     }
   }, [isAuthenticated, navigate]);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm({ ...form, name: value });
+    setError("");
+
+    if (touched.name) {
+      const validation = validateName(value);
+      setNameError(validation.valid ? null : validation.message || null);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm({ ...form, email: value });
+    setError("");
+
+    if (touched.email) {
+      const validation = validateEmail(value);
+      setEmailError(validation.valid ? null : validation.message || null);
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm({ ...form, password: value });
+    setError("");
+
+    const validation = validatePassword(value);
+    setPasswordStrength(validation);
+
+    if (touched.password) {
+      setPasswordError(validation.valid ? null : validation.message || null);
+    }
+
+    // Re-validate confirm password if it's already been touched
+    if (touched.password_confirmation && form.password_confirmation) {
+      if (value !== form.password_confirmation) {
+        setConfirmPasswordError("Passwords do not match");
+      } else {
+        setConfirmPasswordError(null);
+      }
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setForm({ ...form, password_confirmation: value });
+    setError("");
+
+    if (touched.password_confirmation) {
+      if (value !== form.password) {
+        setConfirmPasswordError("Passwords do not match");
+      } else {
+        setConfirmPasswordError(null);
+      }
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setTouched({ name: true, email: true, password: true, password_confirmation: true });
+
+    // Validate all fields
+    const nameValidation = validateName(form.name);
+    const emailValidation = validateEmail(form.email);
+    const passwordValidation = validatePassword(form.password);
+
+    let hasError = false;
+
+    if (!nameValidation.valid) {
+      setNameError(nameValidation.message || null);
+      hasError = true;
+    }
+
+    if (!emailValidation.valid) {
+      setEmailError(emailValidation.message || null);
+      hasError = true;
+    }
+
+    if (!passwordValidation.valid) {
+      setPasswordError(passwordValidation.message || null);
+      hasError = true;
+    }
+
+    if (form.password !== form.password_confirmation) {
+      setConfirmPasswordError("Passwords do not match");
+      hasError = true;
+    }
+
+    if (hasError) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      await register(form);
-      navigate("/dashboard");
+      const response = await register(form);
+      // Store email for verification page
+      if (response && response.user) {
+        localStorage.setItem("pending_verification_email", response.user.email);
+        navigate(`/verify-email?email=${encodeURIComponent(response.user.email)}`);
+      } else {
+        navigate("/verify-email");
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Registration failed";
       if (typeof errorMessage === "object" && errorMessage.email) {
         setError(Array.isArray(errorMessage.email) ? errorMessage.email[0] : errorMessage.email);
+        setEmailError(Array.isArray(errorMessage.email) ? errorMessage.email[0] : errorMessage.email);
       } else if (typeof errorMessage === "string") {
         setError(errorMessage);
       } else {
@@ -88,24 +192,21 @@ export default function Register() {
         title="Register - 26-step"
         description="Create a new 26-step account"
       />
-      <div className={`relative min-h-screen transition-colors duration-300 ${
-        isDark 
-          ? "bg-gray-900" 
-          : "bg-gray-50"
-      }`}>
+      <div className={`relative min-h-screen transition-colors duration-300 ${isDark
+        ? "bg-gray-900"
+        : "bg-gray-50"
+        }`}>
         <div className="relative flex min-h-screen flex-col justify-center p-4 sm:p-6 lg:p-8">
           <div className="relative z-10 mx-auto w-full max-w-6xl">
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Left Side - Form */}
               <div className="flex flex-col justify-center">
-                <div className={`w-full max-w-md mx-auto transition-all duration-700 ease-out ${
-                  mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}>
+                <div className={`w-full max-w-md mx-auto transition-all duration-700 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                  }`}>
                   <Link
                     to="/"
-                    className={`inline-flex items-center mb-8 text-sm transition-colors ${
-                      isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-600 hover:text-gray-900"
-                    }`}
+                    className={`inline-flex items-center mb-8 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-600 hover:text-gray-900"
+                      }`}
                   >
                     <svg
                       width="20"
@@ -126,29 +227,25 @@ export default function Register() {
                     Back to homepage
                   </Link>
 
-                  <div className={`rounded-2xl border p-8 ${
-                    isDark 
-                      ? "border-gray-800 bg-gray-800/50" 
-                      : "border-gray-200 bg-white"
-                  }`}>
+                  <div className={`rounded-2xl border p-8 ${isDark
+                    ? "border-gray-800 bg-gray-800/50"
+                    : "border-gray-200 bg-white"
+                    }`}>
                     <div className="mb-8 text-center">
                       <div className="mb-6 flex justify-center">
                         <div className="relative">
-                          <div className={`flex h-16 w-16 items-center justify-center rounded-xl ${
-                            isDark ? "bg-gray-700" : "bg-gray-100"
-                          }`}>
+                          <div className={`flex h-16 w-16 items-center justify-center rounded-xl ${isDark ? "bg-gray-700" : "bg-gray-100"
+                            }`}>
                             <img src="/logo.svg" alt="26-step" className="h-10 w-10" />
                           </div>
                         </div>
                       </div>
-                      <h1 className={`mb-2 text-3xl font-semibold ${
-                        isDark ? "text-white" : "text-gray-900"
-                      }`}>
+                      <h1 className={`mb-2 text-3xl font-semibold ${isDark ? "text-white" : "text-gray-900"
+                        }`}>
                         26-step
                       </h1>
-                      <p className={`text-sm ${
-                        isDark ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"
+                        }`}>
                         Create your new account
                       </p>
                     </div>
@@ -163,14 +260,29 @@ export default function Register() {
                             type="text"
                             placeholder="Your name"
                             value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            className={`${
-                              isDark 
-                                ? "bg-gray-800 border-gray-700 focus:border-gray-600" 
-                                : "bg-white border-gray-300 focus:border-gray-400"
-                            }`}
+                            onChange={handleNameChange}
+                            onBlur={() => {
+                              setTouched({ ...touched, name: true });
+                              const validation = validateName(form.name);
+                              setNameError(validation.valid ? null : validation.message || null);
+                            }}
+                            className={`${isDark
+                              ? "bg-gray-800 border-gray-700 focus:border-gray-600"
+                              : "bg-white border-gray-300 focus:border-gray-400"
+                              } ${nameError && touched.name
+                                ? isDark
+                                  ? "border-red-500 focus:border-red-400"
+                                  : "border-red-500 focus:border-red-400"
+                                : ""
+                              }`}
                             required
                           />
+                          {nameError && touched.name && (
+                            <p className={`mt-1.5 text-xs ${isDark ? "text-red-400" : "text-red-600"
+                              }`}>
+                              {nameError}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <Label className="mb-2">
@@ -180,14 +292,29 @@ export default function Register() {
                             type="email"
                             placeholder="nama@email.com"
                             value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            className={`${
-                              isDark 
-                                ? "bg-gray-800 border-gray-700 focus:border-gray-600" 
-                                : "bg-white border-gray-300 focus:border-gray-400"
-                            }`}
+                            onChange={handleEmailChange}
+                            onBlur={() => {
+                              setTouched({ ...touched, email: true });
+                              const validation = validateEmail(form.email);
+                              setEmailError(validation.valid ? null : validation.message || null);
+                            }}
+                            className={`${isDark
+                              ? "bg-gray-800 border-gray-700 focus:border-gray-600"
+                              : "bg-white border-gray-300 focus:border-gray-400"
+                              } ${emailError && touched.email
+                                ? isDark
+                                  ? "border-red-500 focus:border-red-400"
+                                  : "border-red-500 focus:border-red-400"
+                                : ""
+                              }`}
                             required
                           />
+                          {emailError && touched.email && (
+                            <p className={`mt-1.5 text-xs ${isDark ? "text-red-400" : "text-red-600"
+                              }`}>
+                              {emailError}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <Label className="mb-2">
@@ -198,12 +325,21 @@ export default function Register() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Minimum 8 characters"
                               value={form.password}
-                              onChange={(e) => setForm({ ...form, password: e.target.value })}
-                              className={`${
-                                isDark 
-                                  ? "bg-gray-800 border-gray-700 focus:border-gray-600" 
-                                  : "bg-white border-gray-300 focus:border-gray-400"
-                              }`}
+                              onChange={handlePasswordChange}
+                              onBlur={() => {
+                                setTouched({ ...touched, password: true });
+                                const validation = validatePassword(form.password);
+                                setPasswordError(validation.valid ? null : validation.message || null);
+                              }}
+                              className={`${isDark
+                                ? "bg-gray-800 border-gray-700 focus:border-gray-600"
+                                : "bg-white border-gray-300 focus:border-gray-400"
+                                } ${passwordError && touched.password
+                                  ? isDark
+                                    ? "border-red-500 focus:border-red-400"
+                                    : "border-red-500 focus:border-red-400"
+                                  : ""
+                                }`}
                               required
                             />
                             <button
@@ -216,9 +352,8 @@ export default function Register() {
                               onMouseDown={(e) => {
                                 e.preventDefault();
                               }}
-                              className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 transition-colors z-10 ${
-                                isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
-                              }`}
+                              className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 transition-colors z-10 ${isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
+                                }`}
                               aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                               <span className="flex items-center justify-center">
@@ -230,6 +365,66 @@ export default function Register() {
                               </span>
                             </button>
                           </div>
+                          {passwordError && touched.password && (
+                            <p className={`mt-1.5 text-xs ${isDark ? "text-red-400" : "text-red-600"
+                              }`}>
+                              {passwordError}
+                            </p>
+                          )}
+                          {passwordStrength && form.password && (
+                            <div className="mt-2 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
+                                  <div
+                                    className={`h-full transition-all duration-300 ${passwordStrength.strength === 'weak'
+                                      ? 'bg-red-500 w-1/3'
+                                      : passwordStrength.strength === 'medium'
+                                        ? 'bg-yellow-500 w-2/3'
+                                        : 'bg-green-500 w-full'
+                                      }`}
+                                  />
+                                </div>
+                                <span className={`text-xs font-medium ${passwordStrength.strength === 'weak'
+                                  ? isDark ? 'text-red-400' : 'text-red-600'
+                                  : passwordStrength.strength === 'medium'
+                                    ? isDark ? 'text-yellow-400' : 'text-yellow-600'
+                                    : isDark ? 'text-green-400' : 'text-green-600'
+                                  }`}>
+                                  {passwordStrength.strength === 'weak' ? 'Weak' : passwordStrength.strength === 'medium' ? 'Medium' : 'Strong'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.requirements.minLength
+                                  ? isDark ? 'text-green-400' : 'text-green-600'
+                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                                  }`}>
+                                  <span>{passwordStrength.requirements.minLength ? '✓' : '○'}</span>
+                                  <span>8+ characters</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.requirements.hasUpperCase
+                                  ? isDark ? 'text-green-400' : 'text-green-600'
+                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                                  }`}>
+                                  <span>{passwordStrength.requirements.hasUpperCase ? '✓' : '○'}</span>
+                                  <span>Uppercase</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.requirements.hasLowerCase
+                                  ? isDark ? 'text-green-400' : 'text-green-600'
+                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                                  }`}>
+                                  <span>{passwordStrength.requirements.hasLowerCase ? '✓' : '○'}</span>
+                                  <span>Lowercase</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 ${passwordStrength.requirements.hasNumber
+                                  ? isDark ? 'text-green-400' : 'text-green-600'
+                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                                  }`}>
+                                  <span>{passwordStrength.requirements.hasNumber ? '✓' : '○'}</span>
+                                  <span>Number</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <Label className="mb-2">
@@ -240,12 +435,24 @@ export default function Register() {
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="Ulangi password"
                               value={form.password_confirmation}
-                              onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })}
-                              className={`${
-                                isDark 
-                                  ? "bg-gray-800 border-gray-700 focus:border-gray-600" 
-                                  : "bg-white border-gray-300 focus:border-gray-400"
-                              }`}
+                              onChange={handleConfirmPasswordChange}
+                              onBlur={() => {
+                                setTouched({ ...touched, password_confirmation: true });
+                                if (form.password_confirmation !== form.password) {
+                                  setConfirmPasswordError("Passwords do not match");
+                                } else {
+                                  setConfirmPasswordError(null);
+                                }
+                              }}
+                              className={`${isDark
+                                ? "bg-gray-800 border-gray-700 focus:border-gray-600"
+                                : "bg-white border-gray-300 focus:border-gray-400"
+                                } ${confirmPasswordError && touched.password_confirmation
+                                  ? isDark
+                                    ? "border-red-500 focus:border-red-400"
+                                    : "border-red-500 focus:border-red-400"
+                                  : ""
+                                }`}
                               required
                             />
                             <button
@@ -258,9 +465,8 @@ export default function Register() {
                               onMouseDown={(e) => {
                                 e.preventDefault();
                               }}
-                              className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 transition-colors z-10 ${
-                                isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
-                              }`}
+                              className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 transition-colors z-10 ${isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
+                                }`}
                               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                             >
                               <span className="flex items-center justify-center">
@@ -272,56 +478,59 @@ export default function Register() {
                               </span>
                             </button>
                           </div>
+                          {confirmPasswordError && touched.password_confirmation && (
+                            <p className={`mt-1.5 text-xs ${isDark ? "text-red-400" : "text-red-600"
+                              }`}>
+                              {confirmPasswordError}
+                            </p>
+                          )}
                         </div>
                         {error && (
-                          <div className={`rounded-lg border p-4 ${
-                            isDark 
-                              ? "border-red-900/50 bg-red-900/20" 
-                              : "border-red-200 bg-red-50"
-                          }`}>
-                            <p className={`text-sm font-medium ${
-                              isDark ? "text-red-400" : "text-red-600"
-                            }`}>{error}</p>
+                          <div className={`rounded-lg border p-4 ${isDark
+                            ? "border-red-900/50 bg-red-900/20"
+                            : "border-red-200 bg-red-50"
+                            }`}>
+                            <p className={`text-sm font-medium ${isDark ? "text-red-400" : "text-red-600"
+                              }`}>{error}</p>
                           </div>
                         )}
                         <div className="pt-2">
                           <button
                             type="submit"
-                            disabled={loading}
-                            className={`w-full rounded-lg px-5 py-3.5 text-sm font-medium transition-colors ${
-                              isDark 
-                                ? "bg-white text-gray-900 hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500" 
-                                : "bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-400 disabled:text-gray-300"
-                            } ${loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                            disabled={loading || emailError !== null || nameError !== null || passwordError !== null || confirmPasswordError !== null}
+                            className={`group relative w-full overflow-hidden rounded-xl px-5 py-4 text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${loading || emailError !== null || nameError !== null || passwordError !== null || confirmPasswordError !== null
+                              ? "bg-gray-400"
+                              : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                              }`}
                           >
-                            {loading ? (
-                              <span className="flex items-center justify-center">
-                                <svg className="mr-2 h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Memproses...
-                              </span>
-                            ) : (
-                              "Daftar"
-                            )}
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                              {loading ? (
+                                <>
+                                  <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Memproses...
+                                </>
+                              ) : (
+                                "Daftar"
+                              )}
+                            </span>
                           </button>
                         </div>
                       </div>
                     </form>
 
                     <div className="mt-6 text-center">
-                      <p className={`text-sm ${
-                        isDark ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"
+                        }`}>
                         Sudah punya akun?{" "}
                         <Link
                           to="/login"
-                          className={`font-medium transition-colors ${
-                            isDark 
-                              ? "text-gray-300 hover:text-white" 
-                              : "text-gray-900 hover:text-gray-700"
-                          }`}
+                          className={`font-medium transition-colors ${isDark
+                            ? "text-gray-300 hover:text-white"
+                            : "text-gray-900 hover:text-gray-700"
+                            }`}
                         >
                           Login here
                         </Link>
@@ -332,19 +541,16 @@ export default function Register() {
               </div>
 
               {/* Right Side - Visual */}
-              <div className={`hidden items-center justify-center rounded-2xl border lg:flex ${
-                isDark 
-                  ? "border-gray-800 bg-gray-800/50" 
-                  : "border-gray-200 bg-white"
-              }`}>
-                <div className={`relative flex items-center justify-center p-12 w-full h-full min-h-[600px] transition-all duration-700 ease-out delay-200 ${
-                  mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              <div className={`hidden items-center justify-center rounded-2xl border lg:flex ${isDark
+                ? "border-gray-800 bg-gray-800/50"
+                : "border-gray-200 bg-white"
                 }`}>
+                <div className={`relative flex items-center justify-center p-12 w-full h-full min-h-[600px] transition-all duration-700 ease-out delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                  }`}>
                   <div className="flex flex-col items-center max-w-sm text-center">
                     <div className="mb-8">
-                      <div className={`flex h-24 w-24 items-center justify-center rounded-xl ${
-                        isDark ? "bg-gray-700" : "bg-gray-100"
-                      }`}>
+                      <div className={`flex h-24 w-24 items-center justify-center rounded-xl ${isDark ? "bg-gray-700" : "bg-gray-100"
+                        }`}>
                         <img
                           src="/logo.svg"
                           alt="Logo"
@@ -355,14 +561,12 @@ export default function Register() {
                         />
                       </div>
                     </div>
-                    <h2 className={`mb-4 text-3xl font-semibold ${
-                      isDark ? "text-white" : "text-gray-900"
-                    }`}>
+                    <h2 className={`mb-4 text-3xl font-semibold ${isDark ? "text-white" : "text-gray-900"
+                      }`}>
                       Join Us Today!
                     </h2>
-                    <p className={`text-base leading-relaxed ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}>
+                    <p className={`text-base leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"
+                      }`}>
                       Start managing your life more efficiently with 26-step
                     </p>
                   </div>

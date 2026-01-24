@@ -12,6 +12,7 @@ import { Component, ReactNode } from "react";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/modules/Tasks";
@@ -151,6 +152,14 @@ export default function App() {
                 element={
                   <PublicRoute>
                     <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/verify-email"
+                element={
+                  <PublicRoute>
+                    <VerifyEmail />
                   </PublicRoute>
                 }
               />

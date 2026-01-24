@@ -9,15 +9,10 @@ import {
   FinancialTransaction,
 } from "../../services/financialTransactionsService";
 import { formatIndonesianDate } from "../../utils/date";
-import { PlusIcon, PencilIcon, TrashBinIcon } from "../../icons";
+import { FinanceStats } from "./FinanceStats";
+import { PlusIcon, PencilIcon, TrashBinIcon, EyeIcon, DollarLineIcon } from "../../icons";
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "../../utils/currency";
 
 function formatRupiahInput(value: string): string {
   const digits = value.replace(/\D/g, "");
@@ -35,6 +30,7 @@ const initialForm = {
   amount: "",
   category: "",
   description: "",
+  notes: "",
   date: "",
 };
 
@@ -59,6 +55,11 @@ export default function TransactionsList() {
   const [dateTo, setDateTo] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewModal, setViewModal] = useState<{ open: boolean; item: FinancialTransaction | null }>({
+    open: false,
+    item: null,
+  });
+  const [isClosingView, setIsClosingView] = useState(false);
 
   const getTodayYmd = () => new Date().toISOString().slice(0, 10);
 
@@ -98,7 +99,7 @@ export default function TransactionsList() {
       type: form.type,
       amount: parseRupiahInput(form.amount),
       category: form.category || null,
-      description: form.description || null,
+      description: form.description + (form.notes ? `\n\nNotes:\n${form.notes}` : ""),
       date: form.date,
     };
     try {
@@ -123,9 +124,10 @@ export default function TransactionsList() {
     setEditing(item);
     setForm({
       type: item.type,
-      amount: String(item.amount),
+      amount: formatRupiahInput(String(Math.floor(Number(item.amount)))),
       category: item.category || "",
-      description: item.description || "",
+      description: (item.description || "").split("\n\nNotes:\n")[0],
+      notes: (item.description || "").split("\n\nNotes:\n")[1] || "",
       date: item.date?.slice(0, 10) || "",
     });
     setShowForm(true);
@@ -146,14 +148,49 @@ export default function TransactionsList() {
     }
   };
 
-  const totalIncome = useMemo(
-    () => items.filter((i) => i.type === "income").reduce((sum, i) => sum + Number(i.amount || 0), 0),
-    [items]
-  );
-  const totalExpense = useMemo(
-    () => items.filter((i) => i.type === "expense").reduce((sum, i) => sum + Number(i.amount || 0), 0),
-    [items]
-  );
+  const processedCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categories.filter((c) => {
+      const lowerName = c.name.toLowerCase();
+      if (seen.has(lowerName)) return false;
+      seen.add(lowerName);
+      return true;
+    });
+  }, [categories]);
+
+  const totals = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const grandIncome = items
+      .filter((i) => i.type === "income")
+      .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+    const grandExpense = items
+      .filter((i) => i.type === "expense")
+      .reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+    const thisMonthTransactions = items.filter((t) => {
+      const d = new Date(t.date);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+
+    const thisMonthIncome = thisMonthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const thisMonthExpense = thisMonthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    return {
+      grandBalance: grandIncome - grandExpense,
+      thisMonthIncome,
+      thisMonthExpense,
+      thisMonthNet: thisMonthIncome - thisMonthExpense,
+    };
+  }, [items]);
+
+
 
   const filteredItems = useMemo(() => {
     let filtered = items;
@@ -184,17 +221,24 @@ export default function TransactionsList() {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-500 to-fuchsia-500 p-8 text-white shadow-xl">
-        <h1 className="mb-2 text-4xl font-bold">Transactions</h1>
-        <p className="text-white/90">Track your income and expenses</p>
+      {/* Header - Consistent with Budget/Categories */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
+            <DollarLineIcon className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Transactions</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Track and manage your daily income and expenses</p>
+          </div>
+        </div>
       </div>
 
-      {/* Breadcrumbs */}
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        Home <span className="mx-2">›</span> Finance Tools <span className="mx-2">›</span>{" "}
-        <span className="font-semibold text-gray-900 dark:text-white">Transactions</span>
-      </div>
+      <FinanceStats
+        grandBalance={totals.grandBalance}
+        thisMonthIncome={totals.thisMonthIncome}
+        thisMonthExpense={totals.thisMonthExpense}
+      />
 
       {/* Filters */}
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-sm dark:border-gray-800 dark:bg-gray-800">
@@ -214,7 +258,7 @@ export default function TransactionsList() {
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           >
             <option value="all">All Categories</option>
-            {categories.map((cat) => (
+            {processedCategories.map((cat) => (
               <option key={cat.id} value={cat.name}>
                 {cat.name}
               </option>
@@ -268,15 +312,16 @@ export default function TransactionsList() {
                 {pagedItems.map((item, idx) => (
                   <tr
                     key={item.id}
-                    className={`border-b border-gray-100 dark:border-gray-700 ${
-                      idx % 2 === 0 ? "bg-gray-50/40 dark:bg-gray-900/30" : "bg-transparent"
-                    }`}
+                    className={`border-b border-gray-100 dark:border-gray-700 ${idx % 2 === 0 ? "bg-gray-50/40 dark:bg-gray-900/30" : "bg-transparent"
+                      }`}
                   >
                     <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
                       {formatIndonesianDate(item.date)}
                     </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white">
-                      {item.description || "-"}
+                      <div className="max-w-[200px] truncate" title={item.description || ""}>
+                        {item.description ? item.description.split("\n\nNotes:\n")[0] : "-"}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300">
@@ -285,25 +330,30 @@ export default function TransactionsList() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          item.type === "income"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                            : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
-                        }`}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${item.type === "income"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                          : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                          }`}
                       >
                         {item.type === "income" ? "Income" : "Expense"}
                       </span>
                     </td>
                     <td
-                      className={`px-6 py-4 text-right font-semibold ${
-                        item.type === "income" ? "text-emerald-600" : "text-rose-600"
-                      }`}
+                      className={`px-6 py-4 text-right font-semibold ${item.type === "income" ? "text-emerald-600" : "text-rose-600"
+                        }`}
                     >
                       {item.type === "income" ? "+" : "-"}
-                      {formatCurrency(Number(item.amount))}
+                      {formatCurrency(Number(item.amount), Number(item.amount) >= 10000000)}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => setViewModal({ open: true, item })}
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="View Details"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </button>
                         <button
                           onClick={() => handleEdit(item)}
                           className="text-blue-600 hover:text-blue-700"
@@ -370,9 +420,8 @@ export default function TransactionsList() {
       {/* Form Modal */}
       {showForm && (
         <div
-          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${
-            isClosing ? "opacity-0" : "opacity-100"
-          }`}
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${isClosing ? "opacity-0" : "opacity-100"
+            }`}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsClosing(true);
@@ -384,17 +433,17 @@ export default function TransactionsList() {
           }}
         >
           <div
-            className={`w-full max-w-3xl rounded-2xl border border-gray-200 bg-white p-6 text-gray-900 shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-900/95 dark:text-white ${
-              isClosing ? "animate-out fade-out zoom-out-95" : "animate-in fade-in zoom-in-95"
-            }`}
+            className={`flex w-full max-w-2xl flex-col max-h-[90vh] rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-900/95 ${isClosing ? "animate-out fade-out zoom-out-95" : "animate-in fade-in zoom-in-95"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {/* Modal Header - Fixed */}
+            <div className="flex items-center justify-between border-b border-gray-200 p-4 shrink-0 dark:border-gray-700 md:px-6 md:py-5">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white md:text-xl">
                 {editing ? "Edit Transaction" : "Add New Transaction"}
               </h2>
               <button
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 onClick={() => {
                   setIsClosing(true);
                   setTimeout(() => {
@@ -407,118 +456,135 @@ export default function TransactionsList() {
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <label className="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Type *</label>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, type: "income" }))}
-                    className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border p-6 text-left transition-all ${
-                      form.type === "income"
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
+            {/* Modal Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar-minimal">
+              <div className="space-y-6">
+                <div>
+                  <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type *</label>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, type: "income" }))}
+                      className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all sm:p-5 ${form.type === "income"
+                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20 dark:bg-emerald-500/10"
                         : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/70"
-                    }`}
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600/20 text-3xl text-emerald-500 dark:text-emerald-400">
-                      +
-                    </div>
-                    <div className="text-lg font-semibold text-gray-900 dark:text-white">Income</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Money received</div>
-                    {form.type === "income" && (
-                      <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, type: "expense" }))}
-                    className={`relative flex flex-col items-center justify-center gap-2 rounded-2xl border p-6 text-left transition-all ${
-                      form.type === "expense"
-                        ? "border-rose-500 bg-rose-50 dark:bg-rose-500/10"
+                        }`}
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/20 text-2xl text-emerald-500 dark:text-emerald-400 sm:h-12 sm:w-12">
+                        +
+                      </div>
+                      <div className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">Income</div>
+                      <div className="hidden text-[10px] text-gray-500 dark:text-gray-400 sm:block">Money received</div>
+                      {form.type === "income" && (
+                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white sm:right-3 sm:top-3 sm:h-6 sm:w-6">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, type: "expense" }))}
+                      className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all sm:p-5 ${form.type === "expense"
+                        ? "border-rose-500 bg-rose-50 ring-2 ring-rose-500/20 dark:bg-rose-500/10"
                         : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/70"
-                    }`}
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-600/20 text-3xl text-rose-500 dark:text-rose-400">
-                      –
-                    </div>
-                    <div className="text-lg font-semibold text-gray-900 dark:text-white">Expense</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Money spent</div>
-                    {form.type === "expense" && (
-                      <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white">
-                        ✓
-                      </span>
-                    )}
-                  </button>
+                        }`}
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-600/20 text-2xl text-rose-500 dark:text-rose-400 sm:h-12 sm:w-12">
+                        –
+                      </div>
+                      <div className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">Expense</div>
+                      <div className="hidden text-[10px] text-gray-500 dark:text-gray-400 sm:block">Money spent</div>
+                      {form.type === "expense" && (
+                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] text-white sm:right-3 sm:top-3 sm:h-6 sm:w-6">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {(cat.icon || "📁") + " " + cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (Rp) *</label>
-                  <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-800">
-                    <span className="mr-2 text-sm text-gray-500 dark:text-gray-400">Rp</span>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    >
+                      <option value="">Select Category</option>
+                      {processedCategories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {(cat.icon || "📁") + " " + cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (Rp) *</label>
+                    <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-800">
+                      <span className="mr-2 text-sm text-gray-500 dark:text-gray-400">Rp</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={form.amount}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, amount: formatRupiahInput(e.target.value) }))
+                        }
+                        className="w-full bg-transparent text-sm text-gray-900 outline-none dark:text-white"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Date *</label>
+                    <DatePicker
+                      value={form.date}
+                      onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Description *</label>
+                      <span className="text-[10px] text-gray-400">
+                        {form.description.trim() === "" ? 0 : form.description.trim().split(/\s+/).length}/30 words
+                      </span>
+                    </div>
                     <input
-                      type="text"
-                      inputMode="numeric"
-                      value={form.amount}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, amount: formatRupiahInput(e.target.value) }))
-                      }
-                      className="w-full bg-transparent text-sm text-gray-900 outline-none dark:text-white"
-                      placeholder="0"
+                      value={form.description}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const words = val.trim().split(/\s+/).filter(Boolean);
+                        if (words.length <= 30) {
+                          setForm((prev) => ({ ...prev, description: val }));
+                        }
+                      }}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                      placeholder="Enter description"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Date *</label>
-                  <DatePicker
-                    value={form.date}
-                    onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
-                  <input
-                    value={form.description}
-                    onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                    placeholder="Enter description"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes (Optional)</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  className="h-24 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  placeholder="Additional notes..."
-                />
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Notes (Optional)</label>
+                    <span className="text-[10px] text-gray-400">{form.notes.length}/200</span>
+                  </div>
+                  <textarea
+                    value={form.notes}
+                    maxLength={200}
+                    onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    className="h-28 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    placeholder="Additional notes..."
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+            {/* Modal Footer - Fixed */}
+            <div className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 p-4 dark:border-gray-700 md:px-6 md:py-4">
               <button
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                 onClick={() => {
                   setIsClosing(true);
                   setTimeout(() => {
@@ -530,11 +596,11 @@ export default function TransactionsList() {
                 Cancel
               </button>
               <button
-                className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60"
+                className="rounded-lg bg-purple-600 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-700 disabled:opacity-60"
                 onClick={handleSubmit}
                 disabled={saving}
               >
-                {saving ? "Saving..." : editing ? "Update Transaction" : "Create Transaction"}
+                {saving ? "Saving..." : editing ? "Update" : "Create"}
               </button>
             </div>
           </div>
@@ -558,6 +624,91 @@ export default function TransactionsList() {
         message={error || ""}
         type="error"
       />
+
+      {/* View Details Modal */}
+      {viewModal.open && viewModal.item && (
+        <div
+          className={`fixed inset-0 z-100000 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity duration-200 ${isClosingView ? "opacity-0" : "opacity-100"
+            }`}
+          onClick={() => {
+            setIsClosingView(true);
+            setTimeout(() => {
+              setIsClosingView(false);
+              setViewModal({ open: false, item: null });
+            }, 200);
+          }}
+        >
+          <div
+            className={`w-full max-w-lg overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl transition-all duration-200 dark:border-gray-700 dark:bg-gray-900 ${isClosingView ? "animate-out fade-out zoom-out-95" : "animate-in fade-in zoom-in-95"
+              }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-6 text-white ${viewModal.item.type === 'income' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-widest opacity-80">Transaction Details</span>
+                <button
+                  onClick={() => {
+                    setIsClosingView(true);
+                    setTimeout(() => {
+                      setIsClosingView(false);
+                      setViewModal({ open: false, item: null });
+                    }, 200);
+                  }}
+                  className="hover:rotate-90 transition-transform"
+                >✕</button>
+              </div>
+              <h3 className="mt-4 text-3xl font-black">{formatCurrency(Number(viewModal.item.amount))}</h3>
+              <p className="mt-1 text-white/80">{viewModal.item.category || 'Uncategorized'}</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Date</label>
+                  <p className="font-semibold text-gray-900 dark:text-white">{formatIndonesianDate(viewModal.item.date)}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Type</label>
+                  <p className={`font-semibold ${viewModal.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {viewModal.item.type.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Description</label>
+                <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {(viewModal.item.description || "").split("\n\nNotes:\n")[0] || "-"}
+                </p>
+              </div>
+
+              {(viewModal.item.description || "").includes("\n\nNotes:\n") && (
+                <div className="border-t border-gray-100 pt-4 dark:border-gray-800">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Notes</label>
+                  <div className="mt-1 rounded-xl bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800/50 dark:text-gray-400">
+                    {(viewModal.item.description || "").split("\n\nNotes:\n")[1]}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-100 p-4 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/30 text-center">
+              <button
+                onClick={() => {
+                  setIsClosingView(true);
+                  setTimeout(() => {
+                    setIsClosingView(false);
+                    setViewModal({ open: false, item: null });
+                  }, 200);
+                }}
+                className="w-full rounded-xl bg-gray-900 py-3 text-sm font-bold text-white transition-all hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
