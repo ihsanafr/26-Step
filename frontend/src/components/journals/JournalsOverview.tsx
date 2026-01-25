@@ -299,8 +299,8 @@ export default function JournalsOverview() {
         </div>
       ) : (
         <>
-          {/* Stats Grid - 6 columns */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {/* Stats Grid - Responsive */}
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {/* Total Entries */}
             <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-theme-xs dark:border-gray-700 dark:from-blue-500/10 dark:to-blue-500/5">
               <div className="flex items-center gap-3">

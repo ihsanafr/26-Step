@@ -71,7 +71,6 @@ export default function JournalsGuide() {
                     <li><strong>Mood:</strong> Pilih mood untuk tracking emosi (Happy, Sad, Anxious, Excited, Calm, Angry, Tired, Confused)</li>
                     <li><strong>Weather:</strong> Pilih kondisi cuaca (Sunny, Cloudy, Rainy, Stormy, Snowy, Windy)</li>
                     <li><strong>Category:</strong> Pilih atau buat kategori untuk mengorganisir entries</li>
-                    <li><strong>Private Entry:</strong> Centang untuk membuat entry private (hanya Anda yang bisa melihat)</li>
                     <li><strong>Date:</strong> Tanggal entry (default: hari ini)</li>
                   </ul>
                 </li>
@@ -168,7 +167,7 @@ export default function JournalsGuide() {
           </div>
           <ul className="ml-6 list-disc space-y-2 text-gray-700 dark:text-gray-300">
             <li><strong>Write Regularly:</strong> Buat kebiasaan menulis journal setiap hari, bahkan jika hanya beberapa kalimat</li>
-            <li><strong>Be Honest:</strong> Journal adalah ruang pribadi untuk refleksi jujur. Gunakan private entry untuk hal sensitif</li>
+            <li><strong>Be Honest:</strong> Journal adalah ruang pribadi untuk refleksi jujur</li>
             <li><strong>Use Categories:</strong> Kategorikan entries dan notes untuk memudahkan pencarian dan review</li>
             <li><strong>Track Mood & Weather:</strong> Tracking mood dan weather membantu melihat pola dan konteks emosi Anda</li>
             <li><strong>Quick Capture:</strong> Gunakan Notes untuk menangkap ide cepat, lalu kembangkan menjadi Journal Entry jika perlu</li>

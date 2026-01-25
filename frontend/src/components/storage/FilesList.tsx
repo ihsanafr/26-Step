@@ -32,39 +32,25 @@ function formatFileSize(bytes: number): string {
 //   return "📎";
 // }
 
+function getFileIcon(mimeType: string): string {
+  if (mimeType.startsWith("image/")) return "🖼️";
+  if (mimeType.startsWith("video/")) return "🎥";
+  if (mimeType.startsWith("audio/")) return "🎵";
+  if (mimeType.includes("pdf")) return "📄";
+  if (mimeType.includes("word") || mimeType.includes("document")) return "📝";
+  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "📊";
+  if (mimeType.includes("powerpoint") || mimeType.includes("presentation")) return "📽️";
+  if (mimeType.includes("zip") || mimeType.includes("archive") || mimeType.includes("rar") || mimeType.includes("7z")) return "📦";
+  if (mimeType.includes("text") || mimeType.includes("plain")) return "📃";
+  if (mimeType.includes("json") || mimeType.includes("xml")) return "📋";
+  return "📎";
+}
+
 function getFileIconComponent(mimeType: string) {
-  if (mimeType.includes("pdf")) {
-    return (
-      <svg className="h-12 w-12 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-      </svg>
-    );
-  }
-  if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) {
-    return (
-      <svg className="h-12 w-12 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M17,11H7V13H17V11M17,15H7V17H17V15Z" />
-      </svg>
-    );
-  }
-  if (mimeType.includes("word") || mimeType.includes("document")) {
-    return (
-      <svg className="h-12 w-12 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M17,11H7V13H17V11M17,15H7V17H17V15Z" />
-      </svg>
-    );
-  }
-  if (mimeType.startsWith("image/")) {
-    return (
-      <svg className="h-12 w-12 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" />
-      </svg>
-    );
-  }
   return (
-    <svg className="h-12 w-12 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-    </svg>
+    <span className="text-4xl" role="img" aria-label="File icon">
+      {getFileIcon(mimeType)}
+    </span>
   );
 }
 

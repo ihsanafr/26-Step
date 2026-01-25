@@ -455,15 +455,6 @@ export default function JournalFormModal({
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={form.is_private}
-              onChange={(e) => setForm((f) => ({ ...f, is_private: e.target.checked }))}
-              disabled={readOnly}
-            />
-            Private entry
-          </label>
 
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={handleClose} disabled={isLoading}>

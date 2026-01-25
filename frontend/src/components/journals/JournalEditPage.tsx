@@ -530,14 +530,6 @@ export default function JournalEditPage() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={form.is_private}
-              onChange={(e) => setForm((f) => ({ ...f, is_private: e.target.checked }))}
-            />
-            Private entry
-          </label>
         </form>
       </div>
 

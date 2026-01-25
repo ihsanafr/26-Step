@@ -30,7 +30,9 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect if user is authenticated AND not already on a protected route
+    // This prevents redirect loop when user manually navigates to landing page
+    if (isAuthenticated && window.location.pathname === '/') {
       navigate("/dashboard");
     }
     setMounted(true);
@@ -168,9 +170,9 @@ export default function Home() {
 
       {/* Navigation */}
       <nav className="relative z-10 container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="relative">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0 flex-shrink">
+            <div className="relative flex-shrink-0">
               {/* Outer box with blue-purple gradient */}
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-indigo-500/30 blur-sm"></div>
               {/* Inner box with logo - blue-purple gradient */}
@@ -178,12 +180,12 @@ export default function Home() {
                 <img src="/logo.svg" alt="26-step" className="h-6 w-6" />
               </div>
             </div>
-            <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>26-step</h2>
+            <h2 className={`text-lg sm:text-xl font-bold whitespace-nowrap ${isDark ? "text-white" : "text-gray-900"}`}>26-step</h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <Link
               to="/login"
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${isDark
+              className={`rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${isDark
                 ? "text-gray-300 hover:bg-white/10 hover:text-white"
                 : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -192,11 +194,11 @@ export default function Home() {
             </Link>
             <Link
               to="/register"
-              className="rounded-lg bg-gradient-to-r from-brand-500 to-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-brand-600 hover:to-blue-600 hover:shadow-xl"
+              className="rounded-lg bg-gradient-to-r from-brand-500 to-blue-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-brand-600 hover:to-blue-600 hover:shadow-xl whitespace-nowrap"
             >
               Register
             </Link>
-            <div className="ml-1">
+            <div className="ml-1 flex-shrink-0">
               <ThemeTogglerTwo />
             </div>
           </div>
@@ -338,8 +340,8 @@ export default function Home() {
                   <div className={`relative h-32 w-32 overflow-hidden rounded-full border-2 md:h-40 md:w-40 ${isDark ? "border-white/20" : "border-white shadow-sm"
                     }`}>
                     <img
-                      src="/images/user/user-01.jpg"
-                      alt="Author"
+                      src="/pp.png"
+                      alt="Ihsan Ahmad Fakhriansyah"
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=Ihsan+Ahmad+Fakhriansyah&background=465fff&color=fff&size=160";
@@ -355,7 +357,7 @@ export default function Home() {
                 {/* Text Content */}
                 <div className="flex-1 text-center md:text-left">
                   <h3 className={`mb-1 text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Ihsan Ahmad Fakhriansyah</h3>
-                  <p className={`mb-4 text-sm font-medium text-brand-500`}>Full Stack Web Development Student</p>
+                  <p className={`mb-4 text-sm font-medium text-brand-500`}>Fullstack Developer</p>
                   <p className={`mb-6 text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-600"
                     }`}>
                     A passionate full-stack web development student with strong interests in frontend and backend development, focused on building user-centered web applications and innovative solutions.
